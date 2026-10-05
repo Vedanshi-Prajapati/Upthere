@@ -1,17 +1,12 @@
-//
-//  UpthereApp.swift
-//  Upthere
-//
-//  Created by Vedanshi Prajapati on 04/10/26.
-//
-
 import SwiftUI
 
 @main
 struct UpthereApp: App {
+    @State private var container = AppContainer()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView(viewModel: container.makeHomeViewModel())
         }
     }
 }
