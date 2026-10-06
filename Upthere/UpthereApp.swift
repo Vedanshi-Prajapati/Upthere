@@ -6,7 +6,7 @@ struct UpthereApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView(viewModel: container.makeHomeViewModel())
+            MainTabView(homeViewModel: container.makeHomeViewModel())
         }
     }
 }

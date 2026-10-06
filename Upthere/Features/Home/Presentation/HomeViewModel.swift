@@ -19,6 +19,8 @@ public final class HomeViewModel {
     }
 
     public func loadWeather() async {
+        if case .loading = state { return }
+        if case .loaded = state { return }
         state = .loading
         do {
             let weather = try await getWeatherUseCase.execute()
