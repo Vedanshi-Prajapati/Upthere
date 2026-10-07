@@ -18,26 +18,15 @@ public struct HomeView: View {
                 Color.clear.onAppear { Task { await viewModel.loadWeather() } }
 
             case .loading:
-                ProgressView()
-                    .tint(.white)
-                    .scaleEffect(1.4)
+                LoadingSkeletonView()
 
             case .loaded(let weather):
                 WeatherScrollContent(weather: weather)
 
-            case .error(let msg):
-                VStack(spacing: 12) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 44))
-                        .foregroundStyle(AppTheme.alertAmber)
-                    Text(msg)
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                    Button("Retry") { Task { await viewModel.loadWeather() } }
-                        .buttonStyle(.bordered)
-                        .tint(.white)
+            case .error:
+                NetworkErrorView {
+                    Task { await viewModel.loadWeather() }
                 }
-                .padding()
             }
         }
         .task { await viewModel.loadWeather() }
@@ -63,10 +52,10 @@ private struct WeatherScrollContent: View {
                 precipitationChart
                 temperatureChart
                 todaySection
-                Spacer(minLength: 40)
+                Spacer(minLength: 110)
             }
             .padding(.horizontal, 20)
-            .padding(.top, 8)
+            .padding(.top, 62)
         }
     }
 

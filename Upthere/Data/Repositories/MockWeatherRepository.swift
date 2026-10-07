@@ -40,6 +40,19 @@ public final class MockWeatherRepository: WeatherRepository {
             .init(time: "11p",  temperature: 26, precipitationProbability: 0.05),
         ]
 
+        let daily: [DailyWeather] = [
+            .init(dayName: "Today", date: "6 Oct", symbolName: "cloud.bolt.rain.fill", precipitationProbability: 0.70, lowTemperature: 25, highTemperature: 35),
+            .init(dayName: "Wed", date: "7 Oct", symbolName: "cloud.sun.fill", lowTemperature: 24, highTemperature: 34),
+            .init(dayName: "Thu", date: "8 Oct", symbolName: "sun.max.fill", lowTemperature: 23, highTemperature: 33),
+            .init(dayName: "Fri", date: "9 Oct", symbolName: "sun.max.fill", lowTemperature: 23, highTemperature: 34),
+            .init(dayName: "Sat", date: "10 Oct", symbolName: "cloud.sun.fill", lowTemperature: 24, highTemperature: 33),
+            .init(dayName: "Sun", date: "11 Oct", symbolName: "cloud.fill", precipitationProbability: 0.30, lowTemperature: 24, highTemperature: 31),
+            .init(dayName: "Mon", date: "12 Oct", symbolName: "cloud.rain.fill", precipitationProbability: 0.65, lowTemperature: 23, highTemperature: 29),
+            .init(dayName: "Tue", date: "13 Oct", symbolName: "cloud.sun.rain.fill", precipitationProbability: 0.20, lowTemperature: 22, highTemperature: 31),
+            .init(dayName: "Wed", date: "14 Oct", symbolName: "cloud.sun.fill", lowTemperature: 22, highTemperature: 32),
+            .init(dayName: "Thu", date: "15 Oct", symbolName: "sun.max.fill", lowTemperature: 23, highTemperature: 33)
+        ]
+
         return Weather(
             cityName: "Ghaziabad",
             locationSubtitle: "Current location · Tue 6 Oct, 8:00 AM",
@@ -67,6 +80,7 @@ public final class MockWeatherRepository: WeatherRepository {
                 validUntil: "Until 9:00 PM"
             ),
             hourlyForecast: hourly,
+            dailyForecast: daily,
             rainWindow: RainWindow(
                 title: "Rain likely later",
                 timeRange: "4:00 PM – 6:30 PM",

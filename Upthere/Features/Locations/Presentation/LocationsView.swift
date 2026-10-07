@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct LocationsView: View {
     @State private var searchText = ""
+    @State private var showCitySearch = false
     @State private var locations: [SavedLocation] = [
         SavedLocation(cityName: "Ghaziabad", regionName: "Partly Cloudy", condition: "Partly Cloudy", isCurrentLocation: true),
         SavedLocation(cityName: "Delhi",     regionName: "National Capital Territory", condition: "Sunny"),
@@ -34,6 +35,7 @@ public struct LocationsView: View {
                     }
                     Spacer()
                     Button {
+                        showCitySearch = true
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 16, weight: .semibold))
@@ -43,7 +45,7 @@ public struct LocationsView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .padding(.top, 62)
                 .padding(.bottom, 16)
 
                 Text("Locations")
@@ -134,6 +136,18 @@ public struct LocationsView: View {
 
                 Spacer()
             }
+        }
+        .sheet(isPresented: $showCitySearch) {
+            CitySearchSheet { cityName in
+                let newLocation = SavedLocation(
+                    cityName: cityName,
+                    regionName: "",
+                    condition: "--"
+                )
+                locations.append(newLocation)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.hidden)
         }
     }
 }

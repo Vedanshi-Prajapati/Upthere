@@ -22,8 +22,8 @@ public struct MainTabView: View {
             ZStack {
                 switch selectedTab {
                 case .home:     HomeView(viewModel: homeViewModel)
-                case .forecast: ForecastView()
-                case .insights: InsightsView()
+                case .forecast: ForecastView(viewModel: homeViewModel)
+                case .insights: InsightsView(viewModel: homeViewModel)
                 case .locations:
                     LocationsView(onDone: { selectedTab = .home })
                 case .settings: SettingsView()
@@ -34,8 +34,10 @@ public struct MainTabView: View {
 
             // Custom Tab Bar
             CustomTabBar(selected: $selectedTab)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 36)
         }
-        .ignoresSafeArea(edges: .bottom)
+        .ignoresSafeArea()
         .sheet(isPresented: $showPermission) {
             LocationPermissionView(
                 onAllow: { showPermission = false },
@@ -64,11 +66,11 @@ public enum Tab: CaseIterable {
 
     var icon: String {
         switch self {
-        case .home:      return "house.fill"
+        case .home:      return "house"
         case .forecast:  return "calendar"
         case .insights:  return "sparkles"
-        case .locations: return "location.fill"
-        case .settings:  return "gearshape"
+        case .locations: return "mappin.and.ellipse"
+        case .settings:  return "scope"
         }
     }
 }
@@ -82,26 +84,27 @@ private struct CustomTabBar: View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases, id: \.self) { tab in
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                         selected = tab
                     }
                 } label: {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 3) {
                         Image(systemName: tab.icon)
                             .font(.system(size: 20, weight: selected == tab ? .semibold : .regular))
-                            .foregroundStyle(selected == tab ? .white : .white.opacity(0.55))
+                            .foregroundStyle(selected == tab ? .white : Color.white.opacity(0.65))
+
                         Text(tab.title)
-                            .font(.system(size: 10, weight: selected == tab ? .semibold : .regular))
-                            .foregroundStyle(selected == tab ? .white : .white.opacity(0.55))
+                            .font(.system(size: 10, weight: selected == tab ? .semibold : .medium))
+                            .foregroundStyle(selected == tab ? .white : Color.white.opacity(0.65))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .frame(height: 54)
                     .background(
                         Group {
                             if selected == tab {
-                                Capsule()
-                                    .fill(Color.white.opacity(0.14))
-                                    .padding(.horizontal, 4)
+                                Circle()
+                                    .fill(Color.white.opacity(0.24))
+                                    .frame(width: 54, height: 54)
                             }
                         }
                     )
@@ -109,19 +112,22 @@ private struct CustomTabBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 24)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(height: 66)
         .background(
-            Rectangle()
-                .fill(AppTheme.tabBarBackground.opacity(0.92))
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(Color.white.opacity(0.12))
-                        .frame(height: 1)
-                }
+            Capsule()
+                .fill(Color(red: 22/255, green: 45/255, blue: 85/255).opacity(0.85))
+                .background(
+                    Capsule()
+                        .fill(.ultraThinMaterial.opacity(0.6))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.25), radius: 18, x: 0, y: 8)
         )
-        .compositingGroup()
     }
 }
 

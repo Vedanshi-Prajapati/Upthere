@@ -32,6 +32,7 @@ public struct Weather: Equatable, Sendable {
 
     // MARK: - Hourly Forecast
     public let hourlyForecast: [HourlyWeather]
+    public let dailyForecast: [DailyWeather]
 
     // MARK: - Insights
     public let rainWindow: RainWindow?
@@ -65,6 +66,7 @@ public struct Weather: Equatable, Sendable {
         pressureTrend: String = "",
         alert: WeatherAlert? = nil,
         hourlyForecast: [HourlyWeather] = [],
+        dailyForecast: [DailyWeather] = [],
         rainWindow: RainWindow? = nil,
         warmingInsight: String = "",
         chanceOfRain: Int = 0,
@@ -93,6 +95,7 @@ public struct Weather: Equatable, Sendable {
         self.pressureTrend = pressureTrend
         self.alert = alert
         self.hourlyForecast = hourlyForecast
+        self.dailyForecast = dailyForecast
         self.rainWindow = rainWindow
         self.warmingInsight = warmingInsight
         self.chanceOfRain = chanceOfRain
