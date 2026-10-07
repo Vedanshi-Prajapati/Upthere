@@ -21,7 +21,12 @@ public struct MainTabView: View {
             // Page content
             ZStack {
                 switch selectedTab {
-                case .home:     HomeView(viewModel: homeViewModel)
+                case .home:
+                    HomeView(viewModel: homeViewModel, onNavigateToInsights: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                            selectedTab = .insights
+                        }
+                    })
                 case .forecast: ForecastView(viewModel: homeViewModel)
                 case .insights: InsightsView(viewModel: homeViewModel)
                 case .locations:

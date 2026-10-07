@@ -75,23 +75,10 @@ public struct SettingsView: View {
                                 title: "Rain alerts",
                                 isOn: $viewModel.rainAlertsEnabled
                             )
-                            divider
-                            toggleRow(
-                                icon: "exclamationmark.triangle.fill",
-                                iconColor: .red,
-                                title: "Severe weather alerts",
-                                isOn: $viewModel.severeWeatherAlertsEnabled
-                            )
                         }
                         .glassCard()
                         .padding(.horizontal, 20)
-
-                        Text("Severe weather alerts come from official government sources where available.")
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.textTertiary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 8)
-                            .padding(.bottom, 24)
+                        .padding(.bottom, 24)
 
                         // MARK: - Location
                         sectionHeader("Location")
@@ -178,50 +165,6 @@ public struct SettingsView: View {
                                 iconColor: .clear,
                                 title: "App version",
                                 value: viewModel.appVersion
-                            )
-                        }
-                        .glassCard()
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-
-                        // MARK: - Prototype states
-                        sectionHeader("Prototype states")
-
-                        VStack(spacing: 0) {
-                            prototypeRow(title: "Launch and loading") { }
-                            divider
-                            prototypeRow(title: "Location permission") { }
-                            divider
-                            prototypeRow(title: "Permission denied") { }
-                            divider
-                            prototypeRow(title: "Network error") { }
-                            divider
-                            toggleRow(
-                                icon: nil,
-                                iconColor: .clear,
-                                title: "Offline with cached data",
-                                isOn: $viewModel.offlineWithCachedData
-                            )
-                            divider
-                            toggleRow(
-                                icon: nil,
-                                iconColor: .clear,
-                                title: "Right-to-left layout",
-                                isOn: $viewModel.rightToLeftLayout
-                            )
-                            divider
-                            toggleRow(
-                                icon: nil,
-                                iconColor: .clear,
-                                title: "Tablet (834 pt)",
-                                isOn: $viewModel.tabletMode
-                            )
-                            divider
-                            toggleRow(
-                                icon: nil,
-                                iconColor: .clear,
-                                title: "Smallest device (375 pt)",
-                                isOn: $viewModel.smallestDevice
                             )
                         }
                         .glassCard()
@@ -389,22 +332,6 @@ public struct SettingsView: View {
         .padding(.vertical, 13)
     }
 
-    private func prototypeRow(title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(title)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-        }
-        .buttonStyle(.plain)
-    }
 
     private func segmentedControl(
         options: [String],

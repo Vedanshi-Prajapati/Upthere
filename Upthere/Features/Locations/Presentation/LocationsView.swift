@@ -119,21 +119,6 @@ public struct LocationsView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 14)
 
-                VStack(spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text("Weather ·")
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.textSecondary)
-                        Text("Other data sources")
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    Text("Sample data for prototyping, not real-time.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.textTertiary)
-                }
-                .padding(.top, 16)
-
                 Spacer()
             }
         }

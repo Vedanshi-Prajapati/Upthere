@@ -4,9 +4,11 @@ import SwiftUI
 
 public struct HomeView: View {
     @State private var viewModel: HomeViewModel
+    public var onNavigateToInsights: (() -> Void)?
 
-    public init(viewModel: HomeViewModel) {
+    public init(viewModel: HomeViewModel, onNavigateToInsights: (() -> Void)? = nil) {
         self._viewModel = State(initialValue: viewModel)
+        self.onNavigateToInsights = onNavigateToInsights
     }
 
     public var body: some View {
@@ -21,7 +23,7 @@ public struct HomeView: View {
                 LoadingSkeletonView()
 
             case .loaded(let weather):
-                WeatherScrollContent(weather: weather)
+                WeatherScrollContent(weather: weather, onNavigateToInsights: onNavigateToInsights)
 
             case .error:
                 NetworkErrorView {
@@ -37,6 +39,7 @@ public struct HomeView: View {
 
 private struct WeatherScrollContent: View {
     let weather: Weather
+    var onNavigateToInsights: (() -> Void)?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -114,37 +117,42 @@ private struct WeatherScrollContent: View {
 
     // MARK: Alert
     private func alertSection(_ alert: WeatherAlert) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(AppTheme.alertAmber)
-                .font(.system(size: 16))
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Official alert · \(alert.source)")
-                    .font(.system(size: 13))
+        Button {
+            onNavigateToInsights?()
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppTheme.alertAmber)
-                Text(alert.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(alert.validUntil)
-                    .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.textSecondary)
+                    .font(.system(size: 16))
+                    .padding(.top, 2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Official alert · \(alert.source)")
+                        .font(.system(size: 13))
+                        .foregroundStyle(AppTheme.alertAmber)
+                    Text(alert.title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(alert.validUntil)
+                        .font(.system(size: 13))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .font(.system(size: 14, weight: .medium))
+                    .padding(.top, 2)
             }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .foregroundStyle(AppTheme.textTertiary)
-                .font(.system(size: 14, weight: .medium))
-                .padding(.top, 2)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppTheme.alertAmber.opacity(0.6), lineWidth: 1)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(AppTheme.alertAmber.opacity(0.08))
+                    )
+            )
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(AppTheme.alertAmber.opacity(0.6), lineWidth: 1)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(AppTheme.alertAmber.opacity(0.08))
-                )
-        )
+        .buttonStyle(.plain)
         .padding(.bottom, 20)
     }
 
@@ -195,26 +203,31 @@ private struct WeatherScrollContent: View {
     private var insightSection: some View {
         Group {
             if let rain = weather.rainWindow {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppTheme.textSecondary)
-                        Text("UpThere insight")
-                            .font(.system(size: 13, weight: .medium))
+                Button {
+                    onNavigateToInsights?()
+                } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppTheme.textSecondary)
+                            Text("UpThere insight")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                        Text(rain.title)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                        Text(rain.timeRange)
+                            .font(.system(size: 28, weight: .thin, design: .rounded))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .tracking(-0.5)
+                        Text(rain.detail)
+                            .font(.system(size: 14))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
-                    Text(rain.title)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(rain.timeRange)
-                        .font(.system(size: 28, weight: .thin, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .tracking(-0.5)
-                    Text(rain.detail)
-                        .font(.system(size: 14))
-                        .foregroundStyle(AppTheme.textSecondary)
                 }
+                .buttonStyle(.plain)
                 .padding(.bottom, 16)
             }
         }
