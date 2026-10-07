@@ -5,37 +5,82 @@ import Observation
 @MainActor
 public final class SettingsViewModel {
     // MARK: - Weather Units
-    public var temperatureUnit: TemperatureUnit = .celsius
-    public var windSpeedUnit: WindSpeedUnit = .kmh
-    public var precipitationUnit: PrecipitationUnit = .mm
+    public var temperatureUnit: TemperatureUnit {
+        didSet { UserDefaults.standard.set(temperatureUnit.rawValue, forKey: "settings.temperatureUnit") }
+    }
+    public var windSpeedUnit: WindSpeedUnit {
+        didSet { UserDefaults.standard.set(windSpeedUnit.rawValue, forKey: "settings.windSpeedUnit") }
+    }
+    public var precipitationUnit: PrecipitationUnit {
+        didSet { UserDefaults.standard.set(precipitationUnit.rawValue, forKey: "settings.precipitationUnit") }
+    }
 
     // MARK: - Notifications
     public var weatherChangesEnabled: Bool = true
     public var rainAlertsEnabled: Bool = true
-    public var severeWeatherAlertsEnabled: Bool = true
 
     // MARK: - Location
     public var currentLocationName: String = "Ghaziabad"
     public var locationPermission: String = "While Using"
 
     // MARK: - Appearance
-    public var appearanceMode: AppearanceMode = .light
+    public var appearanceMode: AppearanceMode {
+        didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
+    }
     public var textSize: TextSize = .default_
-
-    // MARK: - Prototype states
-    public var offlineWithCachedData: Bool = false
-    public var rightToLeftLayout: Bool = false
-    public var tabletMode: Bool = false
-    public var smallestDevice: Bool = false
 
     // MARK: - About
     public let weatherDataProvider = "Apple WeatherKit"
     public let appVersion = "1.0 (24)"
 
-    public init() {}
+    public init() {
+        if let rawTemp = UserDefaults.standard.string(forKey: "settings.temperatureUnit"),
+           let unit = TemperatureUnit(rawValue: rawTemp) {
+            self.temperatureUnit = unit
+        } else {
+            self.temperatureUnit = .celsius
+        }
+
+        if let rawWind = UserDefaults.standard.string(forKey: "settings.windSpeedUnit"),
+           let unit = WindSpeedUnit(rawValue: rawWind) {
+            self.windSpeedUnit = unit
+        } else {
+            self.windSpeedUnit = .kmh
+        }
+
+        if let rawPrecip = UserDefaults.standard.string(forKey: "settings.precipitationUnit"),
+           let unit = PrecipitationUnit(rawValue: rawPrecip) {
+            self.precipitationUnit = unit
+        } else {
+            self.precipitationUnit = .mm
+        }
+
+        if let rawApp = UserDefaults.standard.string(forKey: "settings.appearanceMode"),
+           let mode = AppearanceMode(rawValue: rawApp) {
+            self.appearanceMode = mode
+        } else {
+            self.appearanceMode = .light
+        }
+    }
+
+    // MARK: - Helpers
+
+    public func formatTemp(_ celsius: Double) -> String {
+        let val = temperatureUnit.convert(celsius)
+        return "\(Int(round(val)))°"
+    }
+
+    public func formatWind(_ kmh: Double) -> String {
+        let val = windSpeedUnit.convert(kmh: kmh)
+        return "\(Int(round(val))) \(windSpeedUnit.rawValue)"
+    }
 }
 
 // MARK: - Enums
+
+import Foundation
+import Observation
+import SwiftUI
 
 public enum TemperatureUnit: String, CaseIterable, Identifiable {
     case celsius = "Celsius (°C)"
@@ -49,6 +94,13 @@ public enum TemperatureUnit: String, CaseIterable, Identifiable {
         case .fahrenheit: return "°F"
         }
     }
+
+    public func convert(_ celsius: Double) -> Double {
+        switch self {
+        case .celsius: return celsius
+        case .fahrenheit: return (celsius * 9 / 5) + 32
+        }
+    }
 }
 
 public enum WindSpeedUnit: String, CaseIterable, Identifiable {
@@ -57,6 +109,14 @@ public enum WindSpeedUnit: String, CaseIterable, Identifiable {
     case ms = "m/s"
 
     public var id: String { rawValue }
+
+    public func convert(kmh: Double) -> Double {
+        switch self {
+        case .kmh: return kmh
+        case .mph: return kmh * 0.621371
+        case .ms: return kmh / 3.6
+        }
+    }
 }
 
 public enum PrecipitationUnit: String, CaseIterable, Identifiable {
@@ -64,6 +124,13 @@ public enum PrecipitationUnit: String, CaseIterable, Identifiable {
     case inches = "in"
 
     public var id: String { rawValue }
+
+    public func convert(mm: Double) -> Double {
+        switch self {
+        case .mm: return mm
+        case .inches: return mm * 0.0393701
+        }
+    }
 }
 
 public enum AppearanceMode: String, CaseIterable, Identifiable {
@@ -72,6 +139,14 @@ public enum AppearanceMode: String, CaseIterable, Identifiable {
     case dark = "Dark"
 
     public var id: String { rawValue }
+
+    public var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light:  return .light
+        case .dark:   return .dark
+        }
+    }
 }
 
 public enum TextSize: String, CaseIterable, Identifiable {

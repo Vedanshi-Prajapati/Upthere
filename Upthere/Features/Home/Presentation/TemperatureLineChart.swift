@@ -21,6 +21,9 @@ struct TemperatureLineChart: View {
         height - CGFloat((temp - minT) / tempRange) * height
     }
 
+    @State private var selectedIndex: Int?
+    @State private var isDragging = false
+
     var body: some View {
         VStack(spacing: 8) {
             GeometryReader { geo in
@@ -31,13 +34,92 @@ struct TemperatureLineChart: View {
                     dashedHighLine(w: w, h: h)
                     areaFill(w: w, h: h)
                     temperatureLine(w: w, h: h)
-                    peakDotAndLabel(w: w, h: h)
-                    nowDotAndLabel(w: w, h: h)
+
+                    if !isDragging {
+                        peakDotAndLabel(w: w, h: h)
+                        nowDotAndLabel(w: w, h: h)
+                    } else if let selectedIndex, hourly.indices.contains(selectedIndex) {
+                        scrubberOverlay(index: selectedIndex, w: w, h: h)
+                    }
                 }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard hourly.count > 1 else { return }
+                            let rawFraction = value.location.x / w
+                            let clamped = max(0, min(1, rawFraction))
+                            let newIndex = min(hourly.count - 1, max(0, Int(round(clamped * CGFloat(hourly.count - 1)))))
+                            
+                            if selectedIndex != newIndex {
+                                selectedIndex = newIndex
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            }
+                            isDragging = true
+                        }
+                        .onEnded { _ in
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                isDragging = false
+                                selectedIndex = nil
+                            }
+                        }
+                )
             }
             .frame(height: 95)
 
             xAxisLabels
+        }
+    }
+
+    private func scrubberOverlay(index: Int, w: CGFloat, h: CGFloat) -> some View {
+        let px = xPos(index, in: w)
+        let py = yPos(hourly[index].temperature, in: h)
+        let item = hourly[index]
+
+        return Group {
+            // Vertical cursor line
+            Path { p in
+                p.move(to: CGPoint(x: px, y: 0))
+                p.addLine(to: CGPoint(x: px, y: h))
+            }
+            .stroke(Color.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+
+            // Outer glow circle
+            Circle()
+                .fill(Color.white.opacity(0.25))
+                .frame(width: 16, height: 16)
+                .position(x: px, y: py)
+
+            // Inner solid dot
+            Circle()
+                .fill(Color.white)
+                .frame(width: 8, height: 8)
+                .position(x: px, y: py)
+
+            // Floating value badge
+            HStack(spacing: 4) {
+                Text(item.time)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.8))
+                Text("\(Int(item.temperature))°")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color(red: 18/255, green: 42/255, blue: 82/255).opacity(0.92))
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
+            )
+            .position(
+                x: min(max(px, 45), w - 45),
+                y: max(14, py - 22)
+            )
         }
     }
 
