@@ -57,8 +57,8 @@ public struct InsightsView: View {
                     .foregroundStyle(.white)
                 Spacer()
                 Text("Official source")
-                    .font(.system(size: 14))
-                    .foregroundStyle(AppTheme.accent)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color(red: 0.65, green: 0.85, blue: 1.0))
             }
             .padding(.horizontal, 20)
 
@@ -290,7 +290,6 @@ public struct InsightsView: View {
                 .padding(.top, 4)
 
                 OutdoorTimeline()
-                    .frame(height: 24)
                     .padding(.top, 4)
             }
         }
@@ -346,7 +345,6 @@ public struct InsightsView: View {
                     .lineSpacing(2)
 
                 CloudCoverChart()
-                    .frame(height: 80)
             }
         }
     }
@@ -536,28 +534,31 @@ private struct WindLineChart: View {
 
 private struct OutdoorTimeline: View {
     var body: some View {
-        GeometryReader { geo in
-            let totalHours: CGFloat = 16 // 6 AM to 10 PM
-            let startOffset: CGFloat = 2 / totalHours  // 8 AM
-            let endOffset: CGFloat = 5 / totalHours    // 11 AM
+        VStack(spacing: 8) {
+            GeometryReader { geo in
+                let totalHours: CGFloat = 16 // 6 AM to 10 PM
+                let startOffset: CGFloat = 2 / totalHours  // 8 AM
+                let endOffset: CGFloat = 5 / totalHours    // 11 AM
 
-            ZStack(alignment: .leading) {
-                // Background track
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
+                ZStack(alignment: .leading) {
+                    // Background track
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
 
-                // Highlighted window
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.green.opacity(0.6), Color.yellow.opacity(0.5)],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                    // Highlighted window
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.green.opacity(0.6), Color.yellow.opacity(0.5)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .frame(width: (endOffset - startOffset) * geo.size.width)
-                    .offset(x: startOffset * geo.size.width)
+                        .frame(width: (endOffset - startOffset) * geo.size.width)
+                        .offset(x: startOffset * geo.size.width)
+                }
             }
+            .frame(height: 18)
 
             // Time labels
             HStack {
@@ -577,7 +578,6 @@ private struct OutdoorTimeline: View {
                     .font(.system(size: 10))
                     .foregroundStyle(AppTheme.textTertiary)
             }
-            .offset(y: geo.size.height + 6)
         }
     }
 }
@@ -616,35 +616,42 @@ private struct CloudCoverChart: View {
     private let cloudPercent: [Double] = [30, 35, 40, 42, 45, 48, 55, 65, 75, 82, 88, 90, 88, 85, 80, 75]
 
     var body: some View {
-        GeometryReader { geo in
-            let maxVal: Double = 100
-            let barWidth = max(4, (geo.size.width - CGFloat(cloudPercent.count - 1) * 3) / CGFloat(cloudPercent.count))
+        VStack(spacing: 8) {
+            GeometryReader { geo in
+                let maxVal: Double = 100
+                let labelWidth: CGFloat = 28
+                let chartWidth = max(10, geo.size.width - labelWidth)
+                let barWidth = max(4, (chartWidth - CGFloat(cloudPercent.count - 1) * 3) / CGFloat(cloudPercent.count))
 
-            // Grid references
-            ForEach([0, 50, 100], id: \.self) { value in
-                let y = geo.size.height * (1 - CGFloat(value) / maxVal)
-                ZStack(alignment: .trailing) {
-                    Rectangle()
-                        .fill(Color.white.opacity(0.06))
-                        .frame(height: 1)
-                    Text("\(value)%")
-                        .font(.system(size: 9))
-                        .foregroundStyle(AppTheme.textTertiary)
-                        .offset(x: 28)
-                }
-                .offset(y: y)
-            }
+                ZStack(alignment: .topLeading) {
+                    // Grid references inside the chart width
+                    ForEach([0, 50, 100], id: \.self) { value in
+                        let y = geo.size.height * (1 - CGFloat(value) / maxVal)
+                        HStack(spacing: 4) {
+                            Rectangle()
+                                .fill(Color.white.opacity(0.06))
+                                .frame(height: 1)
+                            Text("\(value)%")
+                                .font(.system(size: 9))
+                                .foregroundStyle(AppTheme.textTertiary)
+                                .frame(width: labelWidth - 4, alignment: .trailing)
+                        }
+                        .offset(y: y - 5)
+                    }
 
-            HStack(alignment: .bottom, spacing: 3) {
-                ForEach(Array(cloudPercent.enumerated()), id: \.offset) { index, pct in
-                    let height = max(2, geo.size.height * (pct / maxVal))
-                    let isAfter2PM = index >= 6
-                    RoundedRectangle(cornerRadius: 2, style: .continuous)
-                        .fill(isAfter2PM ? Color.gray.opacity(0.7) : Color.gray.opacity(0.3))
-                        .frame(width: barWidth, height: height)
+                    HStack(alignment: .bottom, spacing: 3) {
+                        ForEach(Array(cloudPercent.enumerated()), id: \.offset) { index, pct in
+                            let height = max(2, geo.size.height * (pct / maxVal))
+                            let isAfter2PM = index >= 6
+                            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                .fill(isAfter2PM ? Color.gray.opacity(0.7) : Color.gray.opacity(0.3))
+                                .frame(width: barWidth, height: height)
+                        }
+                    }
+                    .frame(width: chartWidth, height: geo.size.height, alignment: .bottomLeading)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .frame(height: 64)
 
             // Time labels
             HStack(spacing: 0) {
@@ -658,7 +665,7 @@ private struct CloudCoverChart: View {
             }
             .font(.system(size: 10))
             .foregroundStyle(AppTheme.textTertiary)
-            .offset(y: geo.size.height + 8)
+            .padding(.trailing, 28)
         }
     }
 }

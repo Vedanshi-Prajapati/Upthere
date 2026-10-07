@@ -22,21 +22,22 @@ struct TemperatureLineChart: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
+        VStack(spacing: 8) {
+            GeometryReader { geo in
+                let w = geo.size.width
+                let h = geo.size.height
 
-            ZStack(alignment: .topLeading) {
-                dashedHighLine(w: w, h: h)
-                areaFill(w: w, h: h)
-                temperatureLine(w: w, h: h)
-                peakDotAndLabel(w: w, h: h)
-                nowDotAndLabel(w: w, h: h)
+                ZStack(alignment: .topLeading) {
+                    dashedHighLine(w: w, h: h)
+                    areaFill(w: w, h: h)
+                    temperatureLine(w: w, h: h)
+                    peakDotAndLabel(w: w, h: h)
+                    nowDotAndLabel(w: w, h: h)
+                }
             }
-            .overlay(alignment: .bottom) {
-                xAxisLabels
-                    .offset(y: 18)
-            }
+            .frame(height: 95)
+
+            xAxisLabels
         }
     }
 

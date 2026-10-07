@@ -84,12 +84,13 @@ public enum Tab: CaseIterable {
 
 private struct CustomTabBar: View {
     @Binding var selected: Tab
+    @Namespace private var tabAnimation
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Tab.allCases, id: \.self) { tab in
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
                         selected = tab
                     }
                 } label: {
@@ -104,35 +105,34 @@ private struct CustomTabBar: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
-                    .background(
-                        Group {
-                            if selected == tab {
-                                Circle()
-                                    .fill(Color.white.opacity(0.24))
-                                    .frame(width: 54, height: 54)
-                            }
+                    .background {
+                        if selected == tab {
+                            Capsule()
+                                .fill(Color.white.opacity(0.25))
+                                .matchedGeometryEffect(id: "selectedTabIndicator", in: tabAnimation)
+                                .padding(.horizontal, 3)
                         }
-                    )
+                    }
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .frame(height: 66)
-        .background(
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+        .frame(height: 64)
+        .background {
             Capsule()
-                .fill(Color(red: 22/255, green: 45/255, blue: 85/255).opacity(0.85))
-                .background(
+                .fill(.ultraThinMaterial)
+                .overlay(
                     Capsule()
-                        .fill(.ultraThinMaterial.opacity(0.6))
+                        .fill(Color(red: 18/255, green: 42/255, blue: 82/255).opacity(0.75))
                 )
                 .overlay(
                     Capsule()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.20), lineWidth: 1)
                 )
                 .shadow(color: Color.black.opacity(0.25), radius: 18, x: 0, y: 8)
-        )
+        }
     }
 }
 

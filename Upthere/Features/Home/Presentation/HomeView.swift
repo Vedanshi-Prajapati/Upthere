@@ -263,7 +263,6 @@ private struct WeatherScrollContent: View {
                         high: weather.highTemperature,
                         low: weather.lowTemperature
                     )
-                    .frame(height: 120)
 
                     Text(weather.warmingInsight)
                         .font(.system(size: 13))
@@ -281,11 +280,10 @@ private struct WeatherScrollContent: View {
 
     // MARK: Today Section
     private var todaySection: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Today")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(AppTheme.textPrimary)
-                .padding(.bottom, 14)
 
             let items: [(String, String, String, String)] = [
                 ("High / Low", "\(Int(weather.highTemperature))°/\(Int(weather.lowTemperature))°",
@@ -293,22 +291,24 @@ private struct WeatherScrollContent: View {
                 ("Sunrise", weather.sunrise, "Sunset", weather.sunset),
             ]
 
-            ForEach(Array(items.enumerated()), id: \.offset) { idx, row in
-                HStack(spacing: 0) {
-                    TodayCell(label: row.0, value: row.1)
-                    Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1)
-                    TodayCell(label: row.2, value: row.3)
-                }
-                if idx < items.count - 1 {
-                    Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1)
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.offset) { idx, row in
+                    HStack(spacing: 0) {
+                        TodayCell(label: row.0, value: row.1)
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1)
+                        TodayCell(label: row.2, value: row.3)
+                    }
+                    if idx < items.count - 1 {
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1)
+                    }
                 }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(AppTheme.cardGlass)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppTheme.cardGlass)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .padding(.bottom, 20)
     }
 }
