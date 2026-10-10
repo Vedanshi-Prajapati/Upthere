@@ -38,7 +38,7 @@ public struct SettingsView: View {
                             divider
                             settingsRow(
                                 icon: "wind",
-                                iconColor: .cyan,
+                                iconColor: Color(red: 45/255, green: 175/255, blue: 195/255),
                                 title: "Wind speed unit",
                                 value: viewModel.windSpeedUnit.rawValue
                             ) {
@@ -47,7 +47,7 @@ public struct SettingsView: View {
                             divider
                             settingsRow(
                                 icon: "drop.fill",
-                                iconColor: .blue,
+                                iconColor: Color(red: 0/255, green: 122/255, blue: 255/255),
                                 title: "Precipitation unit",
                                 value: viewModel.precipitationUnit.rawValue
                             ) {
@@ -64,14 +64,14 @@ public struct SettingsView: View {
                         VStack(spacing: 0) {
                             toggleRow(
                                 icon: "cloud.fill",
-                                iconColor: .gray,
+                                iconColor: Color(red: 50/255, green: 155/255, blue: 245/255),
                                 title: "Weather changes",
                                 isOn: $viewModel.weatherChangesEnabled
                             )
                             divider
                             toggleRow(
                                 icon: "umbrella.fill",
-                                iconColor: .purple,
+                                iconColor: Color(red: 88/255, green: 86/255, blue: 214/255),
                                 title: "Rain alerts",
                                 isOn: $viewModel.rainAlertsEnabled
                             )
@@ -86,14 +86,14 @@ public struct SettingsView: View {
                         VStack(spacing: 0) {
                             infoRow(
                                 icon: "location.fill",
-                                iconColor: .blue,
+                                iconColor: Color(red: 0/255, green: 122/255, blue: 255/255),
                                 title: "Current location",
                                 value: viewModel.currentLocationName
                             )
                             divider
                             settingsRow(
-                                icon: "location.circle.fill",
-                                iconColor: .green,
+                                icon: "location.fill",
+                                iconColor: Color(red: 52/255, green: 199/255, blue: 89/255),
                                 title: "Location permissions",
                                 value: viewModel.locationPermission
                             ) { }
@@ -153,12 +153,11 @@ public struct SettingsView: View {
                                 iconColor: .clear,
                                 title: "Apple Weather attribution",
                                 value: nil
-                            ) { }
-                            Text("Opens weatherkit.apple.com")
-                                .font(.system(size: 12))
-                                .foregroundStyle(AppTheme.textTertiary)
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 10)
+                            ) {
+                                if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
                             divider
                             infoRow(
                                 icon: nil,
@@ -226,6 +225,17 @@ public struct SettingsView: View {
             .padding(.bottom, 10)
     }
 
+    private func iconBadge(icon: String, color: Color) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(color)
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+        .frame(width: 28, height: 28)
+    }
+
     private func settingsRow(
         icon: String?,
         iconColor: Color,
@@ -236,14 +246,7 @@ public struct SettingsView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 if let icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 16))
-                        .foregroundStyle(iconColor)
-                        .frame(width: 28, height: 28)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(iconColor.opacity(0.15))
-                        )
+                    iconBadge(icon: icon, color: iconColor)
                 }
 
                 Text(title)
@@ -276,14 +279,7 @@ public struct SettingsView: View {
     ) -> some View {
         HStack(spacing: 12) {
             if let icon {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(iconColor.opacity(0.15))
-                    )
+                iconBadge(icon: icon, color: iconColor)
             }
 
             Text(title)
@@ -308,14 +304,7 @@ public struct SettingsView: View {
     ) -> some View {
         HStack(spacing: 12) {
             if let icon {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(iconColor.opacity(0.15))
-                    )
+                iconBadge(icon: icon, color: iconColor)
             }
 
             Text(title)
