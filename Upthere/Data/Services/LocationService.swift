@@ -54,6 +54,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     private let clManager: CLLocationManager
     private let geocoder = CLGeocoder()
     private var locationContinuations: [CheckedContinuation<CLLocation, Error>] = []
+    private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
     private var lastRequestTime: Date?
 
     public override init() {
@@ -61,7 +62,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         self.clManager = manager
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
-        self.isLocationServicesEnabled = CLLocationManager.locationServicesEnabled()
+        self.isLocationServicesEnabled = true
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyKilometer
@@ -69,7 +70,6 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     public func requestAuthorization() {
-        guard isLocationServicesEnabled else { return }
         if authorizationStatus == .notDetermined {
             clManager.requestWhenInUseAuthorization()
         }
@@ -88,8 +88,11 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     public func requestCurrentLocation(force: Bool = false) async throws -> CLLocation {
-        self.isLocationServicesEnabled = CLLocationManager.locationServicesEnabled()
-        guard isLocationServicesEnabled else {
+        let servicesEnabled = await Task.detached(priority: .userInitiated) {
+            CLLocationManager.locationServicesEnabled()
+        }.value
+        self.isLocationServicesEnabled = servicesEnabled
+        guard servicesEnabled else {
             throw LocationServiceError.servicesDisabled
         }
 
@@ -107,8 +110,25 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
             return location
         }
 
+        // If authorization is not determined yet, wait for user response via locationManagerDidChangeAuthorization
         if authorizationStatus == .notDetermined {
             requestAuthorization()
+            let newStatus = await withCheckedContinuation { continuation in
+                self.authContinuations.append(continuation)
+            }
+            #if os(iOS)
+            guard newStatus == .authorizedWhenInUse || newStatus == .authorizedAlways else {
+                throw LocationServiceError.permissionDenied
+            }
+            #else
+            guard newStatus == .authorizedAlways else {
+                throw LocationServiceError.permissionDenied
+            }
+            #endif
+        }
+
+        guard isAuthorized else {
+            throw LocationServiceError.permissionDenied
         }
 
         // Use a 3.5-second timeout to prevent infinite hangs indoors / no-GPS
@@ -260,9 +280,14 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
-        self.isLocationServicesEnabled = CLLocationManager.locationServicesEnabled()
+
+        let callbacks = self.authContinuations
+        self.authContinuations.removeAll()
+        for cont in callbacks {
+            cont.resume(returning: manager.authorizationStatus)
+        }
+
         if isAuthorized {
-            manager.startUpdatingLocation()
             manager.requestLocation()
         }
     }
