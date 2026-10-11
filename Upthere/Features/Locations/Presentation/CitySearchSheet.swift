@@ -1,15 +1,43 @@
 import SwiftUI
 
 /// City search sheet shown when the user taps "+" on the Locations screen.
-/// Displays a search bar and suggestion chips.
+/// Displays a search bar and searchable city database with coordinates.
 public struct CitySearchSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
 
-    private let suggestions = ["Pune", "Jaipur", "Chennai", "Kolkata"]
-    public var onCitySelected: (String) -> Void
+    public struct CityData: Hashable {
+        public let name: String
+        public let region: String
+        public let latitude: Double
+        public let longitude: Double
+    }
 
-    public init(onCitySelected: @escaping (String) -> Void) {
+    private let allCities: [CityData] = [
+        CityData(name: "Sydney", region: "New South Wales, Australia", latitude: -33.8688, longitude: 151.2093),
+        CityData(name: "Cupertino", region: "California, USA", latitude: 37.3230, longitude: -122.0322),
+        CityData(name: "San Francisco", region: "California, USA", latitude: 37.7749, longitude: -122.4194),
+        CityData(name: "New York", region: "New York, USA", latitude: 40.7128, longitude: -74.0060),
+        CityData(name: "London", region: "United Kingdom", latitude: 51.5074, longitude: -0.1278),
+        CityData(name: "Tokyo", region: "Japan", latitude: 35.6762, longitude: 139.6503),
+        CityData(name: "Paris", region: "France", latitude: 48.8566, longitude: 2.3522),
+        CityData(name: "Berlin", region: "Germany", latitude: 52.5200, longitude: 13.4050),
+        CityData(name: "Dubai", region: "United Arab Emirates", latitude: 25.2048, longitude: 55.2708),
+        CityData(name: "Singapore", region: "Singapore", latitude: 1.3521, longitude: 103.8198),
+        CityData(name: "Delhi", region: "National Capital Territory", latitude: 28.6139, longitude: 77.2090),
+        CityData(name: "Ghaziabad", region: "Uttar Pradesh", latitude: 28.6692, longitude: 77.4538),
+        CityData(name: "Mumbai", region: "Maharashtra", latitude: 19.0760, longitude: 72.8777),
+        CityData(name: "Bengaluru", region: "Karnataka", latitude: 12.9716, longitude: 77.5946),
+        CityData(name: "Pune", region: "Maharashtra", latitude: 18.5204, longitude: 73.8567),
+        CityData(name: "Jaipur", region: "Rajasthan", latitude: 26.9124, longitude: 75.7873),
+        CityData(name: "Chennai", region: "Tamil Nadu", latitude: 13.0827, longitude: 80.2707),
+        CityData(name: "Kolkata", region: "West Bengal", latitude: 22.5726, longitude: 88.3639),
+        CityData(name: "Hyderabad", region: "Telangana", latitude: 17.3850, longitude: 78.4867)
+    ]
+
+    public var onCitySelected: (SavedLocation) -> Void
+
+    public init(onCitySelected: @escaping (SavedLocation) -> Void) {
         self.onCitySelected = onCitySelected
     }
 
@@ -77,12 +105,11 @@ public struct CitySearchSheet: View {
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(filteredSuggestions, id: \.self) { city in
+                            ForEach(allCities.prefix(8), id: \.name) { city in
                                 Button {
-                                    onCitySelected(city)
-                                    dismiss()
+                                    select(city: city)
                                 } label: {
-                                    Text(city)
+                                    Text(city.name)
                                         .font(.system(size: 15, weight: .medium))
                                         .foregroundStyle(.primary)
                                         .padding(.horizontal, 18)
@@ -100,7 +127,7 @@ public struct CitySearchSheet: View {
                 }
             } else {
                 // Search results
-                let results = filteredSuggestions
+                let results = filteredCities
                 if results.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
@@ -112,30 +139,36 @@ public struct CitySearchSheet: View {
                     }
                     .padding(.top, 60)
                 } else {
-                    VStack(spacing: 0) {
-                        ForEach(results, id: \.self) { city in
-                            Button {
-                                onCitySelected(city)
-                                dismiss()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "mappin.circle.fill")
-                                        .font(.system(size: 22))
-                                        .foregroundStyle(AppTheme.accent)
-                                    Text(city)
-                                        .font(.system(size: 16))
-                                        .foregroundStyle(.white)
-                                    Spacer()
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(results, id: \.name) { city in
+                                Button {
+                                    select(city: city)
+                                } label: {
+                                    HStack(spacing: 14) {
+                                        Image(systemName: "mappin.circle.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundStyle(AppTheme.accent)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(city.name)
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundStyle(.white)
+                                            Text(city.region)
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(AppTheme.textSecondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 14)
                                 }
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 14)
-                            }
-                            .buttonStyle(.plain)
+                                .buttonStyle(.plain)
 
-                            Rectangle()
-                                .fill(Color.white.opacity(0.08))
-                                .frame(height: 1)
-                                .padding(.leading, 56)
+                                Rectangle()
+                                    .fill(Color.white.opacity(0.08))
+                                    .frame(height: 1)
+                                    .padding(.leading, 56)
+                            }
                         }
                     }
                 }
@@ -148,17 +181,23 @@ public struct CitySearchSheet: View {
         )
     }
 
-    private var filteredSuggestions: [String] {
-        let allCities = [
-            "Pune", "Jaipur", "Chennai", "Kolkata",
-            "Delhi", "Mumbai", "Bengaluru", "Hyderabad",
-            "Ahmedabad", "Lucknow", "Chandigarh", "Kochi"
-        ]
-        if searchText.isEmpty { return suggestions }
-        return allCities.filter { $0.localizedCaseInsensitiveContains(searchText) }
+    private func select(city: CityData) {
+        let saved = SavedLocation(
+            cityName: city.name,
+            regionName: city.region,
+            condition: "Saved",
+            isCurrentLocation: false,
+            latitude: city.latitude,
+            longitude: city.longitude
+        )
+        onCitySelected(saved)
+        dismiss()
     }
-}
 
-#Preview {
-    CitySearchSheet(onCitySelected: { _ in })
+    private var filteredCities: [CityData] {
+        allCities.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.region.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 }

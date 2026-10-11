@@ -30,7 +30,15 @@ public struct MainTabView: View {
                 case .forecast: ForecastView(viewModel: homeViewModel)
                 case .insights: InsightsView(viewModel: homeViewModel)
                 case .locations:
-                    LocationsView(onDone: { selectedTab = .home })
+                    LocationsView(
+                        onSelectLocation: { location in
+                            homeViewModel.selectLocation(location)
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                selectedTab = .home
+                            }
+                        },
+                        onDone: { selectedTab = .home }
+                    )
                 case .settings: SettingsView()
                 }
             }

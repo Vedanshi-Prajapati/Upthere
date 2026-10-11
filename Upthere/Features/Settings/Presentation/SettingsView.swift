@@ -97,8 +97,9 @@ public struct SettingsView: View {
                                 title: "Location permissions",
                                 value: viewModel.locationPermission
                             ) {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    UIApplication.shared.open(url)
+                                if let url = URL(string: UIApplication.openSettingsURLString),
+                                   UIApplication.shared.canOpenURL(url) {
+                                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
                                 }
                             }
                         }

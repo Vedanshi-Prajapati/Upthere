@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 public enum MockWeatherError: LocalizedError {
     case simulatedFailure
@@ -18,6 +19,46 @@ public final class MockWeatherRepository: WeatherRepository {
         try await Task.sleep(nanoseconds: 300_000_000)
         if shouldFail { throw MockWeatherError.simulatedFailure }
         return mockWeather ?? Self.makeGhaziabadWeather()
+    }
+
+    public func fetchWeather(
+        for location: CLLocation,
+        cityName: String,
+        locationSubtitle: String
+    ) async throws -> Weather {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        if shouldFail { throw MockWeatherError.simulatedFailure }
+        let base = mockWeather ?? Self.makeGhaziabadWeather()
+        return Weather(
+            cityName: cityName,
+            locationSubtitle: locationSubtitle.isEmpty ? base.locationSubtitle : locationSubtitle,
+            temperature: base.temperature,
+            condition: base.condition,
+            highTemperature: base.highTemperature,
+            lowTemperature: base.lowTemperature,
+            feelsLike: base.feelsLike,
+            weatherSymbolName: base.weatherSymbolName,
+            description: base.description,
+            humidity: base.humidity,
+            dewPoint: base.dewPoint,
+            windSpeed: base.windSpeed,
+            windDirection: base.windDirection,
+            precipitationChance: base.precipitationChance,
+            uvIndex: base.uvIndex,
+            uvDescription: base.uvDescription,
+            visibility: base.visibility,
+            visibilityDescription: base.visibilityDescription,
+            pressure: base.pressure,
+            pressureTrend: base.pressureTrend,
+            alert: base.alert,
+            hourlyForecast: base.hourlyForecast,
+            dailyForecast: base.dailyForecast,
+            rainWindow: base.rainWindow,
+            warmingInsight: base.warmingInsight,
+            chanceOfRain: base.chanceOfRain,
+            sunrise: base.sunrise,
+            sunset: base.sunset
+        )
     }
 
     public static func makeGhaziabadWeather() -> Weather {

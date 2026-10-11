@@ -21,7 +21,7 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         let subtitle: String
 
         do {
-            let userLoc = try await locationService.requestCurrentLocation()
+            let userLoc = try await locationService.requestCurrentLocation(force: true)
             location = userLoc
             let geo = await locationService.reverseGeocode(location: userLoc)
             cityName = geo.cityName
@@ -31,7 +31,7 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
             location = LocationService.defaultCoordinate
             let geo = await locationService.reverseGeocode(location: location)
             cityName = geo.cityName.isEmpty ? LocationService.defaultCityName : geo.cityName
-            subtitle = geo.subtitle
+            subtitle = "Location access disabled · Using default location"
         }
 
         return try await fetchWeather(for: location, cityName: cityName, locationSubtitle: subtitle)
@@ -229,7 +229,7 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         if let peak = hourly.prefix(8).max(by: { $0.temperature < $1.temperature }), peak.temperature > morning.temperature {
             let diff = Int((peak.temperature - morning.temperature).rounded())
             if diff >= 2 {
-                return "+\(diff)° warming from \(morning.time) to \(peak.time)"
+                return "+\(diff)° warmin g from \(morning.time) to \(peak.time)"
             }
         }
         return ""
