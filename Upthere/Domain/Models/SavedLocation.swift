@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SavedLocation: Equatable, Sendable, Identifiable {
+public struct SavedLocation: Equatable, Sendable, Identifiable, Codable {
     public let id: UUID
     public let cityName: String
     public let regionName: String
@@ -19,11 +19,21 @@ public struct SavedLocation: Equatable, Sendable, Identifiable {
         longitude: Double? = nil
     ) {
         self.id = id
-        self.cityName = cityName
-        self.regionName = regionName
+        self.cityName = cityName.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.regionName = regionName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.condition = condition
+
+        // Validate coordinate bounds
+        if let lat = latitude, let lon = longitude,
+           lat.isFinite, lon.isFinite,
+           lat >= -90.0, lat <= 90.0,
+           lon >= -180.0, lon <= 180.0 {
+            self.latitude = lat
+            self.longitude = lon
+        } else {
+            self.latitude = nil
+            self.longitude = nil
+        }
         self.isCurrentLocation = isCurrentLocation
-        self.latitude = latitude
-        self.longitude = longitude
     }
 }

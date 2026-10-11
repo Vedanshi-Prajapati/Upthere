@@ -14,9 +14,18 @@ public struct InsightsView: View {
             switch viewModel.state {
             case .idle, .loading:
                 ProgressView().tint(.white)
-            case .error(let msg):
-                Text(msg).foregroundStyle(AppTheme.textSecondary)
-            case .loaded(let weather):
+            case .error(let msg, _):
+                VStack(spacing: 8) {
+                    Text(msg)
+                        .foregroundStyle(AppTheme.textSecondary)
+                    Button("Retry") {
+                        Task { await viewModel.refreshWeather() }
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppTheme.accent)
+                }
+                .padding(.horizontal, 20)
+            case .loaded(let weather, _):
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
                         header
@@ -69,7 +78,7 @@ public struct InsightsView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 12))
                             .foregroundStyle(AppTheme.alertAmber)
-                        Text("Official weather alert")
+                        Text(alert.severity != nil ? "\(alert.severity?.capitalized ?? "") Weather Alert" : "Official weather alert")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -80,13 +89,16 @@ public struct InsightsView: View {
                         .foregroundStyle(.white)
 
                     // Description
-                    Text("Thunderstorm with lightning and gusty winds (30–40 km/h) likely at isolated places.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineSpacing(3)
+                    if let details = alert.details, !details.isEmpty {
+                        Text(details)
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineSpacing(3)
+                    }
 
                     // Source
-                    Text("Issued by India Meteorological Department · \(alert.validUntil)")
+                    let sourceText = alert.source.isEmpty ? "Meteorological Agency" : alert.source
+                    Text("Issued by \(sourceText) · \(alert.validUntil)")
                         .font(.system(size: 12))
                         .foregroundStyle(AppTheme.textTertiary)
                         .lineSpacing(2)
@@ -97,7 +109,7 @@ public struct InsightsView: View {
 
                     // Attribution link
                     HStack {
-                        Text("Read the Apple Weather attribution")
+                        Text("Read official attribution")
                             .font(.system(size: 14))
                             .foregroundStyle(.white)
                         Spacer()
@@ -105,6 +117,29 @@ public struct InsightsView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppTheme.textTertiary)
                     }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(AppTheme.cardGlass)
+                )
+                .padding(.horizontal, 20)
+            } else {
+                // No active alerts state card
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.green.opacity(0.85))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No active weather alerts")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                        Text("No severe weather warnings are currently in effect for this region.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                    Spacer()
                 }
                 .padding(16)
                 .background(
@@ -169,7 +204,8 @@ public struct InsightsView: View {
                     Text("Now")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text("\(Int(hourly.first?.precipitationProbability ?? 0 * 100))%")
+                    let precipProb = Int(((hourly.first?.precipitationProbability ?? 0.0) * 100).rounded())
+                    Text("\(precipProb)%")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                     Spacer()
@@ -194,21 +230,21 @@ public struct InsightsView: View {
     private func temperatureRisingCard(weather: Weather) -> some View {
         InsightCard {
             VStack(alignment: .leading, spacing: 8) {
-                InsightBadge(icon: "thermometer.sun.fill", color: .orange, label: "Temperature rising")
+                InsightBadge(icon: "thermometer.sun.fill", color: .orange, label: "Temperature range")
 
                 HStack(spacing: 4) {
-                    Text("\(Int(weather.lowTemperature))°")
+                    Text(WeatherFormatter.shared.temp(weather.lowTemperature))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.white)
                     Image(systemName: "arrow.right")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(AppTheme.textSecondary)
-                    Text("\(Int(weather.highTemperature))°")
+                    Text(WeatherFormatter.shared.temp(weather.highTemperature))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.white)
                 }
 
-                Text("Temperature increases significantly between 8 AM and 1 PM.")
+                Text("Expected diurnal variation from daily low to peak high.")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
@@ -217,7 +253,7 @@ public struct InsightsView: View {
                     Text("Now")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text("\(Int(weather.temperature))°")
+                    Text(WeatherFormatter.shared.temp(weather.temperature))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                 }
@@ -236,13 +272,15 @@ public struct InsightsView: View {
     private func strongestWindsCard(weather: Weather) -> some View {
         InsightCard {
             VStack(alignment: .leading, spacing: 8) {
-                InsightBadge(icon: "wind", color: .mint, label: "Strongest winds")
+                InsightBadge(icon: "wind", color: .mint, label: "Wind conditions")
 
-                Text("Around 4 PM")
+                Text("Current & Gusts")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                Text("Expected sustained wind: \(Int(weather.windSpeed + 14)) km/h\nGusts: up to \(Int(weather.windSpeed + 26)) km/h")
+                let currentWindStr = WeatherFormatter.shared.wind(weather.windSpeed)
+                let gustWindStr = WeatherFormatter.shared.wind(weather.windSpeed + 12)
+                Text("Expected sustained wind: \(currentWindStr)\nPeak gusts: up to \(gustWindStr)")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
@@ -251,7 +289,7 @@ public struct InsightsView: View {
                     Text("Now")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text("\(Int(weather.windSpeed)) km/h")
+                    Text(currentWindStr)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                 }

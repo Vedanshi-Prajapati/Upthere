@@ -10,15 +10,16 @@ struct TemperatureLineChart: View {
     private var temps: [Double] { hourly.map(\.temperature) }
     private var minT: Double { (temps.min() ?? low) - 1 }
     private var maxT: Double { (temps.max() ?? high) + 1 }
-    private var tempRange: Double { maxT - minT }
+    private var tempRange: Double { max(1.0, maxT - minT) }
 
     private func xPos(_ index: Int, in width: CGFloat) -> CGFloat {
-        guard hourly.count > 1 else { return 0 }
+        guard hourly.count > 1 else { return width / 2 }
         return CGFloat(index) / CGFloat(hourly.count - 1) * width
     }
 
     private func yPos(_ temp: Double, in height: CGFloat) -> CGFloat {
-        height - CGFloat((temp - minT) / tempRange) * height
+        let fraction = CGFloat((temp - minT) / tempRange)
+        return height - max(0, min(1, fraction)) * height
     }
 
     @State private var selectedIndex: Int?
@@ -26,57 +27,66 @@ struct TemperatureLineChart: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
+            if hourly.isEmpty {
+                Text("Hourly forecast unavailable")
+                    .font(.system(size: 13))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(height: 95)
+            } else {
+                GeometryReader { geo in
+                    let w = geo.size.width
+                    let h = geo.size.height
 
-                ZStack(alignment: .topLeading) {
-                    dashedHighLine(w: w, h: h)
-                    areaFill(w: w, h: h)
-                    temperatureLine(w: w, h: h)
+                    ZStack(alignment: .topLeading) {
+                        dashedHighLine(w: w, h: h)
+                        areaFill(w: w, h: h)
+                        temperatureLine(w: w, h: h)
 
-                    if !isDragging {
-                        peakDotAndLabel(w: w, h: h)
-                        nowDotAndLabel(w: w, h: h)
-                    } else if let selectedIndex, hourly.indices.contains(selectedIndex) {
-                        scrubberOverlay(index: selectedIndex, w: w, h: h)
+                        if !isDragging {
+                            peakDotAndLabel(w: w, h: h)
+                            nowDotAndLabel(w: w, h: h)
+                        } else if let selectedIndex, hourly.indices.contains(selectedIndex) {
+                            scrubberOverlay(index: selectedIndex, w: w, h: h)
+                        }
                     }
-                }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            guard hourly.count > 1 else { return }
-                            let rawFraction = value.location.x / w
-                            let clamped = max(0, min(1, rawFraction))
-                            let newIndex = min(hourly.count - 1, max(0, Int(round(clamped * CGFloat(hourly.count - 1)))))
-                            
-                            if selectedIndex != newIndex {
-                                selectedIndex = newIndex
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            }
-                            isDragging = true
-                        }
-                        .onEnded { _ in
-                            withAnimation(.easeOut(duration: 0.3)) {
-                                isDragging = false
-                                selectedIndex = nil
-                            }
-                        }
-                )
-            }
-            .frame(height: 95)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                guard hourly.count > 1 else { return }
+                                let rawFraction = value.location.x / w
+                                let clamped = max(0, min(1, rawFraction))
+                                let newIndex = min(hourly.count - 1, max(0, Int(round(clamped * CGFloat(hourly.count - 1)))))
 
-            xAxisLabels
+                                if selectedIndex != newIndex {
+                                    selectedIndex = newIndex
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                }
+                                isDragging = true
+                            }
+                            .onEnded { _ in
+                                withAnimation(.easeOut(duration: 0.3)) {
+                                    isDragging = false
+                                    selectedIndex = nil
+                                }
+                            }
+                    )
+                }
+                .frame(height: 95)
+
+                xAxisLabels
+            }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Temperature timeline chart showing \(hourly.count) hours")
     }
 
     private func scrubberOverlay(index: Int, w: CGFloat, h: CGFloat) -> some View {
         let px = xPos(index, in: w)
-        let py = yPos(hourly[index].temperature, in: h)
         let item = hourly[index]
+        let py = yPos(item.temperature, in: h)
 
-        return Group {
+        return ZStack {
             // Vertical cursor line
             Path { p in
                 p.move(to: CGPoint(x: px, y: 0))
@@ -101,7 +111,7 @@ struct TemperatureLineChart: View {
                 Text(item.time)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.8))
-                Text("\(Int(item.temperature))°")
+                Text(WeatherFormatter.shared.temp(item.temperature))
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.white)
             }
@@ -177,7 +187,7 @@ struct TemperatureLineChart: View {
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
-                Text("H \(Int(high))°")
+                Text("H \(WeatherFormatter.shared.temp(high))")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.white)
                     .position(x: min(max(px, 22), w - 22), y: py - 14)
@@ -193,7 +203,7 @@ struct TemperatureLineChart: View {
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
                     .position(x: xPos(0, in: w), y: py)
-                Text("Now \(Int(first.temperature))°")
+                Text("Now \(WeatherFormatter.shared.temp(first.temperature))")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.white)
                     .position(x: 34, y: py - 14)
@@ -203,12 +213,22 @@ struct TemperatureLineChart: View {
 
     private var xAxisLabels: some View {
         HStack {
-            ForEach(["Now", "9a", "12p", "3p", "8p"], id: \.self) { label in
+            ForEach(sampledLabels, id: \.self) { label in
                 Text(label)
                     .font(.system(size: 11))
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    private var sampledLabels: [String] {
+        guard !hourly.isEmpty else { return [] }
+        if hourly.count <= 5 {
+            return hourly.map(\.time)
+        }
+        let count = hourly.count
+        let indices = [0, count / 4, count / 2, 3 * count / 4, count - 1]
+        return indices.map { hourly[$0].time }
     }
 }

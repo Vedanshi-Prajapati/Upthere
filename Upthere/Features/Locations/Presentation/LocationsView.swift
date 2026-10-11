@@ -3,14 +3,7 @@ import SwiftUI
 public struct LocationsView: View {
     @State private var searchText = ""
     @State private var showCitySearch = false
-    @State private var locations: [SavedLocation] = [
-        SavedLocation(cityName: LocationService.shared.currentCityName, regionName: "Current GPS location", condition: "Live", isCurrentLocation: true),
-        SavedLocation(cityName: "Sydney",    regionName: "New South Wales, Australia", condition: "Sunny", isCurrentLocation: false, latitude: -33.8688, longitude: 151.2093),
-        SavedLocation(cityName: "Cupertino", regionName: "California, USA",            condition: "Clear", isCurrentLocation: false, latitude: 37.3230,  longitude: -122.0322),
-        SavedLocation(cityName: "London",    regionName: "United Kingdom",             condition: "Cloudy", isCurrentLocation: false, latitude: 51.5074,  longitude: -0.1278),
-        SavedLocation(cityName: "Tokyo",     regionName: "Japan",                      condition: "Rain",  isCurrentLocation: false, latitude: 35.6762,  longitude: 139.6503),
-        SavedLocation(cityName: "Delhi",     regionName: "National Capital Territory", condition: "Haze",  isCurrentLocation: false, latitude: 28.6139,  longitude: 77.2090),
-    ]
+    @ObservedObject private var locationsManager = SavedLocationsManager.shared
 
     public var onSelectLocation: ((SavedLocation) -> Void)?
     public var onDone: () -> Void
@@ -97,13 +90,13 @@ public struct LocationsView: View {
                                         onSelectLocation?(location)
                                     },
                                     onDelete: location.isCurrentLocation ? nil : {
-                                        locations.removeAll { $0.id == location.id }
+                                        locationsManager.removeLocation(id: location.id)
                                     },
                                     onMoveUp: index > 1 ? {
-                                        locations.swapAt(index, index - 1)
+                                        locationsManager.moveLocation(fromIndex: index, toIndex: index - 1)
                                     } : nil,
-                                    onMoveDown: (index < locations.count - 1 && index > 0) ? {
-                                        locations.swapAt(index, index + 1)
+                                    onMoveDown: (index < filteredLocations.count - 1 && index > 0) ? {
+                                        locationsManager.moveLocation(fromIndex: index, toIndex: index + 1)
                                     } : nil
                                 )
                                 if index < filteredLocations.count - 1 {
@@ -135,20 +128,15 @@ public struct LocationsView: View {
             }
         }
         .onAppear {
-            // Update the top location's city name to match current GPS location
-            if !locations.isEmpty && locations[0].isCurrentLocation {
-                locations[0] = SavedLocation(
-                    id: locations[0].id,
-                    cityName: LocationService.shared.currentCityName,
-                    regionName: LocationService.shared.currentSubtitle.isEmpty ? "Current GPS location" : LocationService.shared.currentSubtitle,
-                    condition: "Live",
-                    isCurrentLocation: true
-                )
-            }
+            let subtitle = LocationService.shared.currentSubtitle.isEmpty ? "Current GPS location" : LocationService.shared.currentSubtitle
+            locationsManager.updateCurrentLocationHeader(
+                cityName: LocationService.shared.currentCityName,
+                subtitle: subtitle
+            )
         }
         .sheet(isPresented: $showCitySearch) {
             CitySearchSheet { savedLocation in
-                locations.append(savedLocation)
+                locationsManager.addLocation(savedLocation)
                 onSelectLocation?(savedLocation)
             }
             .presentationDetents([.medium, .large])
@@ -157,8 +145,8 @@ public struct LocationsView: View {
     }
 
     private var filteredLocations: [SavedLocation] {
-        if searchText.isEmpty { return locations }
-        return locations.filter {
+        if searchText.isEmpty { return locationsManager.locations }
+        return locationsManager.locations.filter {
             $0.cityName.localizedCaseInsensitiveContains(searchText) ||
             $0.regionName.localizedCaseInsensitiveContains(searchText)
         }

@@ -17,16 +17,33 @@ public struct HomeView: View {
 
             switch viewModel.state {
             case .idle:
-                Color.clear.onAppear { Task { await viewModel.loadWeather() } }
+                Color.clear.task { await viewModel.loadWeather() }
 
-            case .loading:
-                LoadingSkeletonView()
-
-            case .loaded(let weather):
-                WeatherScrollContent(weather: weather, onNavigateToInsights: onNavigateToInsights)
+            case .loading(let isSilent):
+                if !isSilent {
+                    LoadingSkeletonView()
+                } else if let weather = viewModel.displayedWeather {
+                    WeatherScrollContent(
+                        weather: weather,
+                        banner: nil,
+                        onNavigateToInsights: onNavigateToInsights
+                    )
                     .refreshable {
                         await viewModel.refreshWeather()
                     }
+                } else {
+                    LoadingSkeletonView()
+                }
+
+            case .loaded(let weather, let banner):
+                WeatherScrollContent(
+                    weather: weather,
+                    banner: banner,
+                    onNavigateToInsights: onNavigateToInsights
+                )
+                .refreshable {
+                    await viewModel.refreshWeather()
+                }
 
             case .error:
                 NetworkErrorView {
@@ -42,15 +59,22 @@ public struct HomeView: View {
 
 private struct WeatherScrollContent: View {
     let weather: Weather
+    let banner: HomeViewModel.BannerType?
     var onNavigateToInsights: (() -> Void)?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
+                if let banner = banner {
+                    bannerView(banner)
+                }
+
                 headerSection
                 temperatureSection
                 descriptionSection
-                if let alert = weather.alert { alertSection(alert) }
+                if let alert = weather.alert, !alert.isExpired {
+                    alertSection(alert)
+                }
                 divider
                 metricsGrid
                 divider
@@ -63,6 +87,49 @@ private struct WeatherScrollContent: View {
             .padding(.horizontal, 20)
             .padding(.top, 62)
         }
+    }
+
+    // MARK: Banner
+    @ViewBuilder
+    private func bannerView(_ banner: HomeViewModel.BannerType) -> some View {
+        HStack(spacing: 8) {
+            switch banner {
+            case .cached(let time):
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("Showing cached forecast from \(time)")
+                    .font(.system(size: 13))
+            case .offline(let time):
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("Offline · Saved forecast from \(time)")
+                    .font(.system(size: 13))
+            case .refreshFailed(let reason):
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.alertAmber)
+                Text("Could not refresh: \(reason)")
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+            case .locationFallback(let reason):
+                Image(systemName: "location.slash.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.6, green: 0.8, blue: 1.0))
+                Text("Using default location (Ghaziabad) · \(reason)")
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+            }
+            Spacer()
+        }
+        .foregroundStyle(AppTheme.textSecondary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(0.12))
+        )
+        .padding(.bottom, 12)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Header
@@ -85,24 +152,30 @@ private struct WeatherScrollContent: View {
             Image(systemName: weather.weatherSymbolName)
                 .symbolRenderingMode(.multicolor)
                 .font(.system(size: 52))
+                .accessibilityLabel(Text(weather.condition))
         }
         .padding(.top, 8)
         .padding(.bottom, 20)
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: Temperature
     private var temperatureSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(Int(weather.temperature))°")
+            Text(WeatherFormatter.shared.temp(weather.temperature))
                 .font(.system(size: 88, weight: .thin, design: .rounded))
                 .foregroundStyle(AppTheme.textPrimary)
                 .tracking(-2)
+                .accessibilityLabel(Text("\(WeatherFormatter.shared.tempWithUnit(weather.temperature))"))
 
             Text(weather.condition)
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(AppTheme.textPrimary)
 
-            Text("Feels like \(Int(weather.feelsLike))° · H \(Int(weather.highTemperature))° L \(Int(weather.lowTemperature))°")
+            let feelsLike = WeatherFormatter.shared.temp(weather.feelsLike)
+            let high = WeatherFormatter.shared.temp(weather.highTemperature)
+            let low = WeatherFormatter.shared.temp(weather.lowTemperature)
+            Text("Feels like \(feelsLike) · H \(high) L \(low)")
                 .font(.system(size: 15))
                 .foregroundStyle(AppTheme.textSecondary)
         }
@@ -157,6 +230,8 @@ private struct WeatherScrollContent: View {
         }
         .buttonStyle(.plain)
         .padding(.bottom, 20)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Opens severe weather alert details")
     }
 
     // MARK: Divider
@@ -169,13 +244,18 @@ private struct WeatherScrollContent: View {
 
     // MARK: Metrics Grid
     private var metricsGrid: some View {
+        let dew = WeatherFormatter.shared.temp(weather.dewPoint)
+        let wind = WeatherFormatter.shared.wind(weather.windSpeed)
+        let vis = WeatherFormatter.shared.visibility(weather.visibility)
+        let press = WeatherFormatter.shared.pressure(weather.pressure)
+
         let rows: [(String, String, String, String, String, String)] = [
-            ("Humidity", "\(weather.humidity)%", "Dew point \(Int(weather.dewPoint))°",
-             "Wind", "\(Int(weather.windSpeed)) km/h", weather.windDirection),
+            ("Humidity", "\(weather.humidity)%", "Dew point \(dew)",
+             "Wind", wind, weather.windDirection),
             ("Precipitation", "\(weather.precipitationChance)%", "Next hour",
              "UV index", "\(weather.uvIndex)", weather.uvDescription),
-            ("Visibility", "\(Int(weather.visibility)) km", weather.visibilityDescription,
-             "Pressure", "\(Int(weather.pressure)) hPa", weather.pressureTrend),
+            ("Visibility", vis, weather.visibilityDescription,
+             "Pressure", press, weather.pressureTrend),
         ]
 
         return VStack(spacing: 0) {
@@ -232,6 +312,7 @@ private struct WeatherScrollContent: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.bottom, 16)
+                .accessibilityElement(children: .combine)
             }
         }
     }
@@ -267,9 +348,11 @@ private struct WeatherScrollContent: View {
                         low: weather.lowTemperature
                     )
 
-                    Text(weather.warmingInsight)
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.textSecondary)
+                    if !weather.warmingInsight.isEmpty {
+                        Text(weather.warmingInsight)
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
                 }
                 .padding(16)
                 .background(
@@ -288,23 +371,16 @@ private struct WeatherScrollContent: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(AppTheme.textPrimary)
 
-            let items: [(String, String, String, String)] = [
-                ("High / Low", "\(Int(weather.highTemperature))°/\(Int(weather.lowTemperature))°",
-                 "Chance of rain", "\(weather.chanceOfRain)%"),
-                ("Sunrise", weather.sunrise, "Sunset", weather.sunset),
-            ]
-
-            VStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.offset) { idx, row in
-                    HStack(spacing: 0) {
-                        TodayCell(label: row.0, value: row.1)
-                        Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1)
-                        TodayCell(label: row.2, value: row.3)
-                    }
-                    if idx < items.count - 1 {
-                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1)
-                    }
-                }
+            HStack(spacing: 0) {
+                TodayCell(label: "Chance of rain", value: "\(weather.chanceOfRain)%")
+                Rectangle()
+                    .fill(Color.white.opacity(0.10))
+                    .frame(width: 1, height: 60)
+                TodayCell(label: "Sunrise", value: weather.sunrise.isEmpty ? "6:00 AM" : weather.sunrise)
+                Rectangle()
+                    .fill(Color.white.opacity(0.10))
+                    .frame(width: 1, height: 60)
+                TodayCell(label: "Sunset", value: weather.sunset.isEmpty ? "6:00 PM" : weather.sunset)
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -312,7 +388,6 @@ private struct WeatherScrollContent: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .padding(.bottom, 20)
     }
 }
 
@@ -338,6 +413,7 @@ private struct MetricCell: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -359,6 +435,7 @@ private struct TodayCell: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -367,12 +444,11 @@ private struct TodayCell: View {
 private struct PrecipitationBarChart: View {
     let hourly: [HourlyWeather]
 
-    private let highlightRange: ClosedRange<Double> = 0.50...1.0
-
     var body: some View {
         VStack(spacing: 8) {
             GeometryReader { geo in
-                let barWidth: CGFloat = (geo.size.width - CGFloat(hourly.count - 1) * 3) / CGFloat(hourly.count)
+                let count = max(1, hourly.count)
+                let barWidth: CGFloat = max(2, (geo.size.width - CGFloat(count - 1) * 3) / CGFloat(count))
                 HStack(alignment: .bottom, spacing: 3) {
                     ForEach(hourly) { item in
                         let isHighlight = item.precipitationProbability >= 0.50
@@ -387,20 +463,24 @@ private struct PrecipitationBarChart: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
 
-            // Time labels for key slots
-            HStack {
-                Text("8 AM").frame(maxWidth: .infinity, alignment: .leading)
-                Text("12 PM").frame(maxWidth: .infinity, alignment: .center)
-                Text("6 PM").frame(maxWidth: .infinity, alignment: .center)
-                Text("11 PM").frame(maxWidth: .infinity, alignment: .trailing)
+            // Dynamic time labels for key slots
+            if let first = hourly.first, let last = hourly.last {
+                HStack {
+                    Text(first.time).frame(maxWidth: .infinity, alignment: .leading)
+                    if hourly.count > 4 {
+                        Text(hourly[hourly.count / 3].time).frame(maxWidth: .infinity, alignment: .center)
+                        Text(hourly[2 * hourly.count / 3].time).frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    Text(last.time).frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .font(.system(size: 11))
+                .foregroundStyle(AppTheme.textSecondary)
             }
-            .font(.system(size: 11))
-            .foregroundStyle(AppTheme.textSecondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Precipitation probability over the next \(hourly.count) hours")
     }
 }
-
-// TemperatureLineChart lives in TemperatureLineChart.swift
 
 // MARK: - Preview
 

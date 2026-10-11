@@ -1,23 +1,37 @@
 import Foundation
 import CoreLocation
 
-public enum MockWeatherError: LocalizedError {
-    case simulatedFailure
-    public var errorDescription: String? { "Failed to load weather data (simulated error)." }
-}
+public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
+    public var mockWeather: Weather?
+    public var errorToThrow: Error?
+    public var delayNanoseconds: UInt64
+    public private(set) var fetchCallCount: Int = 0
 
-public final class MockWeatherRepository: WeatherRepository {
-    private let mockWeather: Weather?
-    private let shouldFail: Bool
-
-    public init(mockWeather: Weather? = nil, shouldFail: Bool = false) {
+    public init(
+        mockWeather: Weather? = nil,
+        shouldFail: Bool = false,
+        errorToThrow: Error? = nil,
+        delayNanoseconds: UInt64 = 50_000_000
+    ) {
         self.mockWeather = mockWeather
-        self.shouldFail = shouldFail
+        self.delayNanoseconds = delayNanoseconds
+        if let error = errorToThrow {
+            self.errorToThrow = error
+        } else if shouldFail {
+            self.errorToThrow = WeatherServiceError.serverError(code: 500)
+        } else {
+            self.errorToThrow = nil
+        }
     }
 
     public func fetchCurrentWeather() async throws -> Weather {
-        try await Task.sleep(nanoseconds: 300_000_000)
-        if shouldFail { throw MockWeatherError.simulatedFailure }
+        fetchCallCount += 1
+        if delayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: delayNanoseconds)
+        }
+        if let err = errorToThrow {
+            throw err
+        }
         return mockWeather ?? Self.makeGhaziabadWeather()
     }
 
@@ -26,8 +40,13 @@ public final class MockWeatherRepository: WeatherRepository {
         cityName: String,
         locationSubtitle: String
     ) async throws -> Weather {
-        try await Task.sleep(nanoseconds: 300_000_000)
-        if shouldFail { throw MockWeatherError.simulatedFailure }
+        fetchCallCount += 1
+        if delayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: delayNanoseconds)
+        }
+        if let err = errorToThrow {
+            throw err
+        }
         let base = mockWeather ?? Self.makeGhaziabadWeather()
         return Weather(
             cityName: cityName,
@@ -57,7 +76,9 @@ public final class MockWeatherRepository: WeatherRepository {
             warmingInsight: base.warmingInsight,
             chanceOfRain: base.chanceOfRain,
             sunrise: base.sunrise,
-            sunset: base.sunset
+            sunset: base.sunset,
+            fetchTimestamp: base.fetchTimestamp,
+            isCached: base.isCached
         )
     }
 
@@ -96,7 +117,7 @@ public final class MockWeatherRepository: WeatherRepository {
 
         return Weather(
             cityName: "Ghaziabad",
-            locationSubtitle: "Current location · Tue 6 Oct, 8:00 AM",
+            locationSubtitle: "Default location · Uttar Pradesh, India",
             temperature: 28,
             condition: "Partly Cloudy",
             highTemperature: 35,

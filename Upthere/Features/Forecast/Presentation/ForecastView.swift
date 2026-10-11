@@ -17,25 +17,38 @@ public struct ForecastView: View {
             AppTheme.backgroundGradient.ignoresSafeArea()
 
             switch viewModel.state {
-            case .idle, .loading:
-                ProgressView().tint(.white)
-            case .error(let msg):
+            case .idle:
+                Color.clear.task { await viewModel.loadWeather() }
+            case .loading(let isSilent):
+                if !isSilent {
+                    ProgressView().tint(.white)
+                } else if let weather = viewModel.displayedWeather {
+                    forecastContent(weather: weather)
+                } else {
+                    ProgressView().tint(.white)
+                }
+            case .error(let msg, _):
                 Text(msg).foregroundStyle(AppTheme.textSecondary)
-            case .loaded(let weather):
-                VStack(spacing: 0) {
-                    header(weather: weather)
-                    picker
-                    
-                    ScrollView(.vertical, showsIndicators: false) {
-                        if selectedTab == .daily {
-                            dailyView(weather: weather)
-                        } else {
-                            hourlyView(weather: weather)
-                        }
-                    }
-                    .padding(.top, 16)
+                    .padding(.horizontal, 24)
+            case .loaded(let weather, _):
+                forecastContent(weather: weather)
+            }
+        }
+    }
+
+    private func forecastContent(weather: Weather) -> some View {
+        VStack(spacing: 0) {
+            header(weather: weather)
+            picker
+
+            ScrollView(.vertical, showsIndicators: false) {
+                if selectedTab == .daily {
+                    dailyView(weather: weather)
+                } else {
+                    hourlyView(weather: weather)
                 }
             }
+            .padding(.top, 16)
         }
     }
 
@@ -90,9 +103,18 @@ public struct ForecastView: View {
     }
 
     private func dailyView(weather: Weather) -> some View {
-        VStack(spacing: 0) {
+        let lows = weather.dailyForecast.map(\.lowTemperature)
+        let highs = weather.dailyForecast.map(\.highTemperature)
+        let overallMin = lows.min() ?? 10.0
+        let overallMax = highs.max() ?? 35.0
+
+        return VStack(spacing: 0) {
             ForEach(Array(weather.dailyForecast.enumerated()), id: \.offset) { index, daily in
-                DailyWeatherRow(daily: daily)
+                DailyWeatherRow(
+                    daily: daily,
+                    overallMin: overallMin,
+                    overallMax: overallMax
+                )
                 if index < weather.dailyForecast.count - 1 {
                     Rectangle()
                         .fill(Color.white.opacity(0.1))
@@ -112,7 +134,6 @@ public struct ForecastView: View {
 
     private func hourlyView(weather: Weather) -> some View {
         VStack(alignment: .leading, spacing: 24) {
-
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(weather.hourlyForecast) { hourly in
@@ -121,7 +142,6 @@ public struct ForecastView: View {
                 }
                 .padding(.horizontal, 20)
             }
-
 
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
@@ -135,76 +155,82 @@ public struct ForecastView: View {
                 }
                 .padding(.horizontal, 20)
 
+                let currentT = WeatherFormatter.shared.temp(weather.temperature)
+                let feelsT = WeatherFormatter.shared.temp(weather.feelsLike)
+                let precipVal = WeatherFormatter.shared.precipitation(0.0)
+
                 let rows: [(String, String, String, String, String, String)] = [
-                    ("Temperature", "\(Int(weather.temperature))°", "Feels like \(Int(weather.feelsLike))°",
-                     "Precipitation", "\(weather.precipitationChance)%", "0.0 mm"),
-                    ("Wind", "\(Int(weather.windSpeed)) km/h", "Gusts \(Int(weather.windSpeed + 5)) km/h",
-                     "UV index", "\(weather.uvIndex)", weather.uvDescription),
-                    ("Humidity", "\(weather.humidity)%", "",
-                     "Cloud cover", "30%", "")
+                    ("Temperature", currentT, "Feels like \(feelsT)",
+                     "Precipitation", "\(weather.precipitationChance)%", precipVal),
+                    ("Wind", WeatherFormatter.shared.wind(weather.windSpeed), weather.windDirection,
+                     "UV Index", "\(weather.uvIndex)", weather.uvDescription),
+                    ("Humidity", "\(weather.humidity)%", "Dew point \(WeatherFormatter.shared.temp(weather.dewPoint))",
+                     "Visibility", WeatherFormatter.shared.visibility(weather.visibility), weather.visibilityDescription),
                 ]
 
                 VStack(spacing: 0) {
                     ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                         HStack(alignment: .top, spacing: 0) {
-                            MetricCell(title: row.0, value: row.1, subtitle: row.2)
-                            Rectangle().fill(Color.white.opacity(0.10)).frame(width: 1)
-                            MetricCell(title: row.3, value: row.4, subtitle: row.5)
+                            forecastMetricCell(title: row.0, value: row.1, subtitle: row.2)
+                            Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1)
+                            forecastMetricCell(title: row.3, value: row.4, subtitle: row.5)
                         }
                         if rows.firstIndex(where: { $0.0 == row.0 }) != rows.count - 1 {
-                            Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1)
+                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                     }
                 }
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .fill(AppTheme.cardGlass)
                 )
                 .padding(.horizontal, 20)
             }
-            
-
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Precipitation")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 20)
-
-                VStack {
-
-                    Rectangle().fill(Color.clear).frame(height: 100)
-                }
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(AppTheme.cardGlass)
-                )
-                .padding(.horizontal, 20)
-            }
-
-            Spacer(minLength: 110)
+            .padding(.bottom, 110)
         }
     }
+
+    private func forecastMetricCell(title: String, value: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 13))
+                .foregroundStyle(AppTheme.textSecondary)
+            Text(value)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.white)
+            Text(subtitle)
+                .font(.system(size: 12))
+                .foregroundStyle(AppTheme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .combine)
+    }
 }
+
+// MARK: - Subviews
 
 private struct HourlyCard: View {
     let hourly: HourlyWeather
 
+    var isNow: Bool { hourly.time == "Now" }
+
     var body: some View {
-        let isNow = hourly.time.lowercased() == "now"
         VStack(spacing: 8) {
             Text(hourly.time)
-                .font(.system(size: 15, weight: isNow ? .semibold : .medium))
-                .foregroundStyle(.white)
-            
-            Image(systemName: "sun.max.fill")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
+
+            Image(systemName: "cloud.sun.fill")
                 .symbolRenderingMode(.multicolor)
                 .font(.system(size: 24))
                 .padding(.vertical, 4)
-            
-            Text("\(Int(hourly.temperature))°")
+
+            Text(WeatherFormatter.shared.temp(hourly.temperature))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.white)
-            
+
             Text("\(Int(hourly.precipitationProbability * 100))%")
                 .font(.system(size: 13))
                 .foregroundStyle(AppTheme.textSecondary)
@@ -220,11 +246,14 @@ private struct HourlyCard: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(isNow ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
     }
 }
 
 private struct DailyWeatherRow: View {
     let daily: DailyWeather
+    let overallMin: Double
+    let overallMax: Double
 
     var body: some View {
         HStack(spacing: 12) {
@@ -250,60 +279,35 @@ private struct DailyWeatherRow: View {
             }
             .frame(width: 40)
 
-            Text("\(Int(daily.lowTemperature))°")
+            Text(WeatherFormatter.shared.temp(daily.lowTemperature))
                 .font(.system(size: 17))
                 .foregroundStyle(.white)
-                .frame(width: 32, alignment: .trailing)
-
+                .frame(width: 38, alignment: .trailing)
 
             GeometryReader { geo in
-                let totalRange: Double = 40.0 - 15.0
-                let startPos = (daily.lowTemperature - 15.0) / totalRange
-                let widthPercent = (daily.highTemperature - daily.lowTemperature) / totalRange
-                
+                let totalRange = max(1.0, overallMax - overallMin)
+                let startPos = max(0.0, min(1.0, (daily.lowTemperature - overallMin) / totalRange))
+                let widthPercent = max(0.05, min(1.0, (daily.highTemperature - daily.lowTemperature) / totalRange))
+
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(Color.white.opacity(0.1))
-                    
+
                     Capsule()
                         .fill(LinearGradient(colors: [Color(red: 0.4, green: 0.7, blue: 1.0), Color.yellow], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(0, widthPercent * geo.size.width))
+                        .frame(width: max(4, widthPercent * geo.size.width))
                         .offset(x: max(0, startPos * geo.size.width))
                 }
             }
             .frame(height: 4)
 
-            Text("\(Int(daily.highTemperature))°")
+            Text(WeatherFormatter.shared.temp(daily.highTemperature))
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
-                .frame(width: 32, alignment: .trailing)
+                .frame(width: 38, alignment: .trailing)
         }
-        .padding(.vertical, 14)
         .padding(.horizontal, 16)
-    }
-}
-
-private struct MetricCell: View {
-    let title: String
-    let value: String
-    let subtitle: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 13))
-                .foregroundStyle(AppTheme.textSecondary)
-            Text(value)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.white)
-            if !subtitle.isEmpty {
-                Text(subtitle)
-                    .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 14)
-        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
     }
 }
