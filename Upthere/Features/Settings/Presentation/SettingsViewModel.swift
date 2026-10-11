@@ -20,8 +20,19 @@ public final class SettingsViewModel {
     public var rainAlertsEnabled: Bool = true
 
     // MARK: - Location
-    public var currentLocationName: String = "Ghaziabad"
-    public var locationPermission: String = "While Using"
+    public var currentLocationName: String {
+        LocationService.shared.currentCityName
+    }
+    public var locationPermission: String {
+        switch LocationService.shared.authorizationStatus {
+        case .authorizedWhenInUse: return "While Using"
+        case .authorizedAlways:    return "Always"
+        case .denied:              return "Denied"
+        case .restricted:          return "Restricted"
+        case .notDetermined:       return "Not Determined"
+        @unknown default:          return "Unknown"
+        }
+    }
 
     // MARK: - Appearance
     public var appearanceMode: AppearanceMode {

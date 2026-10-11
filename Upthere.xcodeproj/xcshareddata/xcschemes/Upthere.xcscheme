@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "ECB9CBFA30729A6200BD49AF"
                BuildableName = "Upthere.app"
+               BlueprintName = "Upthere"
                ReferencedContainer = "container:Upthere.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,6 +49,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "ECB9CBFA30729A6200BD49AF"
             BuildableName = "Upthere.app"
+            BlueprintName = "Upthere"
             ReferencedContainer = "container:Upthere.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,6 +66,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "ECB9CBFA30729A6200BD49AF"
             BuildableName = "Upthere.app"
+            BlueprintName = "Upthere"
             ReferencedContainer = "container:Upthere.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

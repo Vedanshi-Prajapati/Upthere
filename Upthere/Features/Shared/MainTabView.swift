@@ -3,7 +3,7 @@ import SwiftUI
 public struct MainTabView: View {
     @State private var selectedTab: Tab = .home
     @State private var showLocations = false
-    @State private var showPermission = true
+    @State private var showPermission = LocationService.shared.authorizationStatus == .notDetermined
 
     private let homeViewModel: HomeViewModel
 
@@ -45,8 +45,17 @@ public struct MainTabView: View {
         .ignoresSafeArea()
         .sheet(isPresented: $showPermission) {
             LocationPermissionView(
-                onAllow: { showPermission = false },
-                onSearchInstead: { showPermission = false }
+                onAllow: {
+                    showPermission = false
+                    LocationService.shared.requestAuthorization()
+                    Task {
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        await homeViewModel.loadWeather(force: true)
+                    }
+                },
+                onSearchInstead: {
+                    showPermission = false
+                }
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.hidden)

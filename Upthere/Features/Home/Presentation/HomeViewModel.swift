@@ -18,9 +18,9 @@ public final class HomeViewModel {
         self.getWeatherUseCase = getWeatherUseCase
     }
 
-    public func loadWeather() async {
+    public func loadWeather(force: Bool = false) async {
         if case .loading = state { return }
-        if case .loaded = state { return }
+        if !force, case .loaded = state { return }
         state = .loading
         do {
             let weather = try await getWeatherUseCase.execute()
@@ -28,5 +28,9 @@ public final class HomeViewModel {
         } catch {
             state = .error(error.localizedDescription)
         }
+    }
+
+    public func refreshWeather() async {
+        await loadWeather(force: true)
     }
 }

@@ -96,7 +96,11 @@ public struct SettingsView: View {
                                 iconColor: Color(red: 52/255, green: 199/255, blue: 89/255),
                                 title: "Location permissions",
                                 value: viewModel.locationPermission
-                            ) { }
+                            ) {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
                         }
                         .glassCard()
                         .padding(.horizontal, 20)

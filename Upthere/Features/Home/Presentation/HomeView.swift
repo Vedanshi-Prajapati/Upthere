@@ -24,10 +24,13 @@ public struct HomeView: View {
 
             case .loaded(let weather):
                 WeatherScrollContent(weather: weather, onNavigateToInsights: onNavigateToInsights)
+                    .refreshable {
+                        await viewModel.refreshWeather()
+                    }
 
             case .error:
                 NetworkErrorView {
-                    Task { await viewModel.loadWeather() }
+                    Task { await viewModel.loadWeather(force: true) }
                 }
             }
         }
