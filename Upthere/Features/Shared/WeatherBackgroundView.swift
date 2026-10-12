@@ -44,6 +44,7 @@ public enum WeatherVisualType: String, Equatable, Sendable {
 // MARK: - Unified Master Weather Background View
 
 public struct WeatherBackgroundView: View {
+    @Environment(\.colorScheme) private var colorScheme
     public let type: WeatherVisualType
 
     public init(type: WeatherVisualType) {
@@ -79,12 +80,19 @@ public struct WeatherBackgroundView: View {
                 RealisticCloudAtmosphere(isOvercast: false)
             }
 
-            // Layer 3: Ultra-delicate contrast veil to guarantee Liquid Glass clarity & contrast
+            // Layer 3: Contrast and mood adjustment based on active Dark/Light mode
+            if colorScheme == .dark {
+                // Dark mode deep atmospheric tint
+                Color.black.opacity(0.32)
+                    .allowsHitTesting(false)
+            }
+
+            // Layer 4: Delicate contrast veil to guarantee Liquid Glass clarity & contrast
             LinearGradient(
                 colors: [
-                    Color.black.opacity(0.10),
+                    Color.black.opacity(colorScheme == .dark ? 0.20 : 0.08),
                     Color.clear,
-                    Color.black.opacity(0.22)
+                    Color.black.opacity(colorScheme == .dark ? 0.35 : 0.20)
                 ],
                 startPoint: .top,
                 endPoint: .bottom

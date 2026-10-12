@@ -177,6 +177,15 @@ public enum TextSize: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 
+    public var scaleFactor: CGFloat {
+        switch self {
+        case .default_: return 1.0
+        case .large:    return 1.15
+        case .xl:       return 1.30
+        case .ax:       return 1.50
+        }
+    }
+
     public var dynamicTypeSize: DynamicTypeSize {
         switch self {
         case .default_: return .large

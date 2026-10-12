@@ -1,12 +1,14 @@
 import SwiftUI
 
 public struct SettingsView: View {
-    @State private var viewModel = SettingsViewModel()
+    @Bindable private var viewModel: SettingsViewModel
     @State private var showTemperatureUnit = false
     @State private var showWindSpeedUnit = false
     @State private var showPrecipitationUnit = false
 
-    public init() {}
+    public init(viewModel: SettingsViewModel? = nil) {
+        self.viewModel = viewModel ?? SettingsViewModel()
+    }
 
     public var body: some View {
         NavigationStack {

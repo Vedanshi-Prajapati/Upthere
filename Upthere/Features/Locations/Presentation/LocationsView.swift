@@ -50,6 +50,8 @@ public struct LocationsView: View {
                     )
                     .foregroundStyle(.white)
                     .font(.system(size: 16))
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled(true)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 13)

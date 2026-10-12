@@ -71,6 +71,8 @@ public struct CitySearchSheet: View {
                 .foregroundStyle(.white)
                 .font(.system(size: 16))
                 .submitLabel(.search)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled(true)
 
                 if !searchText.isEmpty {
                     Button {

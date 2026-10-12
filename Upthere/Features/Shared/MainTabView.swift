@@ -6,9 +6,11 @@ public struct MainTabView: View {
     @State private var showPermission = LocationService.shared.authorizationStatus == .notDetermined
 
     private let homeViewModel: HomeViewModel
+    private let settingsViewModel: SettingsViewModel
 
-    public init(homeViewModel: HomeViewModel) {
+    public init(homeViewModel: HomeViewModel, settingsViewModel: SettingsViewModel? = nil) {
         self.homeViewModel = homeViewModel
+        self.settingsViewModel = settingsViewModel ?? SettingsViewModel()
         // Suppress default tab bar appearance
         let appearance = UITabBarAppearance()
         appearance.configureWithTransparentBackground()
@@ -38,7 +40,7 @@ public struct MainTabView: View {
                             }
                         }
                     )
-                case .settings: SettingsView()
+                case .settings: SettingsView(viewModel: settingsViewModel)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

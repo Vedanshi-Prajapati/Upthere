@@ -5,21 +5,21 @@ struct UpthereApp: App {
     @State private var container = AppContainer()
     @State private var showSplash = true
 
-    @AppStorage("settings.appearanceMode") private var appearanceModeRaw: String = AppearanceMode.system.rawValue
-    @AppStorage("settings.textSize") private var textSizeRaw: String = TextSize.default_.rawValue
-
     private var selectedColorScheme: ColorScheme? {
-        AppearanceMode(rawValue: appearanceModeRaw)?.colorScheme
+        container.settingsViewModel.appearanceMode.colorScheme
     }
 
     private var selectedDynamicTypeSize: DynamicTypeSize {
-        (TextSize(rawValue: textSizeRaw) ?? .default_).dynamicTypeSize
+        container.settingsViewModel.textSize.dynamicTypeSize
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                MainTabView(homeViewModel: container.makeHomeViewModel())
+                MainTabView(
+                    homeViewModel: container.makeHomeViewModel(),
+                    settingsViewModel: container.settingsViewModel
+                )
                     .opacity(showSplash ? 0 : 1)
 
                 if showSplash {
