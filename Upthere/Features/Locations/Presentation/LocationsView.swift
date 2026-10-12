@@ -6,14 +6,11 @@ public struct LocationsView: View {
     @ObservedObject private var locationsManager = SavedLocationsManager.shared
 
     public var onSelectLocation: ((SavedLocation) -> Void)?
-    public var onDone: () -> Void
 
     public init(
-        onSelectLocation: ((SavedLocation) -> Void)? = nil,
-        onDone: @escaping () -> Void
+        onSelectLocation: ((SavedLocation) -> Void)? = nil
     ) {
         self.onSelectLocation = onSelectLocation
-        self.onDone = onDone
     }
 
     public var body: some View {
@@ -219,5 +216,5 @@ private struct LocationRow: View {
 }
 
 #Preview {
-    LocationsView(onDone: {})
+    LocationsView()
 }

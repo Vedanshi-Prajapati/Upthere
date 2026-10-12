@@ -36,8 +36,7 @@ public struct MainTabView: View {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
                                 selectedTab = .home
                             }
-                        },
-                        onDone: { selectedTab = .home }
+                        }
                     )
                 case .settings: SettingsView()
                 }
