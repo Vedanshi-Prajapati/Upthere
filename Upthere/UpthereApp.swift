@@ -5,6 +5,17 @@ struct UpthereApp: App {
     @State private var container = AppContainer()
     @State private var showSplash = true
 
+    @AppStorage("settings.appearanceMode") private var appearanceModeRaw: String = AppearanceMode.system.rawValue
+    @AppStorage("settings.textSize") private var textSizeRaw: String = TextSize.default_.rawValue
+
+    private var selectedColorScheme: ColorScheme? {
+        AppearanceMode(rawValue: appearanceModeRaw)?.colorScheme
+    }
+
+    private var selectedDynamicTypeSize: DynamicTypeSize {
+        (TextSize(rawValue: textSizeRaw) ?? .default_).dynamicTypeSize
+    }
+
     var body: some Scene {
         WindowGroup {
             ZStack {
@@ -16,6 +27,8 @@ struct UpthereApp: App {
                         .transition(.opacity)
                 }
             }
+            .preferredColorScheme(selectedColorScheme)
+            .dynamicTypeSize(selectedDynamicTypeSize)
             .animation(.easeInOut(duration: 0.5), value: showSplash)
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {

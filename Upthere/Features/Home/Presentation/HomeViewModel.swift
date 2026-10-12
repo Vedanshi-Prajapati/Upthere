@@ -30,13 +30,14 @@ public final class HomeViewModel {
 
     public init(
         getWeatherUseCase: any GetWeatherUseCaseProtocol,
-        cacheManager: WeatherCacheManager = .shared,
-        locationsManager: SavedLocationsManager = .shared
+        cacheManager: WeatherCacheManager? = nil,
+        locationsManager: SavedLocationsManager? = nil
     ) {
         self.getWeatherUseCase = getWeatherUseCase
-        self.cacheManager = cacheManager
-        self.locationsManager = locationsManager
-        self.selectedLocation = locationsManager.selectedLocation
+        self.cacheManager = cacheManager ?? .shared
+        let locManager = locationsManager ?? .shared
+        self.locationsManager = locManager
+        self.selectedLocation = locManager.selectedLocation
 
         // Listen for live GPS changes if on device location
         LocationService.shared.onLocationChanged = { [weak self] _ in

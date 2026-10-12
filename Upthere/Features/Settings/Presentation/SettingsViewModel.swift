@@ -38,7 +38,9 @@ public final class SettingsViewModel {
     public var appearanceMode: AppearanceMode {
         didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
     }
-    public var textSize: TextSize = .default_
+    public var textSize: TextSize {
+        didSet { UserDefaults.standard.set(textSize.rawValue, forKey: "settings.textSize") }
+    }
 
     // MARK: - About
     public let weatherDataProvider = "Apple WeatherKit"
@@ -70,7 +72,14 @@ public final class SettingsViewModel {
            let mode = AppearanceMode(rawValue: rawApp) {
             self.appearanceMode = mode
         } else {
-            self.appearanceMode = .light
+            self.appearanceMode = .system
+        }
+
+        if let rawText = UserDefaults.standard.string(forKey: "settings.textSize"),
+           let size = TextSize(rawValue: rawText) {
+            self.textSize = size
+        } else {
+            self.textSize = .default_
         }
     }
 
@@ -167,4 +176,13 @@ public enum TextSize: String, CaseIterable, Identifiable {
     case ax = "AX"
 
     public var id: String { rawValue }
+
+    public var dynamicTypeSize: DynamicTypeSize {
+        switch self {
+        case .default_: return .large
+        case .large:    return .xLarge
+        case .xl:       return .xxLarge
+        case .ax:       return .accessibility3
+        }
+    }
 }

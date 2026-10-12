@@ -9,13 +9,13 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
     private let cacheManager: WeatherCacheManager
 
     public init(
-        weatherService: WeatherService = .shared,
+        weatherService: WeatherService? = nil,
         locationService: LocationService? = nil,
-        cacheManager: WeatherCacheManager = .shared
+        cacheManager: WeatherCacheManager? = nil
     ) {
-        self.weatherService = weatherService
+        self.weatherService = weatherService ?? .shared
         self.locationService = locationService ?? .shared
-        self.cacheManager = cacheManager
+        self.cacheManager = cacheManager ?? .shared
     }
 
     public func fetchCurrentWeather() async throws -> Weather {
