@@ -86,15 +86,12 @@ public final class HomeViewModel {
 
         do {
             let weather: Weather
-            let locationKey: String
 
             if let selected = selectedLocation, let lat = selected.latitude, let lon = selected.longitude {
                 let clLocation = CLLocation(latitude: lat, longitude: lon)
                 let subtitle = selected.regionName.isEmpty ? "Selected city" : selected.regionName
-                locationKey = cacheManager.cacheKey(for: selected.cityName, coordinate: (lat, lon))
                 weather = try await getWeatherUseCase.execute(for: clLocation, cityName: selected.cityName, subtitle: subtitle)
             } else {
-                locationKey = cacheManager.cacheKey(for: LocationService.shared.currentCityName)
                 weather = try await getWeatherUseCase.execute()
             }
 
