@@ -18,21 +18,10 @@ public struct LocationsView: View {
 
     public var body: some View {
         ZStack {
-            AppTheme.backgroundGradient.ignoresSafeArea()
+            WeatherBackgroundView(type: .defaultTheme)
 
             VStack(spacing: 0) {
                 HStack {
-                    Button(action: onDone) {
-                        Text("Done")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(Color.white.opacity(0.14))
-                            )
-                    }
                     Spacer()
                     Button {
                         showCitySearch = true
@@ -113,18 +102,19 @@ public struct LocationsView: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .padding(.horizontal, 20)
+
+                        // Hint text — inside scroll so it's never clipped by the tab bar
+                        Text("Tap any city to switch to its live weather. Current location tracks GPS.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .multilineTextAlignment(.leading)
+                            .lineSpacing(3)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
+                            .padding(.bottom, 120) // clears custom tab bar (64pt) + 36pt bottom padding + buffer
                     }
                 }
-
-                Text("Tap any city to switch to its live weather. Current location tracks GPS.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .multilineTextAlignment(.leading)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 14)
-
-                Spacer()
             }
         }
         .onAppear {
@@ -186,9 +176,7 @@ private struct LocationRow: View {
                     Text(location.cityName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
-                    Text(location.isCurrentLocation
-                         ? "\(location.cityName) · \(location.condition)"
-                         : "\(location.regionName) · \(location.condition)")
+                    Text(subtitleText(for: location))
                         .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -218,6 +206,15 @@ private struct LocationRow: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 14)
+    }
+
+    private func subtitleText(for location: SavedLocation) -> String {
+        let hasCondition = !location.condition.isEmpty && location.condition != "--"
+        if location.isCurrentLocation {
+            return hasCondition ? "\(location.cityName) · \(location.condition)" : location.cityName
+        } else {
+            return hasCondition ? "\(location.regionName) · \(location.condition)" : location.regionName
+        }
     }
 }
 

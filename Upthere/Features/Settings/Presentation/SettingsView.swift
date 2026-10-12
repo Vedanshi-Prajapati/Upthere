@@ -11,7 +11,7 @@ public struct SettingsView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                AppTheme.backgroundGradient.ignoresSafeArea()
+                WeatherBackgroundView(type: .defaultTheme)
 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {

@@ -9,7 +9,10 @@ public struct InsightsView: View {
 
     public var body: some View {
         ZStack {
-            AppTheme.backgroundGradient.ignoresSafeArea()
+            WeatherBackgroundView(
+                condition: viewModel.displayedWeather?.condition,
+                symbolName: viewModel.displayedWeather?.weatherSymbolName
+            )
 
             switch viewModel.state {
             case .idle, .loading:
