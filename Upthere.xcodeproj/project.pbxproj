@@ -247,7 +247,8 @@
 				DEVELOPMENT_TEAM = KS9FU7AL7J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Upthere uses your location to provide local weather forecasts and insights.";
+				INFOPLIST_KEY_CFBundleDisplayName = UpThere;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UpThere uses your location to provide local weather forecasts and insights.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -282,7 +283,8 @@
 				DEVELOPMENT_TEAM = KS9FU7AL7J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Upthere uses your location to provide local weather forecasts and insights.";
+				INFOPLIST_KEY_CFBundleDisplayName = UpThere;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UpThere uses your location to provide local weather forecasts and insights.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

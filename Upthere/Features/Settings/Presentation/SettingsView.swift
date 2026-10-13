@@ -77,6 +77,13 @@ public struct SettingsView: View {
                                 title: "Rain alerts",
                                 isOn: $viewModel.rainAlertsEnabled
                             )
+                            divider
+                            toggleRow(
+                                icon: "exclamationmark.triangle.fill",
+                                iconColor: Color(red: 255/255, green: 59/255, blue: 48/255),
+                                title: "Severe weather alerts",
+                                isOn: $viewModel.severeAlertsEnabled
+                            )
                         }
                         .glassCard()
                         .padding(.horizontal, 20)
@@ -94,7 +101,7 @@ public struct SettingsView: View {
                             )
                             divider
                             settingsRow(
-                                icon: "location.fill",
+                                icon: "hand.raised.fill",
                                 iconColor: Color(red: 52/255, green: 199/255, blue: 89/255),
                                 title: "Location permissions",
                                 value: viewModel.locationPermission
@@ -149,15 +156,15 @@ public struct SettingsView: View {
 
                         VStack(spacing: 0) {
                             infoRow(
-                                icon: nil,
-                                iconColor: .clear,
+                                icon: "cloud.sun.fill",
+                                iconColor: Color(red: 50/255, green: 155/255, blue: 245/255),
                                 title: "Weather data provider",
                                 value: viewModel.weatherDataProvider
                             )
                             divider
                             settingsRow(
-                                icon: nil,
-                                iconColor: .clear,
+                                icon: "apple.logo",
+                                iconColor: Color.white.opacity(0.3),
                                 title: "Apple Weather attribution",
                                 value: nil
                             ) {
@@ -167,14 +174,32 @@ public struct SettingsView: View {
                             }
                             divider
                             infoRow(
-                                icon: nil,
-                                iconColor: .clear,
+                                icon: "info.circle.fill",
+                                iconColor: Color.gray,
                                 title: "App version",
                                 value: viewModel.appVersion
                             )
                         }
                         .glassCard()
                         .padding(.horizontal, 20)
+
+                        // Apple Weather footer mark & legal link
+                        VStack(spacing: 8) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "apple.logo")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text("Weather")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundStyle(Color.white.opacity(0.85))
+
+                            Link("Data Sources & Legal Notices", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.white.opacity(0.65))
+                                .underline()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 24)
                         .padding(.bottom, 120)
                     }
                 }
@@ -259,6 +284,8 @@ public struct SettingsView: View {
                 Text(title)
                     .font(.system(size: 16))
                     .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .layoutPriority(1)
 
                 Spacer()
 
@@ -266,6 +293,7 @@ public struct SettingsView: View {
                     Text(value)
                         .font(.system(size: 15))
                         .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
                 }
 
                 Image(systemName: "chevron.right")
@@ -292,6 +320,7 @@ public struct SettingsView: View {
             Text(title)
                 .font(.system(size: 16))
                 .foregroundStyle(.white)
+                .lineLimit(1)
 
             Spacer()
 
@@ -317,12 +346,15 @@ public struct SettingsView: View {
             Text(title)
                 .font(.system(size: 16))
                 .foregroundStyle(.white)
+                .lineLimit(1)
+                .layoutPriority(1)
 
             Spacer()
 
             Text(value)
                 .font(.system(size: 15))
                 .foregroundStyle(AppTheme.textSecondary)
+                .lineLimit(1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
@@ -350,7 +382,11 @@ public struct SettingsView: View {
                             Group {
                                 if selected == option {
                                     Capsule()
-                                        .fill(AppTheme.accent)
+                                        .fill(Color.white.opacity(0.24))
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(Color.white.opacity(0.25), lineWidth: 0.5)
+                                        )
                                 } else {
                                     Color.clear
                                 }

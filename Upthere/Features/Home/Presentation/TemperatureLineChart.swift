@@ -135,12 +135,24 @@ struct TemperatureLineChart: View {
 
     private func dashedHighLine(w: CGFloat, h: CGFloat) -> some View {
         let highY = yPos(high, in: h)
-        return Path { p in
-            p.move(to: CGPoint(x: 0, y: highY))
-            p.addLine(to: CGPoint(x: w, y: highY))
+        let lowY = yPos(low, in: h)
+        return Group {
+            // High reference guide line
+            Path { p in
+                p.move(to: CGPoint(x: 0, y: highY))
+                p.addLine(to: CGPoint(x: w, y: highY))
+            }
+            .stroke(Color.white.opacity(0.22),
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+            // Low reference guide line
+            Path { p in
+                p.move(to: CGPoint(x: 0, y: lowY))
+                p.addLine(to: CGPoint(x: w, y: lowY))
+            }
+            .stroke(Color.white.opacity(0.12),
+                    style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
         }
-        .stroke(Color.white.opacity(0.30),
-                style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
     }
 
     private func areaFill(w: CGFloat, h: CGFloat) -> some View {
@@ -175,7 +187,7 @@ struct TemperatureLineChart: View {
                 )
             }
         }
-        .stroke(Color.white, lineWidth: 2)
+        .stroke(Color.white, lineWidth: 2.75)
     }
 
     private func peakDotAndLabel(w: CGFloat, h: CGFloat) -> some View {
@@ -190,7 +202,7 @@ struct TemperatureLineChart: View {
                 Text("H \(WeatherFormatter.shared.temp(high))")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.white)
-                    .position(x: min(max(px, 22), w - 22), y: py - 14)
+                    .position(x: min(max(px, 24), w - 24), y: max(10, py - 14))
             }
         }
     }
@@ -199,6 +211,12 @@ struct TemperatureLineChart: View {
         Group {
             if let first = hourly.first {
                 let py = yPos(first.temperature, in: h)
+                let peakIdx = hourly.indices.max(by: { hourly[$0].temperature < hourly[$1].temperature }) ?? 0
+                let px = xPos(peakIdx, in: w)
+                // If peak is within 65px horizontally of Now, drop Now label below the line to avoid collision
+                let isCollidingWithPeak = abs(px - 34) < 65
+                let nowLabelY = isCollidingWithPeak ? min(h - 10, py + 15) : max(10, py - 14)
+
                 Circle()
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
@@ -206,7 +224,7 @@ struct TemperatureLineChart: View {
                 Text("Now \(WeatherFormatter.shared.temp(first.temperature))")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.white)
-                    .position(x: 34, y: py - 14)
+                    .position(x: 34, y: nowLabelY)
             }
         }
     }

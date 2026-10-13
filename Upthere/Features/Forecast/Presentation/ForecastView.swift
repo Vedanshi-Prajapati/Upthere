@@ -398,8 +398,9 @@ private struct HourlyCard: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
 
-            Image(systemName: "cloud.sun.fill")
+            Image(systemName: hourly.symbolName)
                 .symbolRenderingMode(.multicolor)
+                .foregroundStyle(.white)
                 .font(.system(size: 24))
                 .padding(.vertical, 4)
 
@@ -409,7 +410,9 @@ private struct HourlyCard: View {
 
             Text("\(Int(hourly.precipitationProbability * 100))%")
                 .font(.system(size: 13))
-                .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(hourly.precipitationProbability >= 0.3
+                    ? Color(red: 0.55, green: 0.85, blue: 1.0)
+                    : AppTheme.textSecondary)
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 12)
@@ -446,11 +449,12 @@ private struct DailyWeatherRow: View {
             VStack(spacing: 2) {
                 Image(systemName: daily.symbolName)
                     .symbolRenderingMode(.multicolor)
+                    .foregroundStyle(.white)
                     .font(.system(size: 20))
                 if daily.precipitationProbability > 0 {
                     Text("\(Int(daily.precipitationProbability * 100))%")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.4, green: 0.7, blue: 1.0))
+                        .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
                 }
             }
             .frame(width: 40)

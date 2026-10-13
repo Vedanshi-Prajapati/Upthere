@@ -4,6 +4,7 @@ public struct LocationsView: View {
     @State private var searchText = ""
     @State private var showCitySearch = false
     @ObservedObject private var locationsManager = SavedLocationsManager.shared
+    @State private var editMode: EditMode = .inactive
 
     public var onSelectLocation: ((SavedLocation) -> Void)?
 
@@ -18,29 +19,34 @@ public struct LocationsView: View {
             WeatherBackgroundView(type: .defaultTheme)
 
             VStack(spacing: 0) {
+                // Navigation bar area
                 HStack {
+                    Text("Locations")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(.white)
                     Spacer()
-                    Button {
-                        showCitySearch = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold))
+                    HStack(spacing: 16) {
+                        EditButton()
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Circle().fill(AppTheme.accent))
+                            .environment(\.editMode, $editMode)
+                        Button {
+                            showCitySearch = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 32, height: 32)
+                                .background(Circle().fill(AppTheme.accent))
+                        }
+                        .accessibilityLabel("Add city")
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 62)
-                .padding(.bottom, 16)
+                .padding(.bottom, 14)
 
-                Text("Locations")
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 14)
-
+                // Search bar
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(AppTheme.textSecondary)
@@ -52,6 +58,12 @@ public struct LocationsView: View {
                     .font(.system(size: 16))
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled(true)
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 13)
@@ -60,64 +72,78 @@ public struct LocationsView: View {
                         .fill(Color.white.opacity(0.12))
                 )
                 .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 8)
 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Saved")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 10)
-
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            ForEach(Array(filteredLocations.enumerated()), id: \.element.id) { index, location in
-                                LocationRow(
-                                    location: location,
-                                    onSelect: {
-                                        onSelectLocation?(location)
-                                    },
-                                    onDelete: location.isCurrentLocation ? nil : {
-                                        locationsManager.removeLocation(id: location.id)
-                                    },
-                                    onMoveUp: index > 1 ? {
-                                        locationsManager.moveLocation(fromIndex: index, toIndex: index - 1)
-                                    } : nil,
-                                    onMoveDown: (index < filteredLocations.count - 1 && index > 0) ? {
-                                        locationsManager.moveLocation(fromIndex: index, toIndex: index + 1)
-                                    } : nil
-                                )
-                                if index < filteredLocations.count - 1 {
-                                    Rectangle()
-                                        .fill(Color.white.opacity(0.10))
-                                        .frame(height: 1)
-                                        .padding(.leading, location.isCurrentLocation ? 16 : 56)
-                                }
+                // List
+                List {
+                    ForEach(filteredLocations) { location in
+                        LocationRowView(
+                            location: location,
+                            isSelected: locationsManager.selectedLocationId == location.id,
+                            onSelect: {
+                                onSelectLocation?(location)
+                            }
+                        )
+                        .listRowBackground(Color.clear)
+                        .listRowSeparatorTint(Color.white.opacity(0.12))
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    }
+                    .onDelete { indexSet in
+                        guard editMode == .active else { return }
+                        for idx in indexSet {
+                            let loc = filteredLocations[idx]
+                            if !loc.isCurrentLocation {
+                                locationsManager.removeLocation(id: loc.id)
                             }
                         }
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(AppTheme.cardGlass)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .padding(.horizontal, 20)
+                    }
+                    .onMove { from, to in
+                        guard editMode == .active else { return }
+                        // Guard: current location must stay at index 0
+                        for sourceIndex in from {
+                            if sourceIndex > 0 && to > 0 {
+                                locationsManager.moveLocation(fromIndex: sourceIndex, toIndex: to > sourceIndex ? to - 1 : to)
+                            }
+                        }
+                    }
 
-                        // Hint text — inside scroll so it's never clipped by the tab bar
-                        Text("Tap any city to switch to its live weather. Current location tracks GPS.")
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .multilineTextAlignment(.leading)
-                            .lineSpacing(3)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                            .padding(.bottom, 120) // clears custom tab bar (64pt) + 36pt bottom padding + buffer
+                    // Hint + legal
+                    Section {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Tap any city to switch to its live weather. Current location tracks GPS.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineSpacing(3)
+                            Button {
+                                if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                                    UIApplication.shared.open(url)
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "apple.logo")
+                                        .font(.system(size: 11))
+                                    Text("Weather · Apple Weather")
+                                        .font(.system(size: 12, weight: .medium))
+                                }
+                                .foregroundStyle(AppTheme.textSecondary)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Apple Weather legal attribution")
+                        }
+                        .padding(.vertical, 4)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .environment(\.editMode, $editMode)
             }
         }
         .onAppear {
-            let subtitle = LocationService.shared.currentSubtitle.isEmpty ? "Current GPS location" : LocationService.shared.currentSubtitle
+            let subtitle = LocationService.shared.currentSubtitle.isEmpty
+                ? "Current GPS location"
+                : LocationService.shared.currentSubtitle
             locationsManager.updateCurrentLocationHeader(
                 cityName: LocationService.shared.currentCityName,
                 subtitle: subtitle
@@ -142,77 +168,70 @@ public struct LocationsView: View {
     }
 }
 
-// MARK: - LocationRow
+// MARK: - LocationRowView
 
-private struct LocationRow: View {
+private struct LocationRowView: View {
     let location: SavedLocation
+    let isSelected: Bool
     var onSelect: (() -> Void)?
-    var onDelete: (() -> Void)?
-    var onMoveUp: (() -> Void)?
-    var onMoveDown: (() -> Void)?
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Delete / current indicator
-            if location.isCurrentLocation {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 40)
-            } else {
-                Button(action: { onDelete?() }) {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(.red)
+        Button(action: { onSelect?() }) {
+            HStack(spacing: 12) {
+                // Left indicator
+                if location.isCurrentLocation {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.accent)
+                        .frame(width: 22)
+                } else if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(AppTheme.accent)
+                        .frame(width: 22)
+                } else {
+                    Color.clear.frame(width: 22)
                 }
-                .frame(width: 40)
-                .disabled(onDelete == nil)
-            }
 
-            // City info (tappable to switch active city)
-            Button(action: { onSelect?() }) {
+                // City info
                 VStack(alignment: .leading, spacing: 3) {
                     Text(location.cityName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
-                    Text(subtitleText(for: location))
+                    Text(subtitleText)
                         .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .buttonStyle(.plain)
 
-            // Reorder / arrows (non-current only)
-            if !location.isCurrentLocation {
-                HStack(spacing: 16) {
-                    Button(action: { onMoveUp?() }) {
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(onMoveUp != nil ? AppTheme.textSecondary : AppTheme.textTertiary)
+                // Condition badge
+                if !location.condition.isEmpty && location.condition != "--" {
+                    HStack(spacing: 4) {
+                        if location.isCurrentLocation {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 6, height: 6)
+                        }
+                        Text(location.condition)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(location.isCurrentLocation
+                                ? Color.green
+                                : AppTheme.textSecondary)
                     }
-                    .disabled(onMoveUp == nil)
-
-                    Button(action: { onMoveDown?() }) {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(onMoveDown != nil ? AppTheme.textSecondary : AppTheme.textTertiary)
-                    }
-                    .disabled(onMoveDown == nil)
                 }
-                .padding(.trailing, 4)
             }
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 14)
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
     }
 
-    private func subtitleText(for location: SavedLocation) -> String {
-        let hasCondition = !location.condition.isEmpty && location.condition != "--"
+    private var subtitleText: String {
         if location.isCurrentLocation {
-            return hasCondition ? "\(location.cityName) · \(location.condition)" : location.cityName
+            return location.regionName.isEmpty ? "GPS location" : location.regionName
         } else {
-            return hasCondition ? "\(location.regionName) · \(location.condition)" : location.regionName
+            return location.regionName
         }
     }
 }

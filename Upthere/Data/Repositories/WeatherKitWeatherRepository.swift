@@ -123,13 +123,18 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         let uvCat = current.uvIndex.category.description
 
         let visKm = max(0.0, current.visibility.converted(to: .kilometers).value.rounded())
+        let condLower = current.condition.description.lowercased()
+        let isRainyCondition = condLower.contains("rain") || condLower.contains("drizzle") ||
+            condLower.contains("shower") || condLower.contains("storm")
         let visDesc: String
-        if visKm >= 10 {
-            visDesc = "Clear"
+        if isRainyCondition {
+            visDesc = "Reduced by precipitation"
+        } else if visKm >= 10 {
+            visDesc = "Good"
         } else if visKm >= 5 {
             visDesc = "Moderate"
         } else {
-            visDesc = "Haze"
+            visDesc = "Poor"
         }
 
         let pressHpa = max(800.0, min(1100.0, current.pressure.converted(to: .hectopascals).value.rounded()))
@@ -159,10 +164,21 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
             }
             let hourTemp = hour.temperature.converted(to: .celsius).value.rounded()
             let precipProb = max(0.0, min(1.0, hour.precipitationChance))
+            let hourSymbol = hour.symbolName.isEmpty ? "cloud.sun.fill" : hour.symbolName
+            let windSpeed = hour.wind.speed.converted(to: .kilometersPerHour).value.rounded()
+            let windGust = hour.wind.gust?.converted(to: .kilometersPerHour).value.rounded() ?? windSpeed
+            let uv = hour.uvIndex.value
+            let cloud = max(0.0, min(1.0, hour.cloudCover))
+
             return HourlyWeather(
                 time: timeString,
                 temperature: hourTemp,
-                precipitationProbability: precipProb
+                precipitationProbability: precipProb,
+                windSpeed: windSpeed,
+                windGust: windGust,
+                uvIndex: uv,
+                cloudCover: cloud,
+                symbolName: hourSymbol
             )
         }
 
@@ -228,10 +244,44 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         let sunsetStr = todayDaily?.sun.sunset.map { sunTimeFormatter.string(from: $0) } ?? "6:00 PM"
 
         let todayRainChance = max(0, min(100, Int(((todayDaily?.precipitationChance ?? 0) * 100).rounded())))
-        let conditionDesc = current.condition.description.isEmpty ? "Partly Cloudy" : current.condition.description
-        let weatherDesc = "\(conditionDesc) conditions today with a high of \(Int(highTemp))° and a low of \(Int(lowTemp))°."
-
         let safeSymbol = current.symbolName.isEmpty ? "cloud.sun.fill" : current.symbolName
+        let conditionDesc: String = {
+            let raw = current.condition.description.trimmingCharacters(in: .whitespacesAndNewlines)
+            if raw.isEmpty { return "Partly Cloudy" }
+            // If condition says "Mostly Clear" but the symbol is a cloud-sun/cloud-moon glyph, align to "Partly Cloudy"
+            if raw.lowercased() == "mostly clear" && safeSymbol.contains("cloud") {
+                return "Partly Cloudy"
+            }
+            return raw
+        }()
+        // Build a more specific, human-readable description
+        let weatherDesc: String = {
+            let condL = conditionDesc.lowercased()
+            let hi = Int(highTemp)
+            let lo = Int(lowTemp)
+            let wind = Int(windSpeedKmh)
+            var parts: [String] = []
+            if condL.contains("rain") || condL.contains("drizzle") || condL.contains("shower") {
+                parts.append("Expect rain today.")
+            } else if condL.contains("thunder") || condL.contains("storm") {
+                parts.append("Thunderstorms possible today.")
+            } else if condL.contains("snow") || condL.contains("flurr") || condL.contains("blizzard") {
+                parts.append("Snowfall expected today.")
+            } else if condL.contains("fog") || condL.contains("mist") || condL.contains("haze") {
+                parts.append("Reduced visibility from fog or haze.")
+            } else if condL.contains("overcast") || condL.contains("cloudy") {
+                parts.append("Overcast skies throughout the day.")
+            } else if condL.contains("partly") || condL.contains("cloud") {
+                parts.append("Some cloud cover throughout the day.")
+            } else {
+                parts.append("\(conditionDesc) conditions.")
+            }
+            parts.append("High of \(hi)°, low of \(lo)°.")
+            if wind >= 30 {
+                parts.append("Breezy at \(wind) km/h winds.")
+            }
+            return parts.joined(separator: " ")
+        }()
 
         return Weather(
             cityName: cityName,
@@ -278,10 +328,18 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
 
         let timeRange = firstRain.time == lastRain.time ? "Around \(firstRain.time)" : "\(firstRain.time) – \(lastRain.time)"
 
+        // Avoid "Most likely near Now" when the first slot is current
+        let peakLabel: String
+        if maxRain.time == "Now" {
+            peakLabel = "Rain is likely right now"
+        } else {
+            peakLabel = "Peak around \(maxRain.time)"
+        }
+
         return RainWindow(
-            title: "Rain likely later",
+            title: "Rain window",
             timeRange: timeRange,
-            detail: "Most likely near \(maxRain.time), at \(peakPercent)% probability."
+            detail: "\(peakLabel), \(peakPercent)% probability."
         )
     }
 

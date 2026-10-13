@@ -247,7 +247,7 @@ public struct InsightsView: View {
                         .foregroundStyle(.white)
                 }
 
-                Text("Expected diurnal variation from daily low to peak high.")
+                Text("Expected temperature swing from daily low to peak high.")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)

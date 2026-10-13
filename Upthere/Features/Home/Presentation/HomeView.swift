@@ -140,9 +140,14 @@ private struct WeatherScrollContent: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
+                    // Only show the location arrow when showing live GPS data (not a pinned city)
+                    if weather.locationSubtitle.contains("GPS") ||
+                       weather.locationSubtitle.isEmpty ||
+                       weather.locationSubtitle.contains("Current") {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                    }
                     Text(weather.cityName)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
@@ -154,6 +159,7 @@ private struct WeatherScrollContent: View {
             Spacer()
             Image(systemName: weather.weatherSymbolName)
                 .symbolRenderingMode(.multicolor)
+                .foregroundStyle(.white)
                 .font(.system(size: 52))
                 .accessibilityLabel(Text(weather.condition))
         }
@@ -316,6 +322,23 @@ private struct WeatherScrollContent: View {
                 .buttonStyle(.plain)
                 .padding(.bottom, 16)
                 .accessibilityElement(children: .combine)
+            } else if weather.precipitationChance < 10 {
+                // Dry day — show a clear summary instead of empty grey dashes
+                HStack(spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .symbolRenderingMode(.multicolor)
+                        .foregroundStyle(.white)
+                        .font(.system(size: 20))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No rain expected today")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                        Text("Enjoy the dry weather.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                }
+                .padding(.bottom, 16)
             }
         }
     }
@@ -374,7 +397,7 @@ private struct WeatherScrollContent: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(AppTheme.textPrimary)
 
-            HStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 TodayCell(label: "Chance of rain", value: "\(weather.chanceOfRain)%")
                 Rectangle()
                     .fill(Color.white.opacity(0.10))

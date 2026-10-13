@@ -84,22 +84,22 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
 
     public static func makeGhaziabadWeather() -> Weather {
         let hourly: [HourlyWeather] = [
-            .init(time: "Now",  temperature: 28, precipitationProbability: 0.05),
-            .init(time: "9a",   temperature: 29, precipitationProbability: 0.05),
-            .init(time: "10a",  temperature: 31, precipitationProbability: 0.07),
-            .init(time: "11a",  temperature: 32, precipitationProbability: 0.10),
-            .init(time: "12p",  temperature: 33, precipitationProbability: 0.15),
-            .init(time: "1p",   temperature: 35, precipitationProbability: 0.20),
-            .init(time: "2p",   temperature: 34, precipitationProbability: 0.30),
-            .init(time: "3p",   temperature: 33, precipitationProbability: 0.42),
-            .init(time: "4p",   temperature: 31, precipitationProbability: 0.65),
-            .init(time: "5p",   temperature: 30, precipitationProbability: 0.70),
-            .init(time: "6p",   temperature: 29, precipitationProbability: 0.60),
-            .init(time: "7p",   temperature: 28, precipitationProbability: 0.38),
-            .init(time: "8p",   temperature: 28, precipitationProbability: 0.18),
-            .init(time: "9p",   temperature: 27, precipitationProbability: 0.12),
-            .init(time: "10p",  temperature: 27, precipitationProbability: 0.08),
-            .init(time: "11p",  temperature: 26, precipitationProbability: 0.05),
+            .init(time: "Now",  temperature: 28, precipitationProbability: 0.05, windSpeed: 10, windGust: 14, uvIndex: 3, cloudCover: 0.30, symbolName: "cloud.sun.fill"),
+            .init(time: "9a",   temperature: 29, precipitationProbability: 0.05, windSpeed: 11, windGust: 15, uvIndex: 5, cloudCover: 0.35, symbolName: "sun.max.fill"),
+            .init(time: "10a",  temperature: 31, precipitationProbability: 0.07, windSpeed: 13, windGust: 17, uvIndex: 7, cloudCover: 0.40, symbolName: "sun.max.fill"),
+            .init(time: "11a",  temperature: 32, precipitationProbability: 0.10, windSpeed: 14, windGust: 18, uvIndex: 9, cloudCover: 0.45, symbolName: "cloud.sun.fill"),
+            .init(time: "12p",  temperature: 33, precipitationProbability: 0.15, windSpeed: 16, windGust: 22, uvIndex: 11, cloudCover: 0.50, symbolName: "cloud.sun.fill"),
+            .init(time: "1p",   temperature: 35, precipitationProbability: 0.20, windSpeed: 18, windGust: 25, uvIndex: 10, cloudCover: 0.60, symbolName: "cloud.fill"),
+            .init(time: "2p",   temperature: 34, precipitationProbability: 0.30, windSpeed: 20, windGust: 28, uvIndex: 8, cloudCover: 0.70, symbolName: "cloud.fill"),
+            .init(time: "3p",   temperature: 33, precipitationProbability: 0.42, windSpeed: 22, windGust: 30, uvIndex: 5, cloudCover: 0.85, symbolName: "cloud.bolt.rain.fill"),
+            .init(time: "4p",   temperature: 31, precipitationProbability: 0.65, windSpeed: 25, windGust: 35, uvIndex: 2, cloudCover: 0.95, symbolName: "cloud.rain.fill"),
+            .init(time: "5p",   temperature: 30, precipitationProbability: 0.70, windSpeed: 24, windGust: 34, uvIndex: 1, cloudCover: 0.95, symbolName: "cloud.rain.fill"),
+            .init(time: "6p",   temperature: 29, precipitationProbability: 0.60, windSpeed: 20, windGust: 28, uvIndex: 0, cloudCover: 0.90, symbolName: "cloud.rain.fill"),
+            .init(time: "7p",   temperature: 28, precipitationProbability: 0.38, windSpeed: 16, windGust: 22, uvIndex: 0, cloudCover: 0.80, symbolName: "cloud.drizzle.fill"),
+            .init(time: "8p",   temperature: 28, precipitationProbability: 0.18, windSpeed: 13, windGust: 18, uvIndex: 0, cloudCover: 0.70, symbolName: "cloud.fill"),
+            .init(time: "9p",   temperature: 27, precipitationProbability: 0.12, windSpeed: 11, windGust: 15, uvIndex: 0, cloudCover: 0.55, symbolName: "cloud.fill"),
+            .init(time: "10p",  temperature: 27, precipitationProbability: 0.08, windSpeed: 10, windGust: 13, uvIndex: 0, cloudCover: 0.40, symbolName: "moon.fill"),
+            .init(time: "11p",  temperature: 26, precipitationProbability: 0.05, windSpeed: 8,  windGust: 11, uvIndex: 0, cloudCover: 0.30, symbolName: "moon.stars.fill"),
         ]
 
         let daily: [DailyWeather] = [

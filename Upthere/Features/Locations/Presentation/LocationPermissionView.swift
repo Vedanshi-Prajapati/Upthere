@@ -53,11 +53,11 @@ public struct LocationPermissionView: View {
                         HStack(alignment: .top, spacing: 16) {
                             Image(systemName: icon)
                                 .font(.system(size: 16))
-                                .foregroundStyle(AppTheme.textSecondary)
+                                .foregroundStyle(Color.white.opacity(0.85))
                                 .frame(width: 22)
                             Text(text)
                                 .font(.system(size: 15))
-                                .foregroundStyle(AppTheme.textSecondary)
+                                .foregroundStyle(Color.white.opacity(0.85))
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -80,13 +80,17 @@ public struct LocationPermissionView: View {
 
                     Button(action: onSearchInstead) {
                         Text("Search for a location instead")
-                            .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
                             .background(
                                 RoundedRectangle(cornerRadius: 27, style: .continuous)
-                                    .fill(Color.white.opacity(0.12))
+                                    .fill(Color.white.opacity(0.18))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 27, style: .continuous)
+                                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                                    )
                             )
                     }
                 }

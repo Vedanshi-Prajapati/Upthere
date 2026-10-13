@@ -16,12 +16,25 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Notifications
-    public var weatherChangesEnabled: Bool = true
-    public var rainAlertsEnabled: Bool = true
+    public var weatherChangesEnabled: Bool = true {
+        didSet { UserDefaults.standard.set(weatherChangesEnabled, forKey: "settings.weatherChangesEnabled") }
+    }
+    public var rainAlertsEnabled: Bool = true {
+        didSet { UserDefaults.standard.set(rainAlertsEnabled, forKey: "settings.rainAlertsEnabled") }
+    }
+    public var severeAlertsEnabled: Bool = true {
+        didSet { UserDefaults.standard.set(severeAlertsEnabled, forKey: "settings.severeAlertsEnabled") }
+    }
 
     // MARK: - Location
     public var currentLocationName: String {
-        LocationService.shared.currentCityName
+        if LocationService.shared.isAuthorized {
+            return LocationService.shared.currentCityName
+        } else if LocationService.shared.authorizationStatus == .notDetermined {
+            return "Not Determined"
+        } else {
+            return "Permission Denied"
+        }
     }
     public var locationPermission: String {
         switch LocationService.shared.authorizationStatus {
@@ -80,6 +93,16 @@ public final class SettingsViewModel {
             self.textSize = size
         } else {
             self.textSize = .default_
+        }
+
+        if UserDefaults.standard.object(forKey: "settings.weatherChangesEnabled") != nil {
+            self.weatherChangesEnabled = UserDefaults.standard.bool(forKey: "settings.weatherChangesEnabled")
+        }
+        if UserDefaults.standard.object(forKey: "settings.rainAlertsEnabled") != nil {
+            self.rainAlertsEnabled = UserDefaults.standard.bool(forKey: "settings.rainAlertsEnabled")
+        }
+        if UserDefaults.standard.object(forKey: "settings.severeAlertsEnabled") != nil {
+            self.severeAlertsEnabled = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
         }
     }
 
