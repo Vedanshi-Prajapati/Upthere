@@ -7,6 +7,7 @@ public final class AppContainer {
     public let getWeatherUseCase: any GetWeatherUseCaseProtocol
 
     public let settingsViewModel: SettingsViewModel
+    public let homeViewModel: HomeViewModel
 
     public init(
         weatherRepository: (any WeatherRepository)? = nil,
@@ -16,11 +17,13 @@ public final class AppContainer {
         self.locationService = locService
         let repository = weatherRepository ?? WeatherKitWeatherRepository(locationService: locService)
         self.weatherRepository = repository
-        self.getWeatherUseCase = GetWeatherUseCase(repository: repository)
+        let useCase = GetWeatherUseCase(repository: repository)
+        self.getWeatherUseCase = useCase
         self.settingsViewModel = SettingsViewModel()
+        self.homeViewModel = HomeViewModel(getWeatherUseCase: useCase)
     }
 
     public func makeHomeViewModel() -> HomeViewModel {
-        HomeViewModel(getWeatherUseCase: getWeatherUseCase)
+        homeViewModel
     }
 }

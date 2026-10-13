@@ -176,13 +176,13 @@ public struct InsightsView: View {
             strongestWindsCard(weather: weather)
 
             // Best outdoor conditions
-            bestOutdoorCard()
+            bestOutdoorCard(weather: weather)
 
             // Highest UV
             highestUVCard(weather: weather)
 
             // Weather changing
-            weatherChangingCard()
+            weatherChangingCard(weather: weather)
         }
     }
 
@@ -197,7 +197,18 @@ public struct InsightsView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                Text("Highest precipitation probability around 5 PM (70%).")
+                let peakHour = hourly.max(by: { $0.precipitationProbability < $1.precipitationProbability })
+                let peakProb = Int(((peakHour?.precipitationProbability ?? 0.0) * 100).rounded())
+                let precipDetail: String = {
+                    guard let peak = peakHour, peakProb > 0 else { return rain.detail }
+                    if peak.time.lowercased() == "now" {
+                        return "Highest precipitation probability right now (\(peakProb)%)."
+                    } else {
+                        return "Highest precipitation probability around \(peak.time) (\(peakProb)%)."
+                    }
+                }()
+
+                Text(precipDetail)
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
@@ -273,7 +284,22 @@ public struct InsightsView: View {
     // MARK: - Strongest Winds Card
 
     private func strongestWindsCard(weather: Weather) -> some View {
-        InsightCard {
+        let hourly = weather.hourlyForecast
+        let currentWindStr = WeatherFormatter.shared.wind(weather.windSpeed)
+        let maxGustValue = hourly.map { max($0.windGust, $0.windSpeed) }.max() ?? weather.windSpeed
+        let gustWindStr = WeatherFormatter.shared.wind(maxGustValue)
+        let maxWindHour = hourly.max(by: { $0.windGust < $1.windGust })
+
+        let windDetail: String = {
+            if let maxHour = maxWindHour, maxGustValue > weather.windSpeed {
+                let timeStr = maxHour.time.lowercased() == "now" ? "right now" : "around \(maxHour.time)"
+                return "Expected sustained wind: \(currentWindStr)\nPeak gusts: up to \(gustWindStr) \(timeStr)"
+            } else {
+                return "Expected sustained wind: \(currentWindStr)\nPeak gusts: up to \(gustWindStr)"
+            }
+        }()
+
+        return InsightCard {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "wind", color: .mint, label: "Wind conditions")
 
@@ -281,9 +307,7 @@ public struct InsightsView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                let currentWindStr = WeatherFormatter.shared.wind(weather.windSpeed)
-                let gustWindStr = WeatherFormatter.shared.wind(weather.windSpeed + 12)
-                Text("Expected sustained wind: \(currentWindStr)\nPeak gusts: up to \(gustWindStr)")
+                Text(windDetail)
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
@@ -298,26 +322,95 @@ public struct InsightsView: View {
                 }
                 .padding(.top, 4)
 
-                WindLineChart()
+                WindLineChart(hourly: hourly)
                     .frame(height: 80)
 
-                HourlyTimeLabels(hourly: weather.hourlyForecast)
+                HourlyTimeLabels(hourly: hourly)
             }
         }
     }
 
     // MARK: - Best Outdoor Conditions Card
 
-    private func bestOutdoorCard() -> some View {
-        InsightCard {
+    private func calculateBestOutdoorWindow(from hourly: [HourlyWeather]) -> OutdoorWindow {
+        guard !hourly.isEmpty else {
+            return OutdoorWindow(timeRange: "Morning – Afternoon", detail: "Comfortable conditions expected today.", startIndex: 0, endIndex: 0, totalCount: 1)
+        }
+
+        func hourScore(_ hour: HourlyWeather) -> Double {
+            var s = 100.0
+            // Heavy penalty for rain
+            s -= hour.precipitationProbability * 80.0
+            // Comfort temp curve (optimal 18-25 C)
+            if hour.temperature < 18 {
+                s -= (18 - hour.temperature) * 3.0
+            } else if hour.temperature > 25 {
+                s -= (hour.temperature - 25) * 3.0
+            }
+            // Wind penalty
+            if hour.windSpeed > 20 {
+                s -= (hour.windSpeed - 20) * 1.5
+            }
+            // UV penalty
+            if hour.uvIndex > 7 {
+                s -= Double(hour.uvIndex - 7) * 4.0
+            }
+            return s
+        }
+
+        let windowSize = min(3, hourly.count)
+        var bestScore = -Double.infinity
+        var bestStart = 0
+        var bestEnd = max(0, windowSize - 1)
+
+        if hourly.count >= windowSize {
+            for i in 0...(hourly.count - windowSize) {
+                let slice = hourly[i..<(i + windowSize)]
+                let avg = slice.map { hourScore($0) }.reduce(0, +) / Double(windowSize)
+                if avg > bestScore {
+                    bestScore = avg
+                    bestStart = i
+                    bestEnd = i + windowSize - 1
+                }
+            }
+        }
+
+        let startHour = hourly[bestStart]
+        let endHour = hourly[bestEnd]
+        let timeRange = startHour.time == endHour.time ? "Around \(startHour.time)" : "\(startHour.time) – \(endHour.time)"
+
+        let windowSlice = hourly[bestStart...bestEnd]
+        let maxRain = Int(((windowSlice.map(\.precipitationProbability).max() ?? 0) * 100).rounded())
+        let avgWind = Int((windowSlice.map(\.windSpeed).reduce(0, +) / Double(windowSlice.count)).rounded())
+
+        let detail: String
+        if maxRain > 40 {
+            detail = "Most favorable available window despite \(maxRain)% rain chance and \(avgWind) km/h wind."
+        } else {
+            detail = "Comfortable temperature, low precipitation probability (\(maxRain)%) and moderate wind (\(avgWind) km/h)."
+        }
+
+        return OutdoorWindow(
+            timeRange: timeRange,
+            detail: detail,
+            startIndex: bestStart,
+            endIndex: bestEnd,
+            totalCount: hourly.count
+        )
+    }
+
+    private func bestOutdoorCard(weather: Weather) -> some View {
+        let outdoorWindow = calculateBestOutdoorWindow(from: weather.hourlyForecast)
+
+        return InsightCard {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "sun.max.fill", color: .yellow, label: "Best outdoor conditions")
 
-                Text("8:00 AM – 11:00 AM")
+                Text(outdoorWindow.timeRange)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                Text("Comfortable temperature, low precipitation probability and moderate wind.")
+                Text(outdoorWindow.detail)
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
@@ -330,7 +423,7 @@ public struct InsightsView: View {
                 }
                 .padding(.top, 4)
 
-                OutdoorTimeline()
+                OutdoorTimeline(hourly: weather.hourlyForecast, outdoorWindow: outdoorWindow)
                     .padding(.top, 4)
             }
         }
@@ -339,15 +432,33 @@ public struct InsightsView: View {
     // MARK: - Highest UV Card
 
     private func highestUVCard(weather: Weather) -> some View {
-        InsightCard {
+        let hourly = weather.hourlyForecast
+        let maxUVHour = hourly.max(by: { $0.uvIndex < $1.uvIndex })
+        let peakUV = max(weather.uvIndex, maxUVHour?.uvIndex ?? weather.uvIndex)
+
+        // Find hours where UV is within 1 of peak (and > 0)
+        let peakHours = hourly.filter { $0.uvIndex >= max(1, peakUV - 1) && $0.uvIndex > 0 }
+        let timeRange: String = {
+            if let first = peakHours.first, let last = peakHours.last {
+                return first.time == last.time ? "Around \(first.time)" : "\(first.time) – \(last.time)"
+            }
+            if let maxHour = maxUVHour {
+                return "Around \(maxHour.time)"
+            }
+            return "Midday"
+        }()
+
+        let uvCategoryStr = uvCategory(for: peakUV)
+
+        return InsightCard {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "sun.max.fill", color: .purple, label: "Highest UV")
 
-                Text("12 PM – 2 PM")
+                Text(timeRange)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                Text("UV Index: \(weather.uvIndex + 5) · High")
+                Text("UV Index: \(peakUV) · \(uvCategoryStr)")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
 
@@ -361,31 +472,110 @@ public struct InsightsView: View {
                 }
                 .padding(.top, 4)
 
-                UVBarChart()
+                UVBarChart(hourly: hourly)
                     .frame(height: 80)
 
-                HourlyTimeLabels(hourly: weather.hourlyForecast)
+                HourlyTimeLabels(hourly: hourly)
             }
+        }
+    }
+
+    private func uvCategory(for value: Int) -> String {
+        switch value {
+        case 0...2: return "Low"
+        case 3...5: return "Moderate"
+        case 6...7: return "High"
+        case 8...10: return "Very High"
+        default: return "Extreme"
         }
     }
 
     // MARK: - Weather Changing Card
 
-    private func weatherChangingCard() -> some View {
-        InsightCard {
+    private struct WeatherShiftInfo {
+        let heading: String
+        let description: String
+        let shiftIndex: Int
+    }
+
+    private func calculateWeatherShift(from hourly: [HourlyWeather], fallbackCondition: String) -> WeatherShiftInfo {
+        guard !hourly.isEmpty else {
+            return WeatherShiftInfo(heading: "Today", description: "Conditions expected to remain steady.", shiftIndex: 0)
+        }
+
+        let clouds = hourly.map { $0.cloudCover * 100 }
+        let minCloud = clouds.min() ?? 0
+        let maxCloud = clouds.max() ?? 0
+        let diff = maxCloud - minCloud
+
+        if diff >= 20 {
+            var maxChange = 0.0
+            var shiftIdx = 1
+            for i in 1..<hourly.count {
+                let change = abs(clouds[i] - clouds[i - 1])
+                if change > maxChange {
+                    maxChange = change
+                    shiftIdx = i
+                }
+            }
+
+            let hourName = hourly[shiftIdx].time
+            let heading = hourName.lowercased() == "now" ? "Starting now" : "After \(hourName)"
+
+            if (clouds.last ?? 0) >= (clouds.first ?? 0) {
+                let startPct = Int(clouds.first?.rounded() ?? 0)
+                let endPct = Int(maxCloud.rounded())
+                return WeatherShiftInfo(
+                    heading: heading,
+                    description: "Cloud cover increases significantly, from \(startPct)% to \(endPct)%.",
+                    shiftIndex: shiftIdx
+                )
+            } else {
+                let startPct = Int(maxCloud.rounded())
+                let endPct = Int(minCloud.rounded())
+                return WeatherShiftInfo(
+                    heading: heading,
+                    description: "Skies clearing as cloud cover drops from \(startPct)% to \(endPct)%.",
+                    shiftIndex: shiftIdx
+                )
+            }
+        }
+
+        // If cloud cover is steady, check precipitation or condition changes
+        if let firstRain = hourly.first(where: { $0.precipitationProbability >= 0.4 }) {
+            let pct = Int((firstRain.precipitationProbability * 100).rounded())
+            return WeatherShiftInfo(
+                heading: firstRain.time.lowercased() == "now" ? "Rain starting" : "Around \(firstRain.time)",
+                description: "Rain chances increase to \(pct)%.",
+                shiftIndex: hourly.firstIndex(where: { $0.id == firstRain.id }) ?? 0
+            )
+        }
+
+        let avgCloud = Int((clouds.reduce(0, +) / Double(clouds.count)).rounded())
+        return WeatherShiftInfo(
+            heading: "Steady conditions",
+            description: "Skies remain consistently \(fallbackCondition.lowercased()) with ~\(avgCloud)% cloud cover.",
+            shiftIndex: 0
+        )
+    }
+
+    private func weatherChangingCard(weather: Weather) -> some View {
+        let shiftInfo = calculateWeatherShift(from: weather.hourlyForecast, fallbackCondition: weather.condition)
+
+        return InsightCard {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "cloud.sun.fill", color: .teal, label: "Weather changing")
 
-                Text("After 2 PM")
+                Text(shiftInfo.heading)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(.white)
 
-                Text("Cloud cover increases significantly, from 45% to 90%.")
+                Text(shiftInfo.description)
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
-                CloudCoverChart()
+                CloudCoverChart(hourly: weather.hourlyForecast, shiftIndex: shiftInfo.shiftIndex)
             }
         }
     }
@@ -513,16 +703,18 @@ private struct TemperatureBarChart: View {
 }
 
 private struct WindLineChart: View {
-    // Synthetic wind data over 16 hours
-    private let windSpeeds: [Double] = [10, 11, 13, 15, 17, 19, 22, 24, 20, 16, 14, 12, 11, 10, 9, 8]
+    let hourly: [HourlyWeather]
 
     var body: some View {
         GeometryReader { geo in
-            let maxWind: Double = 40
-            let stepX = geo.size.width / CGFloat(windSpeeds.count - 1)
+            let windSpeeds: [Double] = hourly.isEmpty ? [10, 10] : hourly.map(\.windSpeed)
+            let peakWind = hourly.map { max($0.windSpeed, $0.windGust) }.max() ?? 20
+            let maxWind: Double = max(30, ((peakWind / 10).rounded(.up)) * 10)
+            let count = max(2, windSpeeds.count)
+            let stepX = geo.size.width / CGFloat(count - 1)
 
             // Grid lines
-            ForEach([0, 20, 40], id: \.self) { value in
+            ForEach([0, Int(maxWind / 2), Int(maxWind)], id: \.self) { value in
                 let y = geo.size.height * (1 - CGFloat(value) / maxWind)
                 HStack {
                     Spacer()
@@ -573,13 +765,25 @@ private struct WindLineChart: View {
     }
 }
 
+private struct OutdoorWindow {
+    let timeRange: String
+    let detail: String
+    let startIndex: Int
+    let endIndex: Int
+    let totalCount: Int
+}
+
 private struct OutdoorTimeline: View {
+    let hourly: [HourlyWeather]
+    let outdoorWindow: OutdoorWindow
+
     var body: some View {
         VStack(spacing: 8) {
             GeometryReader { geo in
-                let totalHours: CGFloat = 16 // 6 AM to 10 PM
-                let startOffset: CGFloat = 2 / totalHours  // 8 AM
-                let endOffset: CGFloat = 5 / totalHours    // 11 AM
+                let total = max(1, CGFloat(outdoorWindow.totalCount))
+                let startOffset: CGFloat = max(0, min(1, CGFloat(outdoorWindow.startIndex) / total))
+                let endOffset: CGFloat = max(0, min(1, CGFloat(outdoorWindow.endIndex + 1) / total))
+                let windowWidth = max(8, (endOffset - startOffset) * geo.size.width)
 
                 ZStack(alignment: .leading) {
                     // Background track
@@ -595,42 +799,28 @@ private struct OutdoorTimeline: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: (endOffset - startOffset) * geo.size.width)
+                        .frame(width: windowWidth)
                         .offset(x: startOffset * geo.size.width)
                 }
             }
             .frame(height: 18)
 
-            // Time labels
-            HStack {
-                Text("6 AM")
-                    .font(.system(size: 10))
-                    .foregroundStyle(AppTheme.textTertiary)
-                Spacer()
-                Text("12 PM")
-                    .font(.system(size: 10))
-                    .foregroundStyle(AppTheme.textTertiary)
-                Spacer()
-                Text("6 PM")
-                    .font(.system(size: 10))
-                    .foregroundStyle(AppTheme.textTertiary)
-                Spacer()
-                Text("11 PM")
-                    .font(.system(size: 10))
-                    .foregroundStyle(AppTheme.textTertiary)
+            // Time labels based on the actual hourly window
+            if !hourly.isEmpty {
+                HourlyTimeLabels(hourly: hourly)
             }
         }
     }
 }
 
 private struct UVBarChart: View {
-    // Synthetic UV data: 16 hours from 8a to 11p
-    private let uvValues: [Double] = [1, 2, 3, 5, 7, 9, 11, 12, 10, 7, 4, 2, 1, 0, 0, 0]
+    let hourly: [HourlyWeather]
 
     var body: some View {
         GeometryReader { geo in
-            let maxUV: Double = 14
-            let barWidth = max(4, (geo.size.width - CGFloat(uvValues.count - 1) * 3) / CGFloat(uvValues.count))
+            let uvValues: [Double] = hourly.isEmpty ? [0, 0] : hourly.map { Double($0.uvIndex) }
+            let maxUV: Double = max(11, (uvValues.max() ?? 10) + 1)
+            let barWidth = max(4, (geo.size.width - CGFloat(max(1, uvValues.count - 1)) * 3) / CGFloat(max(1, uvValues.count)))
 
             HStack(alignment: .bottom, spacing: 3) {
                 ForEach(Array(uvValues.enumerated()), id: \.offset) { _, uv in
@@ -653,8 +843,8 @@ private struct UVBarChart: View {
 }
 
 private struct CloudCoverChart: View {
-    // Synthetic cloud cover data: 16 hours
-    private let cloudPercent: [Double] = [30, 35, 40, 42, 45, 48, 55, 65, 75, 82, 88, 90, 88, 85, 80, 75]
+    let hourly: [HourlyWeather]
+    let shiftIndex: Int
 
     var body: some View {
         VStack(spacing: 8) {
@@ -662,7 +852,8 @@ private struct CloudCoverChart: View {
                 let maxVal: Double = 100
                 let labelWidth: CGFloat = 28
                 let chartWidth = max(10, geo.size.width - labelWidth)
-                let barWidth = max(4, (chartWidth - CGFloat(cloudPercent.count - 1) * 3) / CGFloat(cloudPercent.count))
+                let cloudPercent: [Double] = hourly.isEmpty ? [50, 50] : hourly.map { $0.cloudCover * 100 }
+                let barWidth = max(4, (chartWidth - CGFloat(max(1, cloudPercent.count - 1)) * 3) / CGFloat(max(1, cloudPercent.count)))
 
                 ZStack(alignment: .topLeading) {
                     // Grid references inside the chart width
@@ -683,9 +874,9 @@ private struct CloudCoverChart: View {
                     HStack(alignment: .bottom, spacing: 3) {
                         ForEach(Array(cloudPercent.enumerated()), id: \.offset) { index, pct in
                             let height = max(2, geo.size.height * (pct / maxVal))
-                            let isAfter2PM = index >= 6
+                            let isShifted = index >= shiftIndex && shiftIndex > 0
                             RoundedRectangle(cornerRadius: 2, style: .continuous)
-                                .fill(isAfter2PM ? Color.gray.opacity(0.7) : Color.gray.opacity(0.3))
+                                .fill(isShifted ? Color.teal.opacity(0.7) : Color.gray.opacity(0.4))
                                 .frame(width: barWidth, height: height)
                         }
                     }
@@ -694,19 +885,11 @@ private struct CloudCoverChart: View {
             }
             .frame(height: 64)
 
-            // Time labels
-            HStack(spacing: 0) {
-                Text("8 AM")
-                Spacer()
-                Text("12 PM")
-                Spacer()
-                Text("4 PM")
-                Spacer()
-                Text("11 PM")
+            // Dynamic time labels matching the actual hours
+            if !hourly.isEmpty {
+                HourlyTimeLabels(hourly: hourly)
+                    .padding(.trailing, 28)
             }
-            .font(.system(size: 10))
-            .foregroundStyle(AppTheme.textTertiary)
-            .padding(.trailing, 28)
         }
     }
 }

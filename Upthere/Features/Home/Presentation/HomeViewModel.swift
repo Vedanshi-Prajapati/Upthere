@@ -50,13 +50,14 @@ public final class HomeViewModel {
         }
     }
 
+    public private(set) var currentLoadedWeather: Weather?
+
     public var displayedWeather: Weather? {
         switch state {
         case .loaded(let weather, _):
             return weather
-        case .loading:
-            // Check if we have cached or previously loaded data to keep UI intact
-            return nil
+        case .loading(let isSilent):
+            return isSilent ? currentLoadedWeather : nil
         case .idle, .error:
             return nil
         }
@@ -65,6 +66,7 @@ public final class HomeViewModel {
     public func selectLocation(_ location: SavedLocation?) {
         locationsManager.selectLocation(location)
         self.selectedLocation = locationsManager.selectedLocation
+        self.currentLoadedWeather = nil
         Task {
             await loadWeather(force: true)
         }
@@ -74,6 +76,14 @@ public final class HomeViewModel {
         let isSilent = displayedWeather != nil
         if case .loading = state, !force {
             return
+        }
+
+        // Avoid refetching when switching tabs if we already have fresh loaded weather
+        if !force, case .loaded(let weather, _) = state {
+            let isFresh = Date().timeIntervalSince(weather.fetchTimestamp) < 1800
+            if isFresh {
+                return
+            }
         }
 
         let previousWeather = displayedWeather
@@ -106,6 +116,7 @@ public final class HomeViewModel {
                 banner = .locationFallback(reason: "Location permission disabled")
             }
 
+            self.currentLoadedWeather = weather
             state = .loaded(weather: weather, banner: banner)
         } catch {
             guard latestRequestId == requestId else { return }
@@ -115,6 +126,7 @@ public final class HomeViewModel {
 
             // If we have previous weather or valid cache, preserve it!
             if let prev = previousWeather {
+                self.currentLoadedWeather = prev
                 state = .loaded(weather: prev, banner: .refreshFailed(reason: errMsg))
                 return
             }
@@ -122,7 +134,9 @@ public final class HomeViewModel {
             let fallbackKey = cacheManager.cacheKey(for: selectedLocation?.cityName ?? LocationService.shared.currentCityName)
             if let cached = cacheManager.load(key: fallbackKey, allowExpired: true) {
                 let timeStr = formatTime(cached.savedAt)
-                state = .loaded(weather: cached.weather.asCached(isCached: true), banner: .offline(lastUpdated: timeStr))
+                let cachedWeather = cached.weather.asCached(isCached: true)
+                self.currentLoadedWeather = cachedWeather
+                state = .loaded(weather: cachedWeather, banner: .offline(lastUpdated: timeStr))
                 return
             }
 
