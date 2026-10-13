@@ -44,9 +44,17 @@ public struct CitySearchSheet: View {
         CityData(name: "Hyderabad", region: "Telangana, India", latitude: 17.3850, longitude: 78.4867)
     ]
 
+    public var condition: String?
+    public var symbolName: String?
     public var onCitySelected: (SavedLocation) -> Void
 
-    public init(onCitySelected: @escaping (SavedLocation) -> Void) {
+    public init(
+        condition: String? = nil,
+        symbolName: String? = nil,
+        onCitySelected: @escaping (SavedLocation) -> Void
+    ) {
+        self.condition = condition
+        self.symbolName = symbolName
         self.onCitySelected = onCitySelected
     }
 
@@ -192,7 +200,7 @@ public struct CitySearchSheet: View {
             Spacer()
         }
         .background(
-            AppTheme.backgroundGradient.ignoresSafeArea()
+            WeatherBackgroundView(condition: condition, symbolName: symbolName)
         )
     }
 

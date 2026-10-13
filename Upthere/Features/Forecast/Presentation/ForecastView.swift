@@ -353,9 +353,7 @@ private struct RainWindowCard: View {
                 Circle()
                     .fill(rainBlue.opacity(0.18))
                     .frame(width: 40, height: 40)
-                Image(systemName: "cloud.rain.fill")
-                    .symbolRenderingMode(.multicolor)
-                    .font(.system(size: 20))
+                WeatherIllustrationView(type: .rainy, size: 28, animated: true)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -398,11 +396,9 @@ private struct HourlyCard: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
 
-            Image(systemName: hourly.symbolName)
-                .symbolRenderingMode(.multicolor)
-                .foregroundStyle(.white)
-                .font(.system(size: 24))
-                .padding(.vertical, 4)
+            WeatherIllustrationView(condition: nil, symbolName: hourly.symbolName, size: 30, animated: false)
+                .frame(height: 30)
+                .padding(.vertical, 2)
 
             Text(WeatherFormatter.shared.temp(hourly.temperature))
                 .font(.system(size: 20, weight: .semibold))
@@ -447,10 +443,8 @@ private struct DailyWeatherRow: View {
             .frame(width: 60, alignment: .leading)
 
             VStack(spacing: 2) {
-                Image(systemName: daily.symbolName)
-                    .symbolRenderingMode(.multicolor)
-                    .foregroundStyle(.white)
-                    .font(.system(size: 20))
+                WeatherIllustrationView(condition: nil, symbolName: daily.symbolName, size: 26, animated: false)
+                    .frame(height: 26)
                 if daily.precipitationProbability > 0 {
                     Text("\(Int(daily.precipitationProbability * 100))%")
                         .font(.system(size: 10, weight: .semibold))

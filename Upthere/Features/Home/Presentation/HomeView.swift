@@ -137,7 +137,7 @@ private struct WeatherScrollContent: View {
 
     // MARK: Header
     private var headerSection: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     // Only show the location arrow when showing live GPS data (not a pinned city)
@@ -149,7 +149,7 @@ private struct WeatherScrollContent: View {
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                     Text(weather.cityName)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                 }
                 Text(weather.locationSubtitle)
@@ -157,36 +157,43 @@ private struct WeatherScrollContent: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
             Spacer()
-            Image(systemName: weather.weatherSymbolName)
-                .symbolRenderingMode(.multicolor)
-                .foregroundStyle(.white)
-                .font(.system(size: 52))
-                .accessibilityLabel(Text(weather.condition))
         }
         .padding(.top, 8)
-        .padding(.bottom, 20)
+        .padding(.bottom, 12)
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: Temperature
+    // MARK: Hero Weather Display (Temperature & Prominent Illustration Graphic)
     private var temperatureSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(WeatherFormatter.shared.temp(weather.temperature))
-                .font(.system(size: 88, weight: .thin, design: .rounded))
-                .foregroundStyle(AppTheme.textPrimary)
-                .tracking(-2)
-                .accessibilityLabel(Text("\(WeatherFormatter.shared.tempWithUnit(weather.temperature))"))
+        HStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(WeatherFormatter.shared.temp(weather.temperature))
+                    .font(.system(size: 88, weight: .thin, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .tracking(-2)
+                    .accessibilityLabel(Text("\(WeatherFormatter.shared.tempWithUnit(weather.temperature))"))
 
-            Text(weather.condition)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(AppTheme.textPrimary)
+                Text(weather.condition)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
 
-            let feelsLike = WeatherFormatter.shared.temp(weather.feelsLike)
-            let high = WeatherFormatter.shared.temp(weather.highTemperature)
-            let low = WeatherFormatter.shared.temp(weather.lowTemperature)
-            Text("Feels like \(feelsLike) · H \(high) L \(low)")
-                .font(.system(size: 15))
-                .foregroundStyle(AppTheme.textSecondary)
+                let feelsLike = WeatherFormatter.shared.temp(weather.feelsLike)
+                let high = WeatherFormatter.shared.temp(weather.highTemperature)
+                let low = WeatherFormatter.shared.temp(weather.lowTemperature)
+                Text("Feels like \(feelsLike) · H \(high) L \(low)")
+                    .font(.system(size: 15))
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+
+            Spacer(minLength: 8)
+
+            WeatherIllustrationView(
+                condition: weather.condition,
+                symbolName: weather.weatherSymbolName,
+                size: 104,
+                animated: true
+            )
+            .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 8)
         }
         .padding(.bottom, 16)
     }

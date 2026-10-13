@@ -8,23 +8,29 @@ public struct UnitPickerView: View {
     let title: String
     let options: [String]
     @State private var selected: String
+    let condition: String?
+    let symbolName: String?
     let onSelect: (String) -> Void
 
     public init(
         title: String,
         options: [String],
         selected: String,
+        condition: String? = nil,
+        symbolName: String? = nil,
         onSelect: @escaping (String) -> Void
     ) {
         self.title = title
         self.options = options
         self._selected = State(initialValue: selected)
+        self.condition = condition
+        self.symbolName = symbolName
         self.onSelect = onSelect
     }
 
     public var body: some View {
         ZStack {
-            AppTheme.backgroundGradient.ignoresSafeArea()
+            WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
             VStack(spacing: 0) {
                 // Card

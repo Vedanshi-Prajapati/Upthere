@@ -37,6 +37,8 @@ public struct MainTabView: View {
                 .tag(AppTab.insights)
 
             LocationsView(
+                condition: homeViewModel.displayedWeather?.condition,
+                symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
                 onSelectLocation: { location in
                     homeViewModel.selectLocation(location)
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -49,7 +51,11 @@ public struct MainTabView: View {
             }
             .tag(AppTab.locations)
 
-            SettingsView(viewModel: settingsViewModel)
+            SettingsView(
+                viewModel: settingsViewModel,
+                condition: homeViewModel.displayedWeather?.condition,
+                symbolName: homeViewModel.displayedWeather?.weatherSymbolName
+            )
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }

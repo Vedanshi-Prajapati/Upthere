@@ -6,17 +6,23 @@ public struct LocationsView: View {
     @ObservedObject private var locationsManager = SavedLocationsManager.shared
     @State private var editMode: EditMode = .inactive
 
+    public var condition: String?
+    public var symbolName: String?
     public var onSelectLocation: ((SavedLocation) -> Void)?
 
     public init(
+        condition: String? = nil,
+        symbolName: String? = nil,
         onSelectLocation: ((SavedLocation) -> Void)? = nil
     ) {
+        self.condition = condition
+        self.symbolName = symbolName
         self.onSelectLocation = onSelectLocation
     }
 
     public var body: some View {
         ZStack {
-            WeatherBackgroundView(type: .defaultTheme)
+            WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
             VStack(spacing: 0) {
                 // Navigation bar area
@@ -150,7 +156,10 @@ public struct LocationsView: View {
             )
         }
         .sheet(isPresented: $showCitySearch) {
-            CitySearchSheet { savedLocation in
+            CitySearchSheet(
+                condition: condition,
+                symbolName: symbolName
+            ) { savedLocation in
                 locationsManager.addLocation(savedLocation)
                 onSelectLocation?(savedLocation)
             }

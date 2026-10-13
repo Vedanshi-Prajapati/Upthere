@@ -6,14 +6,23 @@ public struct SettingsView: View {
     @State private var showWindSpeedUnit = false
     @State private var showPrecipitationUnit = false
 
-    public init(viewModel: SettingsViewModel? = nil) {
+    public var condition: String?
+    public var symbolName: String?
+
+    public init(
+        viewModel: SettingsViewModel? = nil,
+        condition: String? = nil,
+        symbolName: String? = nil
+    ) {
         self.viewModel = viewModel ?? SettingsViewModel()
+        self.condition = condition
+        self.symbolName = symbolName
     }
 
     public var body: some View {
         NavigationStack {
             ZStack {
-                WeatherBackgroundView(type: .defaultTheme)
+                WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -208,7 +217,9 @@ public struct SettingsView: View {
                 UnitPickerView(
                     title: "Temperature unit",
                     options: TemperatureUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.temperatureUnit.rawValue
+                    selected: viewModel.temperatureUnit.rawValue,
+                    condition: condition,
+                    symbolName: symbolName
                 ) { newValue in
                     if let unit = TemperatureUnit(rawValue: newValue) {
                         viewModel.temperatureUnit = unit
@@ -219,7 +230,9 @@ public struct SettingsView: View {
                 UnitPickerView(
                     title: "Wind speed unit",
                     options: WindSpeedUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.windSpeedUnit.rawValue
+                    selected: viewModel.windSpeedUnit.rawValue,
+                    condition: condition,
+                    symbolName: symbolName
                 ) { newValue in
                     if let unit = WindSpeedUnit(rawValue: newValue) {
                         viewModel.windSpeedUnit = unit
@@ -230,7 +243,9 @@ public struct SettingsView: View {
                 UnitPickerView(
                     title: "Precipitation unit",
                     options: PrecipitationUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.precipitationUnit.rawValue
+                    selected: viewModel.precipitationUnit.rawValue,
+                    condition: condition,
+                    symbolName: symbolName
                 ) { newValue in
                     if let unit = PrecipitationUnit(rawValue: newValue) {
                         viewModel.precipitationUnit = unit
