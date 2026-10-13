@@ -17,6 +17,8 @@ public final class SavedLocationsManager: ObservableObject {
         load()
     }
 
+    public var savedLocations: [SavedLocation] { locations }
+
     public var selectedLocation: SavedLocation? {
         guard let id = selectedLocationId else { return nil }
         return locations.first { $0.id == id && !$0.isCurrentLocation }
@@ -81,11 +83,17 @@ public final class SavedLocationsManager: ObservableObject {
            let uuid = UUID(uuidString: idString) {
             self.selectedLocationId = uuid
         }
+        Task.detached(priority: .utility) { [locations] in
+            SpotlightService.shared.indexSavedLocations(locations)
+        }
     }
 
     private func save() {
         if let data = try? JSONEncoder().encode(locations) {
             defaults.set(data, forKey: locationsKey)
+        }
+        Task.detached(priority: .utility) { [locations] in
+            SpotlightService.shared.indexSavedLocations(locations)
         }
     }
 

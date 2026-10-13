@@ -118,6 +118,10 @@ public final class HomeViewModel {
 
             self.currentLoadedWeather = weather
             state = .loaded(weather: weather, banner: banner)
+
+            Task.detached(priority: .utility) {
+                SpotlightService.shared.indexWeather(weather)
+            }
         } catch {
             guard latestRequestId == requestId else { return }
 

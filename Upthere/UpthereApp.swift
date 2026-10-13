@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreSpotlight
 
 @main
 struct UpthereApp: App {
@@ -33,6 +34,20 @@ struct UpthereApp: App {
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                     showSplash = false
+                }
+            }
+            .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
+                guard let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                      let cityName = SpotlightService.shared.resolveCityName(from: identifier) else {
+                    return
+                }
+                if let matched = SavedLocationsManager.shared.savedLocations.first(where: {
+                    $0.cityName.caseInsensitiveCompare(cityName) == .orderedSame
+                }) {
+                    container.homeViewModel.selectLocation(matched)
+                } else {
+                    let newLoc = SavedLocation(cityName: cityName, regionName: "", condition: "--")
+                    container.homeViewModel.selectLocation(newLoc)
                 }
             }
         }

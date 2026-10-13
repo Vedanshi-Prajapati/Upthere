@@ -1,5 +1,6 @@
 import XCTest
 import CoreLocation
+import AppIntents
 @testable import Upthere
 
 @MainActor
@@ -407,5 +408,38 @@ final class UpthereTests: XCTestCase {
         XCTAssertNotNil(vm.displayedWeather)
         await refreshTask.value
         XCTAssertNotNil(vm.displayedWeather)
+    }
+
+    // MARK: - 26. Spotlight identifier resolution
+    func test26_SpotlightResolution() {
+        let weatherCity = SpotlightService.shared.resolveCityName(from: "weather.cupertino")
+        XCTAssertEqual(weatherCity, "Cupertino")
+
+        let locationCity = SpotlightService.shared.resolveCityName(from: "location.tokyo")
+        XCTAssertEqual(locationCity, "Tokyo")
+
+        let multiWordCity = SpotlightService.shared.resolveCityName(from: "weather.san_francisco")
+        XCTAssertEqual(multiWordCity, "San Francisco")
+    }
+
+    // MARK: - 27. App Intents LocationEntityQuery
+    func test27_LocationEntityQuery() async throws {
+        let query = LocationEntityQuery()
+        let entities = try await query.allEntities()
+
+        XCTAssertFalse(entities.isEmpty, "Location entities should contain at least current location")
+        XCTAssertEqual(entities.first?.id, "current", "First entity should be Current Location")
+    }
+
+    // MARK: - 28. ToggleSevereAlertsIntent execution
+    func test28_ToggleSevereAlertsIntent() async throws {
+        let initial = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
+        let intent = ToggleSevereAlertsIntent()
+        let result = try await intent.perform()
+
+        XCTAssertEqual(result.value, !initial, "Toggling severe alerts intent should invert the stored setting")
+
+        // Invert back to restore state
+        _ = try await intent.perform()
     }
 }
