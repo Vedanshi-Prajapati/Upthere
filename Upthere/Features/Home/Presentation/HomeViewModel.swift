@@ -24,6 +24,9 @@ public final class HomeViewModel {
     public private(set) var isRefreshing: Bool = false
     public private(set) var currentLoadedWeather: Weather?
     public private(set) var activeTask: Task<Void, Never>?
+    public var isCurrentLocation: Bool {
+        selectedLocation == nil || selectedLocation?.isCurrentLocation == true
+    }
 
     public let locationService: LocationService
     private let getWeatherUseCase: any GetWeatherUseCaseProtocol

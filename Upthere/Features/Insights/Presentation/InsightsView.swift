@@ -282,7 +282,7 @@ public struct InsightsView: View {
                         .foregroundStyle(.white)
                 }
 
-                Text("Expected \(Int(trend.temperatureSwing.rounded()))° swing between \(formatHour(trend.minDate)) and \(formatHour(trend.maxDate)).")
+                Text("Expected temperature swing of \(Int(trend.temperatureSwing.rounded()))° between \(formatHour(trend.minDate)) and \(formatHour(trend.maxDate)).")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)

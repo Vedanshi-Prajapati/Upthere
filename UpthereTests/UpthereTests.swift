@@ -551,4 +551,47 @@ struct UpthereTests {
             Issue.record("State should be .loaded with refreshFailed banner")
         }
     }
+
+    @Test("HomeViewModel distinguishes current location vs selected city")
+    func homeViewModelCurrentLocationFlag() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository()
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(getWeatherUseCase: useCase, locationsManager: locManager)
+
+        #expect(vm.isCurrentLocation, "Default selection without selectedLocation is current location")
+
+        let city = SavedLocation(cityName: "Paris", regionName: "France", condition: "Sunny", isCurrentLocation: false, latitude: 48.8566, longitude: 2.3522)
+        locManager.addLocation(city)
+        vm.selectLocation(city)
+        #expect(!vm.isCurrentLocation, "Selected pinned city is not current location")
+
+        vm.selectLocation(nil)
+        #expect(vm.isCurrentLocation, "Nil selected location returns to current location")
+    }
+
+    @Test("InsightEngine rain window formats specific peak time without saying near Now")
+    func insightEngineRainWindowFormatting() {
+        let engine = InsightEngine()
+        let baseDate = Date(timeIntervalSince1970: 1700000000)
+        let hourly: [HourlyWeather] = [
+            HourlyWeather(date: baseDate, temperature: 20, precipitationChance: 0.80, precipitationAmount: 3.5, symbolName: "cloud.rain.fill"),
+            HourlyWeather(date: baseDate.addingTimeInterval(3600), temperature: 19, precipitationChance: 0.60, precipitationAmount: 1.5, symbolName: "cloud.drizzle.fill")
+        ]
+
+        let result = engine.rainWindow(from: hourly)
+        #expect(result != nil)
+        if let rain = result {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US")
+            f.dateFormat = "ha"
+            let peakTime = f.string(from: rain.peakDate)
+            let detail = "Peak precipitation around \(peakTime), \(Int((rain.peakProbability * 100).rounded()))% probability."
+            #expect(!detail.contains("near Now"))
+            #expect(detail.contains(peakTime))
+        }
+    }
 }

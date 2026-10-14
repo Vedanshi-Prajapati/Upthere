@@ -24,6 +24,7 @@ public struct HomeView: View {
                 WeatherScrollContent(
                     weather: weather,
                     banner: bannerForState,
+                    isCurrentLocation: viewModel.isCurrentLocation,
                     onNavigateToInsights: onNavigateToInsights
                 )
                 .refreshable {
@@ -79,6 +80,7 @@ public struct HomeView: View {
 private struct WeatherScrollContent: View {
     let weather: Weather
     let banner: HomeViewModel.BannerType?
+    let isCurrentLocation: Bool
     var onNavigateToInsights: (() -> Void)?
 
     var body: some View {
@@ -156,10 +158,8 @@ private struct WeatherScrollContent: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
-                    // Only show the location arrow when showing live GPS data (not a pinned city)
-                    if weather.locationSubtitle.contains("GPS") ||
-                       weather.locationSubtitle.isEmpty ||
-                       weather.locationSubtitle.contains("Current") {
+                    // Only show the location arrow when showing current location weather (not a pinned city)
+                    if isCurrentLocation {
                         Image(systemName: "location.fill")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
@@ -173,6 +173,12 @@ private struct WeatherScrollContent: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
             Spacer()
+            Image(systemName: weather.weatherSymbolName)
+                .symbolRenderingMode(.multicolor)
+                .symbolVariant(.fill)
+                .foregroundStyle(.white)
+                .font(.system(size: 44))
+                .accessibilityLabel(Text(weather.condition))
         }
         .padding(.top, 8)
         .padding(.bottom, 12)
@@ -315,9 +321,37 @@ private struct WeatherScrollContent: View {
     }
 
     // MARK: UpThere Insight Section
+    private var rainInsight: (title: String, timeRange: String, detail: String)? {
+        guard let rain = InsightEngine().rainWindow(from: weather.hourlyForecast) else {
+            return nil
+        }
+        let timeFormatter = DateFormatter()
+        timeFormatter.locale = Locale(identifier: "en_US")
+        timeFormatter.dateFormat = "ha"
+
+        let startStr = timeFormatter.string(from: rain.startDate)
+        let endStr = timeFormatter.string(from: rain.endDate)
+        let timeRange = startStr == endStr ? "Around \(startStr)" : "\(startStr) – \(endStr)"
+
+        let peakStr = timeFormatter.string(from: rain.peakDate)
+        let peakPercent = Int((rain.peakProbability * 100).rounded())
+        let detail = "Peak precipitation around \(peakStr), \(peakPercent)% probability."
+
+        let title: String
+        if rain.peakProbability >= 0.70 {
+            title = "Heavy rain expected"
+        } else if rain.peakProbability >= 0.50 {
+            title = "Rain expected"
+        } else {
+            title = "Showers likely"
+        }
+
+        return (title, timeRange, detail)
+    }
+
     private var insightSection: some View {
         Group {
-            if let rain = weather.rainWindow {
+            if let rain = rainInsight {
                 Button {
                     onNavigateToInsights?()
                 } label: {
@@ -350,6 +384,7 @@ private struct WeatherScrollContent: View {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
                         .symbolRenderingMode(.multicolor)
+                        .symbolVariant(.fill)
                         .foregroundStyle(.white)
                         .font(.system(size: 20))
                     VStack(alignment: .leading, spacing: 2) {
@@ -397,8 +432,20 @@ private struct WeatherScrollContent: View {
                         low: weather.lowTemperature
                     )
 
-                    if !weather.warmingInsight.isEmpty {
-                        Text(weather.warmingInsight)
+                    let warmingText: String = {
+                        if let trend = InsightEngine().temperatureTrend(from: weather.hourlyForecast) {
+                            let f = DateFormatter()
+                            f.locale = Locale(identifier: "en_US")
+                            f.dateFormat = "ha"
+                            let minH = f.string(from: trend.minDate).lowercased()
+                            let maxH = f.string(from: trend.maxDate).lowercased()
+                            let swing = Int(trend.temperatureSwing.rounded())
+                            return "+\(swing)° temperature change from \(minH) to \(maxH)"
+                        }
+                        return weather.warmingInsight
+                    }()
+                    if !warmingText.isEmpty {
+                        Text(warmingText)
                             .font(.system(size: 13))
                             .foregroundStyle(AppTheme.textSecondary)
                     }

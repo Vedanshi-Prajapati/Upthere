@@ -162,7 +162,8 @@ public struct ForecastView: View {
 
                 let currentT = WeatherFormatter.shared.temp(weather.temperature)
                 let feelsT = WeatherFormatter.shared.temp(weather.feelsLike)
-                let precipVal = WeatherFormatter.shared.precipitation(0.0)
+                let currentPrecipAmount = weather.hourlyForecast.first?.precipitationAmount ?? 0.0
+                let precipVal = WeatherFormatter.shared.precipitation(currentPrecipAmount)
 
                 let rows: [(String, String, String, String, String, String)] = [
                     ("Temperature", currentT, "Feels like \(feelsT)",
@@ -351,7 +352,11 @@ private struct RainWindowCard: View {
                 Circle()
                     .fill(rainBlue.opacity(0.18))
                     .frame(width: 40, height: 40)
-                WeatherIllustrationView(type: .rainy, size: 28, animated: true)
+                Image(systemName: "cloud.rain.fill")
+                    .symbolRenderingMode(.multicolor)
+                    .symbolVariant(.fill)
+                    .foregroundStyle(.white)
+                    .font(.system(size: 20))
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -394,7 +399,11 @@ private struct HourlyCard: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
 
-            WeatherIllustrationView(condition: nil, symbolName: hourly.symbolName, size: 30, animated: false)
+            Image(systemName: hourly.symbolName)
+                .symbolRenderingMode(.multicolor)
+                .symbolVariant(.fill)
+                .foregroundStyle(.white)
+                .font(.system(size: 24))
                 .frame(height: 30)
                 .padding(.vertical, 2)
 
@@ -441,7 +450,11 @@ private struct DailyWeatherRow: View {
             .frame(width: 60, alignment: .leading)
 
             VStack(spacing: 2) {
-                WeatherIllustrationView(condition: nil, symbolName: daily.symbolName, size: 26, animated: false)
+                Image(systemName: daily.symbolName)
+                    .symbolRenderingMode(.multicolor)
+                    .symbolVariant(.fill)
+                    .foregroundStyle(.white)
+                    .font(.system(size: 20))
                     .frame(height: 26)
                 if daily.precipitationProbability > 0 {
                     Text("\(Int(daily.precipitationProbability * 100))%")

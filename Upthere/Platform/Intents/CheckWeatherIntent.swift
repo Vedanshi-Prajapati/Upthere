@@ -93,6 +93,7 @@ private struct WeatherSnippetView: View {
                     Spacer()
                     Image(systemName: weather.weatherSymbolName)
                         .symbolRenderingMode(.multicolor)
+                        .symbolVariant(.fill)
                         .foregroundStyle(.white)
                         .font(.system(size: 32))
                 }

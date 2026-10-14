@@ -229,12 +229,6 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
             )
         }
 
-        // Rain Window calculation
-        let rainWindow = calculateRainWindow(from: mappedHourly)
-
-        // Warming insight calculation
-        let warmingInsight = calculateWarmingInsight(from: mappedHourly)
-
         // Sunrise & Sunset (handle polar missing dates)
         let sunTimeFormatter = DateFormatter()
         sunTimeFormatter.locale = Locale(identifier: "en_US")
@@ -253,33 +247,53 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
             }
             return raw
         }()
-        // Build a more specific, human-readable description
+
+        // Build concise description sentence from InsightEngine results: next change, rain window, wind
         let weatherDesc: String = {
-            let condL = conditionDesc.lowercased()
-            let hi = Int(highTemp)
-            let lo = Int(lowTemp)
-            let wind = Int(windSpeedKmh)
-            var parts: [String] = []
-            if condL.contains("rain") || condL.contains("drizzle") || condL.contains("shower") {
-                parts.append("Expect rain today.")
-            } else if condL.contains("thunder") || condL.contains("storm") {
-                parts.append("Thunderstorms possible today.")
-            } else if condL.contains("snow") || condL.contains("flurr") || condL.contains("blizzard") {
-                parts.append("Snowfall expected today.")
-            } else if condL.contains("fog") || condL.contains("mist") || condL.contains("haze") {
-                parts.append("Reduced visibility from fog or haze.")
-            } else if condL.contains("overcast") || condL.contains("cloudy") {
-                parts.append("Overcast skies throughout the day.")
-            } else if condL.contains("partly") || condL.contains("cloud") {
-                parts.append("Some cloud cover throughout the day.")
-            } else {
-                parts.append("\(conditionDesc) conditions.")
+            let engine = InsightEngine()
+            let timeFmt = DateFormatter()
+            timeFmt.locale = Locale(identifier: "en_US")
+            timeFmt.dateFormat = "ha"
+
+            var sentenceParts: [String] = []
+
+            // 1. Next change
+            if let cloud = engine.cloudChange(from: mappedHourly) {
+                let changeTime = timeFmt.string(from: cloud.changeDate)
+                if cloud.isClearing {
+                    sentenceParts.append("Skies clearing around \(changeTime).")
+                } else {
+                    sentenceParts.append("Cloud cover increasing around \(changeTime).")
+                }
             }
-            parts.append("High of \(hi)°, low of \(lo)°.")
-            if wind >= 30 {
-                parts.append("Breezy at \(wind) km/h winds.")
+
+            // 2. Rain window
+            if let rain = engine.rainWindow(from: mappedHourly) {
+                let sTime = timeFmt.string(from: rain.startDate)
+                let eTime = timeFmt.string(from: rain.endDate)
+                let prob = Int((rain.peakProbability * 100).rounded())
+                if sTime == eTime {
+                    sentenceParts.append("Rain likely around \(sTime) (\(prob)% chance).")
+                } else {
+                    sentenceParts.append("Rain expected between \(sTime) and \(eTime) (\(prob)% chance).")
+                }
             }
-            return parts.joined(separator: " ")
+
+            // 3. Wind
+            if let wind = engine.strongestWind(from: mappedHourly), wind.peakGust >= 20 || wind.peakWindSpeed >= 20 {
+                let windTime = timeFmt.string(from: wind.peakDate)
+                let gustVal = Int(wind.peakGust.rounded())
+                sentenceParts.append("Wind gusts up to \(gustVal) km/h around \(windTime).")
+            } else if let wind = engine.strongestWind(from: mappedHourly), wind.currentWindSpeed > 0 {
+                let speedVal = Int(wind.currentWindSpeed.rounded())
+                sentenceParts.append("Gentle winds around \(speedVal) km/h.")
+            }
+
+            if sentenceParts.isEmpty {
+                return "\(conditionDesc) conditions throughout the day."
+            }
+
+            return sentenceParts.joined(separator: " ")
         }()
 
         return Weather(
@@ -306,52 +320,14 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
             alert: mappedAlert,
             hourlyForecast: mappedHourly,
             dailyForecast: mappedDaily,
-            rainWindow: rainWindow,
-            warmingInsight: warmingInsight,
+            rainWindow: nil,
+            warmingInsight: "",
             chanceOfRain: todayRainChance,
             sunrise: sunriseStr,
             sunset: sunsetStr,
             fetchTimestamp: Date(),
             isCached: false
         )
-    }
-
-    private func calculateRainWindow(from hourly: [HourlyWeather]) -> RainWindow? {
-        let rainyHours = hourly.filter { $0.precipitationProbability >= 0.3 }
-        guard let firstRain = rainyHours.first,
-              let maxRain = rainyHours.max(by: { $0.precipitationProbability < $1.precipitationProbability }) else {
-            return nil
-        }
-        let lastRain = rainyHours.last ?? firstRain
-        let peakPercent = Int((maxRain.precipitationProbability * 100).rounded())
-
-        let timeRange = firstRain.time == lastRain.time ? "Around \(firstRain.time)" : "\(firstRain.time) – \(lastRain.time)"
-
-        // Avoid "Most likely near Now" when the first slot is current
-        let peakLabel: String
-        if maxRain.time == "Now" {
-            peakLabel = "Rain is likely right now"
-        } else {
-            peakLabel = "Peak around \(maxRain.time)"
-        }
-
-        return RainWindow(
-            title: "Rain window",
-            timeRange: timeRange,
-            detail: "\(peakLabel), \(peakPercent)% probability."
-        )
-    }
-
-    private func calculateWarmingInsight(from hourly: [HourlyWeather]) -> String {
-        guard hourly.count >= 4 else { return "" }
-        let morning = hourly[0]
-        if let peak = hourly.prefix(8).max(by: { $0.temperature < $1.temperature }), peak.temperature > morning.temperature {
-            let diff = Int((peak.temperature - morning.temperature).rounded())
-            if diff >= 2 {
-                return "+\(diff)° warming from \(morning.time) to \(peak.time)"
-            }
-        }
-        return ""
     }
 
     private func mapWeatherKitError(_ error: Error) -> WeatherServiceError {
