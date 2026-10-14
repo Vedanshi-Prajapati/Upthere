@@ -9,14 +9,17 @@ public struct LocationsView: View {
     public var condition: String?
     public var symbolName: String?
     public var onSelectLocation: ((SavedLocation) -> Void)?
+    private let locationService: LocationService
 
     public init(
         condition: String? = nil,
         symbolName: String? = nil,
+        locationService: LocationService? = nil,
         onSelectLocation: ((SavedLocation) -> Void)? = nil
     ) {
         self.condition = condition
         self.symbolName = symbolName
+        self.locationService = locationService ?? .shared
         self.onSelectLocation = onSelectLocation
     }
 
@@ -147,11 +150,11 @@ public struct LocationsView: View {
             }
         }
         .onAppear {
-            let subtitle = LocationService.shared.currentSubtitle.isEmpty
+            let subtitle = locationService.currentSubtitle.isEmpty
                 ? "Current GPS location"
-                : LocationService.shared.currentSubtitle
+                : locationService.currentSubtitle
             locationsManager.updateCurrentLocationHeader(
-                cityName: LocationService.shared.currentCityName,
+                cityName: locationService.currentCityName,
                 subtitle: subtitle
             )
         }

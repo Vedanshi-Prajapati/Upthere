@@ -14,21 +14,7 @@ public struct InsightsView: View {
                 symbolName: viewModel.displayedWeather?.weatherSymbolName
             )
 
-            switch viewModel.state {
-            case .idle, .loading:
-                ProgressView().tint(.white)
-            case .error(let msg, _):
-                VStack(spacing: 8) {
-                    Text(msg)
-                        .foregroundStyle(AppTheme.textSecondary)
-                    Button("Retry") {
-                        Task { await viewModel.refreshWeather() }
-                    }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                }
-                .padding(.horizontal, 20)
-            case .loaded(let weather, _):
+            if let weather = viewModel.displayedWeather {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
                         header
@@ -37,6 +23,24 @@ public struct InsightsView: View {
                         footer
                     }
                     .padding(.bottom, 120)
+                }
+            } else {
+                switch viewModel.state {
+                case .idle, .loading:
+                    ProgressView().tint(.white)
+                case .error(let msg, _):
+                    VStack(spacing: 8) {
+                        Text(msg)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Button("Retry") {
+                            Task { await viewModel.refreshWeather() }
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.accent)
+                    }
+                    .padding(.horizontal, 20)
+                case .loaded:
+                    ProgressView().tint(.white)
                 }
             }
         }

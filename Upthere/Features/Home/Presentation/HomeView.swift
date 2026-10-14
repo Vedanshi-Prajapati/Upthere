@@ -4,6 +4,8 @@ import SwiftUI
 
 public struct HomeView: View {
     @State private var viewModel: HomeViewModel
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var hasAppeared = false
     public var onNavigateToInsights: (() -> Void)?
 
     public init(viewModel: HomeViewModel, onNavigateToInsights: (() -> Void)? = nil) {
@@ -18,43 +20,57 @@ public struct HomeView: View {
                 symbolName: viewModel.displayedWeather?.weatherSymbolName
             )
 
-            switch viewModel.state {
-            case .idle:
-                Color.clear.task { await viewModel.loadWeather() }
-
-            case .loading(let isSilent):
-                if !isSilent {
-                    LoadingSkeletonView()
-                } else if let weather = viewModel.displayedWeather {
-                    WeatherScrollContent(
-                        weather: weather,
-                        banner: nil,
-                        onNavigateToInsights: onNavigateToInsights
-                    )
-                    .refreshable {
-                        await viewModel.refreshWeather()
-                    }
-                } else {
-                    LoadingSkeletonView()
-                }
-
-            case .loaded(let weather, let banner):
+            if let weather = viewModel.displayedWeather {
                 WeatherScrollContent(
                     weather: weather,
-                    banner: banner,
+                    banner: bannerForState,
                     onNavigateToInsights: onNavigateToInsights
                 )
                 .refreshable {
                     await viewModel.refreshWeather()
                 }
-
-            case .error:
-                NetworkErrorView {
-                    Task { await viewModel.loadWeather(force: true) }
+            } else {
+                switch viewModel.state {
+                case .idle, .loading:
+                    LoadingSkeletonView()
+                case .error:
+                    NetworkErrorView {
+                        Task { await viewModel.loadWeather(force: true) }
+                    }
+                case .loaded:
+                    LoadingSkeletonView()
                 }
             }
         }
-        .task { await viewModel.loadWeather() }
+        .task {
+            if !hasAppeared {
+                hasAppeared = true
+                await viewModel.loadWeather()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                handleAppBecameActive()
+            }
+        }
+    }
+
+    private var bannerForState: HomeViewModel.BannerType? {
+        if case .loaded(_, let banner) = viewModel.state {
+            return banner
+        }
+        return nil
+    }
+
+    private func handleAppBecameActive() {
+        guard let weather = viewModel.displayedWeather else {
+            Task { await viewModel.loadWeather() }
+            return
+        }
+        let age = Date().timeIntervalSince(weather.fetchTimestamp)
+        if age > 600 {
+            Task { await viewModel.refreshWeather() }
+        }
     }
 }
 

@@ -472,4 +472,83 @@ struct UpthereTests {
 
         _ = try await intent.perform()
     }
+
+    // MARK: - Counting Mock Repository Lifecycle Tests
+
+    @Test("Tab switches cause zero repository fetches with counting mock")
+    func tabSwitchesCauseZeroFetches() async {
+        let repo = MockWeatherRepository()
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(getWeatherUseCase: useCase)
+
+        // First appearance load
+        await vm.loadWeather()
+        #expect(repo.fetchCallCount == 1, "Initial load must call repository once")
+
+        // Simulate switching between Forecast, Insights, Locations, and back to Home
+        await vm.loadWeather(force: false)
+        await vm.loadWeather(force: false)
+        await vm.loadWeather(force: false)
+        await vm.loadWeather(force: false)
+
+        #expect(repo.fetchCallCount == 1, "Switching tabs must make zero additional repository fetches")
+    }
+
+    @Test("A stale response is dropped when a newer request starts")
+    func staleResponseIsDropped() async throws {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository()
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(getWeatherUseCase: useCase, locationsManager: locManager)
+
+        // Set slow response on repository
+        repo.delayNanoseconds = 300_000_000 // 300ms
+
+        let cityA = SavedLocation(cityName: "CityA", regionName: "RegionA", condition: "Cloudy", isCurrentLocation: false, latitude: 10, longitude: 20)
+        let cityB = SavedLocation(cityName: "CityB", regionName: "RegionB", condition: "Sunny", isCurrentLocation: false, latitude: 30, longitude: 40)
+        locManager.addLocation(cityA)
+        locManager.addLocation(cityB)
+
+        // Start request A
+        vm.selectLocation(cityA)
+        try? await Task.sleep(nanoseconds: 30_000_000)
+
+        // Immediately start request B with no delay
+        repo.delayNanoseconds = 0
+        vm.selectLocation(cityB)
+
+        // Wait for everything to settle
+        try? await Task.sleep(nanoseconds: 400_000_000)
+
+        #expect(vm.displayedWeather?.cityName == "CityB", "Stale response from request A must be dropped and CityB preserved")
+    }
+
+    @Test("A refresh failure keeps the old data on screen and clears isRefreshing")
+    func refreshFailureKeepsOldData() async {
+        let repo = MockWeatherRepository()
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(getWeatherUseCase: useCase)
+
+        await vm.loadWeather()
+        guard let initialWeather = vm.displayedWeather else {
+            Issue.record("Initial weather load failed")
+            return
+        }
+        #expect(!vm.isRefreshing)
+
+        // Subsequent refresh fails
+        repo.errorToThrow = WeatherServiceError.offline
+        await vm.refreshWeather()
+
+        #expect(!vm.isRefreshing, "isRefreshing flag must reset to false after failure")
+        #expect(vm.displayedWeather?.cityName == initialWeather.cityName, "Previous weather must stay on screen")
+        if case .loaded(_, let banner) = vm.state {
+            #expect(banner == .refreshFailed(reason: WeatherServiceError.offline.localizedDescription))
+        } else {
+            Issue.record("State should be .loaded with refreshFailed banner")
+        }
+    }
 }

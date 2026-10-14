@@ -19,22 +19,20 @@ public struct ForecastView: View {
                 symbolName: viewModel.displayedWeather?.weatherSymbolName
             )
 
-            switch viewModel.state {
-            case .idle:
-                Color.clear.task { await viewModel.loadWeather() }
-            case .loading(let isSilent):
-                if !isSilent {
+            if let weather = viewModel.displayedWeather {
+                forecastContent(weather: weather)
+            } else {
+                switch viewModel.state {
+                case .idle:
+                    Color.clear.task { await viewModel.loadWeather() }
+                case .loading:
                     ProgressView().tint(.white)
-                } else if let weather = viewModel.displayedWeather {
-                    forecastContent(weather: weather)
-                } else {
+                case .error(let msg, _):
+                    Text(msg).foregroundStyle(AppTheme.textSecondary)
+                        .padding(.horizontal, 24)
+                case .loaded:
                     ProgressView().tint(.white)
                 }
-            case .error(let msg, _):
-                Text(msg).foregroundStyle(AppTheme.textSecondary)
-                    .padding(.horizontal, 24)
-            case .loaded(let weather, _):
-                forecastContent(weather: weather)
             }
         }
     }

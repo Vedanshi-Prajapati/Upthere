@@ -27,17 +27,19 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Location
+    private let locationService: LocationService
+
     public var currentLocationName: String {
-        if LocationService.shared.isAuthorized {
-            return LocationService.shared.currentCityName
-        } else if LocationService.shared.authorizationStatus == .notDetermined {
+        if locationService.isAuthorized {
+            return locationService.currentCityName
+        } else if locationService.authorizationStatus == .notDetermined {
             return "Not Determined"
         } else {
             return "Permission Denied"
         }
     }
     public var locationPermission: String {
-        switch LocationService.shared.authorizationStatus {
+        switch locationService.authorizationStatus {
         case .authorizedWhenInUse: return "While Using"
         case .authorizedAlways:    return "Always"
         case .denied:              return "Denied"
@@ -59,7 +61,8 @@ public final class SettingsViewModel {
     public let weatherDataProvider = "Apple WeatherKit"
     public let appVersion = "1.0 (24)"
 
-    public init() {
+    public init(locationService: LocationService? = nil) {
+        self.locationService = locationService ?? .shared
         if let rawTemp = UserDefaults.standard.string(forKey: "settings.temperatureUnit"),
            let unit = TemperatureUnit(rawValue: rawTemp) {
             self.temperatureUnit = unit

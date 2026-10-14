@@ -13,14 +13,17 @@ public final class AppContainer {
         weatherRepository: (any WeatherRepository)? = nil,
         locationService: LocationService? = nil
     ) {
-        let locService = locationService ?? .shared
+        let locService = locationService ?? LocationService()
         self.locationService = locService
         let repository = weatherRepository ?? WeatherKitWeatherRepository(locationService: locService)
         self.weatherRepository = repository
         let useCase = GetWeatherUseCase(repository: repository)
         self.getWeatherUseCase = useCase
-        self.settingsViewModel = SettingsViewModel()
-        self.homeViewModel = HomeViewModel(getWeatherUseCase: useCase)
+        self.settingsViewModel = SettingsViewModel(locationService: locService)
+        self.homeViewModel = HomeViewModel(
+            getWeatherUseCase: useCase,
+            locationService: locService
+        )
     }
 
     public func makeHomeViewModel() -> HomeViewModel {

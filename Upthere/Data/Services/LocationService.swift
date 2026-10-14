@@ -49,7 +49,19 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     public private(set) var currentCityName: String = fallbackCityName
     public private(set) var currentSubtitle: String = ""
 
-    public var onLocationChanged: ((CLLocation) -> Void)?
+    private var streamContinuations: [UUID: AsyncStream<CLLocation>.Continuation] = [:]
+
+    public var locationUpdates: AsyncStream<CLLocation> {
+        AsyncStream { continuation in
+            let id = UUID()
+            self.streamContinuations[id] = continuation
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.streamContinuations.removeValue(forKey: id)
+                }
+            }
+        }
+    }
 
     private let clManager: CLLocationManager
     private let geocoder = CLGeocoder()
@@ -303,12 +315,17 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
             continuation.resume(returning: location)
         }
 
+        let shouldNotify: Bool
         if let previous = previous {
-            if location.distance(from: previous) > 500 {
-                onLocationChanged?(location)
-            }
+            shouldNotify = location.distance(from: previous) > 500
         } else {
-            onLocationChanged?(location)
+            shouldNotify = true
+        }
+
+        if shouldNotify {
+            for continuation in streamContinuations.values {
+                continuation.yield(location)
+            }
         }
     }
 

@@ -2,14 +2,22 @@ import SwiftUI
 
 public struct MainTabView: View {
     @State private var selectedTab: AppTab = .home
-    @State private var showPermission = LocationService.shared.authorizationStatus == .notDetermined
+    @State private var showPermission: Bool
 
     private let homeViewModel: HomeViewModel
     private let settingsViewModel: SettingsViewModel
+    private let locationService: LocationService
 
-    public init(homeViewModel: HomeViewModel, settingsViewModel: SettingsViewModel? = nil) {
+    public init(
+        homeViewModel: HomeViewModel,
+        settingsViewModel: SettingsViewModel? = nil,
+        locationService: LocationService? = nil
+    ) {
         self.homeViewModel = homeViewModel
-        self.settingsViewModel = settingsViewModel ?? SettingsViewModel()
+        let loc = locationService ?? homeViewModel.locationService
+        self.locationService = loc
+        self.settingsViewModel = settingsViewModel ?? SettingsViewModel(locationService: loc)
+        self._showPermission = State(initialValue: loc.authorizationStatus == .notDetermined)
     }
 
     public var body: some View {
@@ -39,6 +47,7 @@ public struct MainTabView: View {
             LocationsView(
                 condition: homeViewModel.displayedWeather?.condition,
                 symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
+                locationService: locationService,
                 onSelectLocation: { location in
                     homeViewModel.selectLocation(location)
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
@@ -66,7 +75,7 @@ public struct MainTabView: View {
             LocationPermissionView(
                 onAllow: {
                     showPermission = false
-                    LocationService.shared.requestAuthorization()
+                    locationService.requestAuthorization()
                     Task {
                         try? await Task.sleep(nanoseconds: 600_000_000)
                         await homeViewModel.loadWeather(force: true)
