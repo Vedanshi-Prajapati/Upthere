@@ -154,31 +154,30 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         timeFormatter.dateFormat = "ha" // e.g. "9AM", "12PM"
 
         let filteredHours = weather.hourlyForecast.filter { $0.date >= now.addingTimeInterval(-1800) }
-        let mappedHourly: [HourlyWeather] = filteredHours.prefix(16).enumerated().map { index, hour in
-            let timeString: String
-            if index == 0 {
-                timeString = "Now"
-            } else {
-                let formatted = timeFormatter.string(from: hour.date).lowercased()
-                timeString = formatted.replacingOccurrences(of: "m", with: "")
-            }
+        let mappedHourly: [HourlyWeather] = filteredHours.prefix(16).map { hour in
             let hourTemp = hour.temperature.converted(to: .celsius).value.rounded()
-            let precipProb = max(0.0, min(1.0, hour.precipitationChance))
+            let hourFeelsLike = hour.apparentTemperature.converted(to: .celsius).value.rounded()
+            let precipChance = max(0.0, min(1.0, hour.precipitationChance))
+            let precipAmount = max(0.0, hour.precipitationAmount.converted(to: .millimeters).value)
             let hourSymbol = hour.symbolName.isEmpty ? "cloud.sun.fill" : hour.symbolName
-            let windSpeed = hour.wind.speed.converted(to: .kilometersPerHour).value.rounded()
-            let windGust = hour.wind.gust?.converted(to: .kilometersPerHour).value.rounded() ?? windSpeed
-            let uv = hour.uvIndex.value
+            let windSpeed = max(0.0, hour.wind.speed.converted(to: .kilometersPerHour).value.rounded())
+            let windGust = max(windSpeed, hour.wind.gust?.converted(to: .kilometersPerHour).value.rounded() ?? windSpeed)
+            let uv = max(0, hour.uvIndex.value)
             let cloud = max(0.0, min(1.0, hour.cloudCover))
+            let daylight = hour.isDaylight
 
             return HourlyWeather(
-                time: timeString,
+                date: hour.date,
                 temperature: hourTemp,
-                precipitationProbability: precipProb,
+                feelsLike: hourFeelsLike,
+                precipitationChance: precipChance,
+                precipitationAmount: precipAmount,
                 windSpeed: windSpeed,
                 windGust: windGust,
                 uvIndex: uv,
                 cloudCover: cloud,
-                symbolName: hourSymbol
+                symbolName: hourSymbol,
+                isDaylight: daylight
             )
         }
 

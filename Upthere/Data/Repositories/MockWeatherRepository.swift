@@ -83,23 +83,30 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
     }
 
     public static func makeGhaziabadWeather() -> Weather {
+        let baseDate = Date()
+        let calendar = Calendar.current
+
+        func hourDate(_ offset: Int) -> Date {
+            calendar.date(byAdding: .hour, value: offset, to: baseDate) ?? baseDate.addingTimeInterval(Double(offset) * 3600)
+        }
+
         let hourly: [HourlyWeather] = [
-            .init(time: "Now",  temperature: 28, precipitationProbability: 0.05, windSpeed: 10, windGust: 14, uvIndex: 3, cloudCover: 0.30, symbolName: "cloud.sun.fill"),
-            .init(time: "9a",   temperature: 29, precipitationProbability: 0.05, windSpeed: 11, windGust: 15, uvIndex: 5, cloudCover: 0.35, symbolName: "sun.max.fill"),
-            .init(time: "10a",  temperature: 31, precipitationProbability: 0.07, windSpeed: 13, windGust: 17, uvIndex: 7, cloudCover: 0.40, symbolName: "sun.max.fill"),
-            .init(time: "11a",  temperature: 32, precipitationProbability: 0.10, windSpeed: 14, windGust: 18, uvIndex: 9, cloudCover: 0.45, symbolName: "cloud.sun.fill"),
-            .init(time: "12p",  temperature: 33, precipitationProbability: 0.15, windSpeed: 16, windGust: 22, uvIndex: 11, cloudCover: 0.50, symbolName: "cloud.sun.fill"),
-            .init(time: "1p",   temperature: 35, precipitationProbability: 0.20, windSpeed: 18, windGust: 25, uvIndex: 10, cloudCover: 0.60, symbolName: "cloud.fill"),
-            .init(time: "2p",   temperature: 34, precipitationProbability: 0.30, windSpeed: 20, windGust: 28, uvIndex: 8, cloudCover: 0.70, symbolName: "cloud.fill"),
-            .init(time: "3p",   temperature: 33, precipitationProbability: 0.42, windSpeed: 22, windGust: 30, uvIndex: 5, cloudCover: 0.85, symbolName: "cloud.bolt.rain.fill"),
-            .init(time: "4p",   temperature: 31, precipitationProbability: 0.65, windSpeed: 25, windGust: 35, uvIndex: 2, cloudCover: 0.95, symbolName: "cloud.rain.fill"),
-            .init(time: "5p",   temperature: 30, precipitationProbability: 0.70, windSpeed: 24, windGust: 34, uvIndex: 1, cloudCover: 0.95, symbolName: "cloud.rain.fill"),
-            .init(time: "6p",   temperature: 29, precipitationProbability: 0.60, windSpeed: 20, windGust: 28, uvIndex: 0, cloudCover: 0.90, symbolName: "cloud.rain.fill"),
-            .init(time: "7p",   temperature: 28, precipitationProbability: 0.38, windSpeed: 16, windGust: 22, uvIndex: 0, cloudCover: 0.80, symbolName: "cloud.drizzle.fill"),
-            .init(time: "8p",   temperature: 28, precipitationProbability: 0.18, windSpeed: 13, windGust: 18, uvIndex: 0, cloudCover: 0.70, symbolName: "cloud.fill"),
-            .init(time: "9p",   temperature: 27, precipitationProbability: 0.12, windSpeed: 11, windGust: 15, uvIndex: 0, cloudCover: 0.55, symbolName: "cloud.fill"),
-            .init(time: "10p",  temperature: 27, precipitationProbability: 0.08, windSpeed: 10, windGust: 13, uvIndex: 0, cloudCover: 0.40, symbolName: "moon.fill"),
-            .init(time: "11p",  temperature: 26, precipitationProbability: 0.05, windSpeed: 8,  windGust: 11, uvIndex: 0, cloudCover: 0.30, symbolName: "moon.stars.fill"),
+            HourlyWeather(date: hourDate(0),  temperature: 28, feelsLike: 30, precipitationChance: 0.05, precipitationAmount: 0.0, windSpeed: 10, windGust: 14, uvIndex: 3,  cloudCover: 0.30, symbolName: "cloud.sun.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(1),  temperature: 29, feelsLike: 31, precipitationChance: 0.05, precipitationAmount: 0.0, windSpeed: 11, windGust: 15, uvIndex: 5,  cloudCover: 0.35, symbolName: "sun.max.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(2),  temperature: 31, feelsLike: 33, precipitationChance: 0.07, precipitationAmount: 0.0, windSpeed: 13, windGust: 17, uvIndex: 7,  cloudCover: 0.40, symbolName: "sun.max.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(3),  temperature: 32, feelsLike: 34, precipitationChance: 0.10, precipitationAmount: 0.0, windSpeed: 14, windGust: 18, uvIndex: 9,  cloudCover: 0.45, symbolName: "cloud.sun.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(4),  temperature: 33, feelsLike: 36, precipitationChance: 0.15, precipitationAmount: 0.0, windSpeed: 16, windGust: 22, uvIndex: 11, cloudCover: 0.50, symbolName: "cloud.sun.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(5),  temperature: 35, feelsLike: 38, precipitationChance: 0.20, precipitationAmount: 0.0, windSpeed: 18, windGust: 25, uvIndex: 10, cloudCover: 0.60, symbolName: "cloud.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(6),  temperature: 34, feelsLike: 37, precipitationChance: 0.30, precipitationAmount: 0.2, windSpeed: 20, windGust: 28, uvIndex: 8,  cloudCover: 0.70, symbolName: "cloud.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(7),  temperature: 33, feelsLike: 36, precipitationChance: 0.42, precipitationAmount: 1.5, windSpeed: 22, windGust: 30, uvIndex: 5,  cloudCover: 0.85, symbolName: "cloud.bolt.rain.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(8),  temperature: 31, feelsLike: 34, precipitationChance: 0.65, precipitationAmount: 4.0, windSpeed: 25, windGust: 35, uvIndex: 2,  cloudCover: 0.95, symbolName: "cloud.rain.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(9),  temperature: 30, feelsLike: 33, precipitationChance: 0.70, precipitationAmount: 5.5, windSpeed: 24, windGust: 34, uvIndex: 1,  cloudCover: 0.95, symbolName: "cloud.rain.fill", isDaylight: true),
+            HourlyWeather(date: hourDate(10), temperature: 29, feelsLike: 31, precipitationChance: 0.60, precipitationAmount: 3.0, windSpeed: 20, windGust: 28, uvIndex: 0,  cloudCover: 0.90, symbolName: "cloud.rain.fill", isDaylight: false),
+            HourlyWeather(date: hourDate(11), temperature: 28, feelsLike: 30, precipitationChance: 0.38, precipitationAmount: 0.8, windSpeed: 16, windGust: 22, uvIndex: 0,  cloudCover: 0.80, symbolName: "cloud.drizzle.fill", isDaylight: false),
+            HourlyWeather(date: hourDate(12), temperature: 28, feelsLike: 29, precipitationChance: 0.18, precipitationAmount: 0.0, windSpeed: 13, windGust: 18, uvIndex: 0,  cloudCover: 0.70, symbolName: "cloud.fill", isDaylight: false),
+            HourlyWeather(date: hourDate(13), temperature: 27, feelsLike: 28, precipitationChance: 0.12, precipitationAmount: 0.0, windSpeed: 11, windGust: 15, uvIndex: 0,  cloudCover: 0.55, symbolName: "cloud.fill", isDaylight: false),
+            HourlyWeather(date: hourDate(14), temperature: 27, feelsLike: 28, precipitationChance: 0.08, precipitationAmount: 0.0, windSpeed: 10, windGust: 13, uvIndex: 0,  cloudCover: 0.40, symbolName: "moon.fill", isDaylight: false),
+            HourlyWeather(date: hourDate(15), temperature: 26, feelsLike: 27, precipitationChance: 0.05, precipitationAmount: 0.0, windSpeed: 8,  windGust: 11, uvIndex: 0,  cloudCover: 0.30, symbolName: "moon.stars.fill", isDaylight: false)
         ]
 
         let daily: [DailyWeather] = [

@@ -1,15 +1,23 @@
-import XCTest
+import Testing
+import Foundation
 import CoreLocation
 import AppIntents
 @testable import Upthere
 
+@Suite("Upthere Edge Case Tests")
 @MainActor
-final class UpthereTests: XCTestCase {
+struct UpthereTests {
+
+    private func makeIsolatedDefaults() -> (UserDefaults, String) {
+        let suiteName = "test.suite.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        return (defaults, suiteName)
+    }
 
     // MARK: - 1. First launch with location permission granted
-    func test01_FirstLaunchPermissionGranted() async {
-        let suiteName = "test.suite.01.\(UUID().uuidString)"
-        let mockDefaults = UserDefaults(suiteName: suiteName)!
+    @Test("First launch with location permission granted loads weather")
+    func firstLaunchPermissionGranted() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
         defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
         let locManager = SavedLocationsManager(defaults: mockDefaults)
@@ -20,38 +28,41 @@ final class UpthereTests: XCTestCase {
         await vm.loadWeather()
 
         guard case .loaded(let weather, _) = vm.state else {
-            XCTFail("State was not .loaded")
+            Issue.record("State was not .loaded")
             return
         }
-        XCTAssertFalse(weather.cityName.isEmpty, "Weather loaded successfully for device location")
+        #expect(!weather.cityName.isEmpty, "Weather loaded successfully for device location")
     }
 
     // MARK: - 2. First launch with permission denied and Ghaziabad fallback
-    func test02_FirstLaunchPermissionDeniedGhaziabadFallback() {
+    @Test("First launch with permission denied falls back to Ghaziabad")
+    func firstLaunchPermissionDeniedGhaziabadFallback() {
         let fallbackCity = LocationService.fallbackCityName
         let fallbackCoord = LocationService.fallbackCoordinate
 
-        XCTAssertEqual(fallbackCity, "Ghaziabad")
-        XCTAssertEqual(fallbackCoord.coordinate.latitude, 28.6692, accuracy: 0.001)
-        XCTAssertEqual(fallbackCoord.coordinate.longitude, 77.4538, accuracy: 0.001)
+        #expect(fallbackCity == "Ghaziabad")
+        #expect(abs(fallbackCoord.coordinate.latitude - 28.6692) < 0.001)
+        #expect(abs(fallbackCoord.coordinate.longitude - 77.4538) < 0.001)
     }
 
     // MARK: - 3. Permission revoked after previously being granted
-    func test03_PermissionRevokedAfterGranted() {
+    @Test("Permission revoked error description contains denied")
+    func permissionRevokedAfterGranted() {
         let err = LocationServiceError.permissionDenied
-        XCTAssertTrue(err.errorDescription?.contains("denied") == true)
+        #expect(err.errorDescription?.contains("denied") == true)
     }
 
     // MARK: - 4. Location services disabled
-    func test04_LocationServicesDisabled() {
+    @Test("Location services disabled error description contains disabled")
+    func locationServicesDisabled() {
         let err = LocationServiceError.servicesDisabled
-        XCTAssertTrue(err.errorDescription?.contains("disabled") == true)
+        #expect(err.errorDescription?.contains("disabled") == true)
     }
 
     // MARK: - 5. Manual city selection survives app restart
-    func test05_ManualCitySelectionSurvivesRestart() {
-        let suiteName = "test.suite.\(UUID().uuidString)"
-        let mockDefaults = UserDefaults(suiteName: suiteName)!
+    @Test("Manual city selection survives app restart")
+    func manualCitySelectionSurvivesRestart() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
         defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
         let manager1 = SavedLocationsManager(defaults: mockDefaults)
@@ -62,14 +73,14 @@ final class UpthereTests: XCTestCase {
         let manager2 = SavedLocationsManager(defaults: mockDefaults)
         let selected = manager2.selectedLocation
 
-        XCTAssertEqual(selected?.cityName, "Kyoto")
-        XCTAssertEqual(selected?.latitude, 35.0116)
+        #expect(selected?.cityName == "Kyoto")
+        #expect(selected?.latitude == 35.0116)
     }
 
     // MARK: - 6. Offline launch with cached data
-    func test06_OfflineLaunchWithCachedData() async {
-        let suiteName = "test.cache.\(UUID().uuidString)"
-        let mockDefaults = UserDefaults(suiteName: suiteName)!
+    @Test("Offline launch with cached data loads cached weather")
+    func offlineLaunchWithCachedData() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
         defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
         let cache = WeatherCacheManager(defaults: mockDefaults)
@@ -116,19 +127,19 @@ final class UpthereTests: XCTestCase {
         await vm.loadWeather(force: true)
 
         guard case .loaded(let weather, let banner) = vm.state else {
-            XCTFail("State was not .loaded with cached data")
+            Issue.record("State was not .loaded with cached data")
             return
         }
 
         let isOfflineBanner: Bool
         if case .offline = banner { isOfflineBanner = true } else { isOfflineBanner = false }
-        XCTAssertTrue(weather.isCached || isOfflineBanner)
+        #expect(weather.isCached || isOfflineBanner)
     }
 
     // MARK: - 7. Offline launch without cached data
-    func test07_OfflineLaunchWithoutCachedData() async {
-        let suiteName = "test.cache.empty.\(UUID().uuidString)"
-        let mockDefaults = UserDefaults(suiteName: suiteName)!
+    @Test("Offline launch without cached data enters retryable error state")
+    func offlineLaunchWithoutCachedData() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
         defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
         let cache = WeatherCacheManager(defaults: mockDefaults)
@@ -140,36 +151,40 @@ final class UpthereTests: XCTestCase {
         await vm.loadWeather(force: true)
 
         guard case .error(let message, let isRetryable) = vm.state else {
-            XCTFail("Did not enter error state")
+            Issue.record("Did not enter error state")
             return
         }
-        XCTAssertFalse(message.isEmpty)
-        XCTAssertTrue(isRetryable)
+        #expect(!message.isEmpty)
+        #expect(isRetryable)
     }
 
     // MARK: - 8. Weather API timeout
-    func test08_WeatherApiTimeout() {
+    @Test("Weather API timeout is retryable")
+    func weatherApiTimeout() {
         let err = WeatherServiceError.timeout
-        XCTAssertTrue(err.isRetryable)
-        XCTAssertTrue(err.errorDescription?.contains("timed out") == true)
+        #expect(err.isRetryable)
+        #expect(err.errorDescription?.contains("timed out") == true)
     }
 
     // MARK: - 9. API returns an authorization error
-    func test09_ApiAuthorizationError() {
+    @Test("API authorization error is not retryable")
+    func apiAuthorizationError() {
         let err = WeatherServiceError.unauthorized
-        XCTAssertFalse(err.isRetryable)
-        XCTAssertTrue(err.errorDescription?.contains("Unauthorized") == true)
+        #expect(!err.isRetryable)
+        #expect(err.errorDescription?.contains("Unauthorized") == true)
     }
 
     // MARK: - 10. Malformed weather response
-    func test10_MalformedWeatherResponse() {
+    @Test("Malformed weather response fails decoding")
+    func malformedWeatherResponse() {
         let corruptedData = "{\"invalid_json\": true}".data(using: .utf8)!
         let decoded = try? JSONDecoder().decode(Weather.self, from: corruptedData)
-        XCTAssertNil(decoded)
+        #expect(decoded == nil)
     }
 
     // MARK: - 11. Current conditions succeed while forecast fails
-    func test11_CurrentConditionsSucceedForecastFails() {
+    @Test("Current conditions succeed while forecast fails")
+    func currentConditionsSucceedForecastFails() {
         let partialWeather = Weather(
             cityName: "PartialCity",
             locationSubtitle: "Partial region",
@@ -182,13 +197,14 @@ final class UpthereTests: XCTestCase {
             hourlyForecast: [],
             dailyForecast: []
         )
-        XCTAssertTrue(partialWeather.hourlyForecast.isEmpty)
-        XCTAssertTrue(partialWeather.dailyForecast.isEmpty)
-        XCTAssertEqual(partialWeather.temperature, 20.0)
+        #expect(partialWeather.hourlyForecast.isEmpty)
+        #expect(partialWeather.dailyForecast.isEmpty)
+        #expect(partialWeather.temperature == 20.0)
     }
 
     // MARK: - 12. Old API response arrives after a newer response
-    func test12_OldApiResponseArrivesAfterNewer() async {
+    @Test("Old API response arrives after newer response preserves active state")
+    func oldApiResponseArrivesAfterNewer() async {
         let repo = MockWeatherRepository()
         let useCase = GetWeatherUseCase(repository: repo)
         let vm = HomeViewModel(getWeatherUseCase: useCase)
@@ -197,13 +213,13 @@ final class UpthereTests: XCTestCase {
         let task2 = Task { await vm.loadWeather(force: true) }
         _ = await (task1.value, task2.value)
 
-        XCTAssertNotEqual(vm.state, .idle)
+        #expect(vm.state != .idle)
     }
 
     // MARK: - 13. User changes city during a request
-    func test13_UserChangesCityDuringRequest() async {
-        let suiteName = "test.suite.13.\(UUID().uuidString)"
-        let mockDefaults = UserDefaults(suiteName: suiteName)!
+    @Test("User changes city during a request selects the newest city")
+    func userChangesCityDuringRequest() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
         defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
         let locManager = SavedLocationsManager(defaults: mockDefaults)
@@ -222,22 +238,24 @@ final class UpthereTests: XCTestCase {
 
         try? await Task.sleep(nanoseconds: 100_000_000)
 
-        XCTAssertEqual(vm.selectedLocation?.cityName, "Paris")
+        #expect(vm.selectedLocation?.cityName == "Paris")
     }
 
     // MARK: - 14. Missing temperature does not display as zero
-    func test14_MissingTemperatureDoesNotDisplayZero() {
+    @Test("Missing or negative zero temperature formats safely")
+    func missingTemperatureDoesNotDisplayZero() {
         let negativeZero = -0.0001
         let formattedNegZero = WeatherFormatter.shared.temp(negativeZero)
         let validNegFive = WeatherFormatter.shared.temp(-5.0)
 
-        XCTAssertEqual(formattedNegZero, "0°")
-        XCTAssertNotEqual(formattedNegZero, "-0°")
-        XCTAssertEqual(validNegFive, "-5°")
+        #expect(formattedNegZero == "0°")
+        #expect(formattedNegZero != "-0°")
+        #expect(validNegFive == "-5°")
     }
 
     // MARK: - 15. Unknown condition code uses a safe fallback
-    func test15_UnknownConditionSafeFallback() {
+    @Test("Unknown condition code safely preserved without crashing")
+    func unknownConditionSafeFallback() {
         let weather = Weather(
             cityName: "Test",
             locationSubtitle: "Region",
@@ -248,53 +266,60 @@ final class UpthereTests: XCTestCase {
             feelsLike: 18.0,
             description: "Special event"
         )
-        XCTAssertEqual(weather.condition, "RareAtmosphericPhenomenon")
-        XCTAssertFalse(weather.condition.isEmpty)
+        #expect(weather.condition == "RareAtmosphericPhenomenon")
+        #expect(!weather.condition.isEmpty)
     }
 
     // MARK: - 16. Celsius/Fahrenheit switching is correct
-    func test16_CelsiusFahrenheitSwitching() {
+    @Test("Celsius and Fahrenheit temperature conversions")
+    func celsiusFahrenheitSwitching() {
         let cZero = TemperatureUnit.celsius.convert(0.0)
         let fZero = TemperatureUnit.fahrenheit.convert(0.0)
         let fBoiling = TemperatureUnit.fahrenheit.convert(100.0)
 
-        XCTAssertEqual(cZero, 0.0)
-        XCTAssertEqual(fZero, 32.0)
-        XCTAssertEqual(fBoiling, 212.0)
+        #expect(cZero == 0.0)
+        #expect(fZero == 32.0)
+        #expect(fBoiling == 212.0)
     }
 
     // MARK: - 17. Forecast timestamps across midnight are correct
-    func test17_ForecastTimestampsAcrossMidnight() {
+    @Test("Forecast timestamps across midnight preserve order and formatting")
+    func forecastTimestampsAcrossMidnight() {
         let midnightHourly = [
             HourlyWeather(time: "11 PM", temperature: 18.0, precipitationProbability: 0.1),
             HourlyWeather(time: "12 AM", temperature: 17.0, precipitationProbability: 0.1),
             HourlyWeather(time: "1 AM", temperature: 16.0, precipitationProbability: 0.1)
         ]
-        XCTAssertEqual(midnightHourly[0].time, "11 PM")
-        XCTAssertEqual(midnightHourly[1].time, "12 AM")
-        XCTAssertEqual(midnightHourly[2].time, "1 AM")
+        #expect(midnightHourly[0].time == "11 PM")
+        #expect(midnightHourly[1].time == "12 AM")
+        #expect(midnightHourly[2].time == "1 AM")
     }
 
     // MARK: - 18. Weather data from one city never appears under another city
-    func test18_WeatherDataCityIsolation() {
-        let cache = WeatherCacheManager.shared
+    @Test("Weather data cache keys isolate cities")
+    func weatherDataCityIsolation() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
         let keySydney = cache.cacheKey(for: "Sydney", coordinate: (-33.8688, 151.2093))
         let keyLondon = cache.cacheKey(for: "London", coordinate: (51.5074, -0.1278))
 
-        XCTAssertNotEqual(keySydney, keyLondon)
-        XCTAssertTrue(keySydney.localizedCaseInsensitiveContains("Sydney"))
-        XCTAssertTrue(keyLondon.localizedCaseInsensitiveContains("London"))
+        #expect(keySydney != keyLondon)
+        #expect(keySydney.localizedCaseInsensitiveContains("Sydney"))
+        #expect(keyLondon.localizedCaseInsensitiveContains("London"))
     }
 
     // MARK: - 19. Refresh failure preserves previously valid data
-    func test19_RefreshFailurePreservesValidData() async {
+    @Test("Refresh failure preserves valid weather and shows banner")
+    func refreshFailurePreservesValidData() async {
         let repo = MockWeatherRepository()
         let useCase = GetWeatherUseCase(repository: repo)
         let vm = HomeViewModel(getWeatherUseCase: useCase)
 
         await vm.loadWeather()
         guard case .loaded(let initialWeather, _) = vm.state else {
-            XCTFail("Initial load failed")
+            Issue.record("Initial load failed")
             return
         }
 
@@ -302,18 +327,19 @@ final class UpthereTests: XCTestCase {
         await vm.refreshWeather()
 
         guard case .loaded(let weatherAfterFailure, let banner) = vm.state else {
-            XCTFail("Did not preserve state")
+            Issue.record("Did not preserve state")
             return
         }
-        XCTAssertEqual(weatherAfterFailure.cityName, initialWeather.cityName)
+        #expect(weatherAfterFailure.cityName == initialWeather.cityName)
         guard case .refreshFailed = banner else {
-            XCTFail("Expected refreshFailed banner")
+            Issue.record("Expected refreshFailed banner")
             return
         }
     }
 
     // MARK: - 20. Severe weather alerts are not fabricated or displayed as current after expiry
-    func test20_ExpiredAlertsNotDisplayed() {
+    @Test("Expired severe weather alerts are marked expired")
+    func expiredAlertsNotDisplayed() {
         let pastDate = Date(timeIntervalSinceNow: -7200) // 2 hours ago
         let expiredAlert = WeatherAlert(
             source: "IMD",
@@ -321,20 +347,22 @@ final class UpthereTests: XCTestCase {
             validUntil: "Expired",
             expirationDate: pastDate
         )
-        XCTAssertTrue(expiredAlert.isExpired)
+        #expect(expiredAlert.isExpired)
     }
 
     // MARK: - 21. Search results distinguish cities with identical names
-    func test21_SearchDistinguishesDuplicateNames() {
-        let sheet = CitySearchSheet(onCitySelected: { _ in })
-        _ = sheet
-        let portlandOR = "Portland, Oregon, USA"
-        let portlandME = "Portland, Maine, USA"
-        XCTAssertNotEqual(portlandOR, portlandME)
+    @Test("Search results distinguish cities with identical names in different regions")
+    func searchDistinguishesDuplicateNames() {
+        let portlandOR = SavedLocation(cityName: "Portland", regionName: "Oregon, United States", condition: "Rain", isCurrentLocation: false, latitude: 45.5152, longitude: -122.6784)
+        let portlandME = SavedLocation(cityName: "Portland", regionName: "Maine, United States", condition: "Snow", isCurrentLocation: false, latitude: 43.6591, longitude: -70.2568)
+
+        #expect(portlandOR.id != portlandME.id)
+        #expect(portlandOR.regionName != portlandME.regionName)
     }
 
-    // MARK: - 22. Rapid refreshes do not cause duplicate requests
-    func test22_RapidRefreshesDebounced() async {
+    // MARK: - 23 (EdgeCaseTests 23). Rapid refreshes do not cause duplicate requests
+    @Test("Rapid refreshes are debounced")
+    func rapidRefreshesDebounced() async {
         let repo = MockWeatherRepository()
         let useCase = GetWeatherUseCase(repository: repo)
         let vm = HomeViewModel(getWeatherUseCase: useCase)
@@ -347,11 +375,12 @@ final class UpthereTests: XCTestCase {
             }
         }
 
-        XCTAssertLessThanOrEqual(repo.fetchCallCount, 2)
+        #expect(repo.fetchCallCount <= 2)
     }
 
-    // MARK: - 23. HourlyWeather extensions and insight fields
-    func test23_HourlyWeatherExtendedFields() {
+    // MARK: - Extended HourlyWeather fields
+    @Test("HourlyWeather models extended insight metrics")
+    func hourlyWeatherExtendedFields() {
         let hour = HourlyWeather(
             time: "2 PM",
             temperature: 24.5,
@@ -363,83 +392,84 @@ final class UpthereTests: XCTestCase {
             symbolName: "sun.max.fill"
         )
 
-        XCTAssertEqual(hour.time, "2 PM")
-        XCTAssertEqual(hour.temperature, 24.5)
-        XCTAssertEqual(hour.precipitationProbability, 0.15)
-        XCTAssertEqual(hour.windSpeed, 18.0)
-        XCTAssertEqual(hour.wind, 18.0)
-        XCTAssertEqual(hour.windGust, 26.0)
-        XCTAssertEqual(hour.gust, 26.0)
-        XCTAssertEqual(hour.uvIndex, 7)
-        XCTAssertEqual(hour.cloudCover, 0.45)
-        XCTAssertEqual(hour.symbolName, "sun.max.fill")
-        XCTAssertEqual(hour.symbol, "sun.max.fill")
+        #expect(hour.time == "2 PM")
+        #expect(hour.temperature == 24.5)
+        #expect(hour.precipitationProbability == 0.15)
+        #expect(hour.windSpeed == 18.0)
+        #expect(hour.wind == 18.0)
+        #expect(hour.windGust == 26.0)
+        #expect(hour.gust == 26.0)
+        #expect(hour.uvIndex == 7)
+        #expect(hour.cloudCover == 0.45)
+        #expect(hour.symbolName == "sun.max.fill")
+        #expect(hour.symbol == "sun.max.fill")
     }
 
-    // MARK: - 24. Tab switch does not refetch from API when weather is fresh
-    func test24_TabSwitchAvoidsRefetchingWhenFresh() async {
+    // MARK: - Fresh data tab switch cache
+    @Test("Tab switch avoids refetching when weather data is fresh")
+    func tabSwitchAvoidsRefetchingWhenFresh() async {
         let repo = MockWeatherRepository()
         let useCase = GetWeatherUseCase(repository: repo)
         let vm = HomeViewModel(getWeatherUseCase: useCase)
 
         await vm.loadWeather()
         let countAfterFirstLoad = repo.fetchCallCount
-        XCTAssertGreaterThanOrEqual(countAfterFirstLoad, 1)
+        #expect(countAfterFirstLoad >= 1)
 
-        // Simulating visiting HomeView again from another tab (force: false)
         await vm.loadWeather(force: false)
-        XCTAssertEqual(repo.fetchCallCount, countAfterFirstLoad, "Subsequent visit to Home must not refetch and waste API quota")
+        #expect(repo.fetchCallCount == countAfterFirstLoad, "Subsequent visit to Home must not refetch fresh data")
     }
 
-    // MARK: - 25. Pull-to-refresh preserves displayedWeather and does not show skeleton
-    func test25_PullToRefreshPreservesDisplayedWeather() async {
+    // MARK: - Pull-to-refresh preservation
+    @Test("Pull-to-refresh preserves displayed weather")
+    func pullToRefreshPreservesDisplayedWeather() async {
         let repo = MockWeatherRepository()
         let useCase = GetWeatherUseCase(repository: repo)
         let vm = HomeViewModel(getWeatherUseCase: useCase)
 
         await vm.loadWeather()
-        XCTAssertNotNil(vm.displayedWeather)
+        #expect(vm.displayedWeather != nil)
 
-        // Start forced refresh
         let refreshTask = Task {
             await vm.refreshWeather()
         }
-        // While running, displayedWeather must remain available so screen does not swap for skeleton
-        XCTAssertNotNil(vm.displayedWeather)
+        #expect(vm.displayedWeather != nil)
         await refreshTask.value
-        XCTAssertNotNil(vm.displayedWeather)
+        #expect(vm.displayedWeather != nil)
     }
 
-    // MARK: - 26. Spotlight identifier resolution
-    func test26_SpotlightResolution() {
+    // MARK: - Spotlight identifier resolution
+    @Test("Spotlight service resolves city name from identifier")
+    func spotlightResolution() {
         let weatherCity = SpotlightService.shared.resolveCityName(from: "weather.cupertino")
-        XCTAssertEqual(weatherCity, "Cupertino")
+        #expect(weatherCity == "Cupertino")
 
         let locationCity = SpotlightService.shared.resolveCityName(from: "location.tokyo")
-        XCTAssertEqual(locationCity, "Tokyo")
+        #expect(locationCity == "Tokyo")
 
         let multiWordCity = SpotlightService.shared.resolveCityName(from: "weather.san_francisco")
-        XCTAssertEqual(multiWordCity, "San Francisco")
+        #expect(multiWordCity == "San Francisco")
     }
 
-    // MARK: - 27. App Intents LocationEntityQuery
-    func test27_LocationEntityQuery() async throws {
+    // MARK: - App Intents LocationEntityQuery
+    @Test("LocationEntityQuery returns entities")
+    func locationEntityQuery() async throws {
         let query = LocationEntityQuery()
         let entities = try await query.allEntities()
 
-        XCTAssertFalse(entities.isEmpty, "Location entities should contain at least current location")
-        XCTAssertEqual(entities.first?.id, "current", "First entity should be Current Location")
+        #expect(!entities.isEmpty, "Location entities should contain at least current location")
+        #expect(entities.first?.id == "current", "First entity should be Current Location")
     }
 
-    // MARK: - 28. ToggleSevereAlertsIntent execution
-    func test28_ToggleSevereAlertsIntent() async throws {
+    // MARK: - ToggleSevereAlertsIntent
+    @Test("ToggleSevereAlertsIntent inverts severe alerts setting")
+    func toggleSevereAlertsIntent() async throws {
         let initial = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
         let intent = ToggleSevereAlertsIntent()
         let result = try await intent.perform()
 
-        XCTAssertEqual(result.value, !initial, "Toggling severe alerts intent should invert the stored setting")
+        #expect(result.value == !initial, "Toggling severe alerts intent should invert the stored setting")
 
-        // Invert back to restore state
         _ = try await intent.perform()
     }
 }
