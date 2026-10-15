@@ -19,9 +19,7 @@ struct UpthereApp: App {
             ZStack {
                 MainTabView(
                     homeViewModel: container.homeViewModel,
-                    settingsViewModel: container.settingsViewModel,
-                    initialTab: .locations,
-                    showPermission: false
+                    settingsViewModel: container.settingsViewModel
                 )
                     .opacity(showSplash ? 0 : 1)
 
