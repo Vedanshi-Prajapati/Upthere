@@ -52,7 +52,7 @@ public struct ForecastView: View {
                         hourlyView(weather: weather)
                     }
                 }
-                .padding(.bottom, 24)
+                .padding(.bottom, AppTheme.tabBarClearance)
             }
             .padding(.top, 16)
         }
@@ -88,14 +88,14 @@ public struct ForecastView: View {
             }
         } label: {
             Text(title)
-                .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .medium))
-                .foregroundStyle(.white)
+                .font(.system(size: 14, weight: selectedTab == tab ? .semibold : .medium))
+                .foregroundStyle(selectedTab == tab ? Color.white : AppTheme.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .padding(.vertical, 7)
                 .background(
                     Group {
                         if selectedTab == tab {
-                            Capsule().fill(Color.white.opacity(0.24))
+                            Capsule().fill(Color.white.opacity(0.18))
                         } else {
                             Color.clear
                         }
@@ -137,7 +137,7 @@ public struct ForecastView: View {
     private func hourlyView(weather: Weather) -> some View {
         VStack(alignment: .leading, spacing: 24) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     ForEach(weather.hourlyForecast) { hourly in
                         HourlyCard(hourly: hourly)
                     }
@@ -175,11 +175,11 @@ public struct ForecastView: View {
                     ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                         HStack(alignment: .top, spacing: 0) {
                             forecastMetricCell(title: row.0, value: row.1, subtitle: row.2)
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1)
+                            Rectangle().fill(AppTheme.separator).frame(width: 0.8)
                             forecastMetricCell(title: row.3, value: row.4, subtitle: row.5)
                         }
                         if rows.firstIndex(where: { $0.0 == row.0 }) != rows.count - 1 {
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
+                            Rectangle().fill(AppTheme.separator).frame(height: 0.8)
                         }
                     }
                 }
@@ -193,16 +193,17 @@ public struct ForecastView: View {
     }
 
     private func forecastMetricCell(title: String, value: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.system(size: 13))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(AppTheme.textSecondary)
             Text(value)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
             Text(subtitle)
                 .font(.system(size: 12))
-                .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(AppTheme.textTertiary)
+                .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 14)
@@ -391,7 +392,7 @@ private struct HourlyCard: View {
     var isNow: Bool { hourly.time == "Now" }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Text(hourly.time)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
@@ -400,23 +401,23 @@ private struct HourlyCard: View {
                 .symbolRenderingMode(.multicolor)
                 .symbolVariant(.fill)
                 .foregroundStyle(.white)
-                .font(.system(size: 24))
-                .frame(height: 30)
-                .padding(.vertical, 2)
+                .font(.system(size: 22))
+                .frame(height: 28)
+                .padding(.vertical, 1)
 
             Text(WeatherFormatter.shared.temp(hourly.temperature))
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.white)
 
             Text("\(Int(hourly.precipitationProbability * 100))%")
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .foregroundStyle(hourly.precipitationProbability >= 0.3
                     ? Color(red: 0.55, green: 0.85, blue: 1.0)
-                    : AppTheme.textSecondary)
+                    : AppTheme.textTertiary)
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 12)
-        .frame(width: 80)
+        .padding(.vertical, 11)
+        .padding(.horizontal, 8)
+        .frame(width: 70)
         .background(
             Group {
                 if isNow {

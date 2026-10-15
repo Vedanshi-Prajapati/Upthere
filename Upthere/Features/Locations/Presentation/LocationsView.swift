@@ -69,11 +69,11 @@ public struct LocationsView: View {
 
                     // Hint + legal
                     Section {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Tap any city to switch to its live weather. Current location tracks GPS.")
+                        VStack(alignment: .center, spacing: 8) {
+                            Text("Tap any city to switch to its live weather.")
                                 .font(.system(size: 13))
                                 .foregroundStyle(AppTheme.textSecondary)
-                                .lineSpacing(3)
+
                             Button {
                                 if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
                                     UIApplication.shared.open(url)
@@ -85,12 +85,14 @@ public struct LocationsView: View {
                                     Text("Weather · Apple Weather")
                                         .font(.system(size: 12, weight: .medium))
                                 }
-                                .foregroundStyle(AppTheme.textSecondary)
+                                .foregroundStyle(AppTheme.textTertiary)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("Apple Weather legal attribution")
                         }
-                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .padding(.bottom, AppTheme.tabBarClearance)
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                     }
@@ -281,9 +283,11 @@ private struct LocationRowView: View {
                     Text(location.cityName)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
+                        .lineLimit(1)
                     Text(subtitleText)
                         .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -311,7 +315,12 @@ private struct LocationRowView: View {
                         .frame(width: 20)
                 }
             }
+            .padding(.horizontal, 10)
             .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? Color.white.opacity(0.12) : Color.clear)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

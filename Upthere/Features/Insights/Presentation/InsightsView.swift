@@ -22,7 +22,7 @@ public struct InsightsView: View {
                         insightsSection(weather: weather)
                         footer
                     }
-                    .padding(.bottom, 24)
+                    .padding(.bottom, AppTheme.tabBarClearance)
                 }
             } else {
                 switch viewModel.state {
@@ -270,32 +270,37 @@ public struct InsightsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "thermometer.sun.fill", label: "Temperature range")
 
-                HStack(spacing: 4) {
-                    Text(WeatherFormatter.shared.temp(trend.minTemperature))
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 16, weight: .semibold))
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Now")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(AppTheme.textTertiary)
+                        Text(WeatherFormatter.shared.temp(trend.currentTemperature))
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("24h Range")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(AppTheme.textTertiary)
+                        HStack(spacing: 4) {
+                            Text(WeatherFormatter.shared.temp(trend.minTemperature))
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(AppTheme.textTertiary)
+                            Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                        }
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(AppTheme.textSecondary)
-                    Text(WeatherFormatter.shared.temp(trend.maxTemperature))
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
+                    }
                 }
+                .padding(.vertical, 4)
 
                 Text("Expected temperature swing of \(Int(trend.temperatureSwing.rounded()))° between \(formatHour(trend.minDate)) and \(formatHour(trend.maxDate)).")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
-
-                HStack(spacing: 4) {
-                    Text("Now")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppTheme.textTertiary)
-                    Text(WeatherFormatter.shared.temp(trend.currentTemperature))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-                .padding(.top, 4)
 
                 TemperatureBarChart(hourly: hourly)
                     .frame(height: 80)
@@ -574,8 +579,9 @@ private struct TemperatureBarChart: View {
                 ForEach(hourly) { hour in
                     let normalized = (hour.temperature - minT) / range
                     let height = max(4, geo.size.height * normalized)
+                    let isNow = hour.id == hourly.first?.id
                     RoundedRectangle(cornerRadius: 2, style: .continuous)
-                        .fill(Color.white.opacity(hour.id == hourly.first?.id ? 0.90 : 0.35))
+                        .fill(isNow ? AppTheme.accent : Color.white.opacity(0.35))
                         .frame(width: barWidth, height: height)
                 }
             }

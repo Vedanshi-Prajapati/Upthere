@@ -106,7 +106,7 @@ private struct WeatherScrollContent: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
-            .padding(.bottom, 24)
+            .padding(.bottom, AppTheme.tabBarClearance)
         }
     }
 
@@ -173,12 +173,6 @@ private struct WeatherScrollContent: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
             Spacer()
-            Image(systemName: weather.weatherSymbolName)
-                .symbolRenderingMode(.multicolor)
-                .symbolVariant(.fill)
-                .foregroundStyle(.white)
-                .font(.system(size: 44))
-                .accessibilityLabel(Text(weather.condition))
         }
         .padding(.top, 8)
         .padding(.bottom, 12)
@@ -212,10 +206,10 @@ private struct WeatherScrollContent: View {
             WeatherIllustrationView(
                 condition: weather.condition,
                 symbolName: weather.weatherSymbolName,
-                size: 104,
+                size: 76,
                 animated: true
             )
-            .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 8)
+            .shadow(color: Color.black.opacity(0.10), radius: 8, x: 0, y: 4)
         }
         .padding(.bottom, 16)
     }

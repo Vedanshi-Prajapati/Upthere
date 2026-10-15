@@ -192,12 +192,12 @@ private struct RealisticSkyCanvas: View {
                 .init(color: Color(red: 0.32, green: 0.52, blue: 0.72), location: 1.0)
             ]
         case .cloudy:
-            // Soft diffuse overcast: cool slate gray-blue with subtle brightness variation
+            // Soft diffuse overcast: muted atmospheric slate-gray/blue-gray palette
             return [
-                .init(color: Color(red: 0.16, green: 0.23, blue: 0.35), location: 0.0),
-                .init(color: Color(red: 0.25, green: 0.33, blue: 0.44), location: 0.45),
-                .init(color: Color(red: 0.36, green: 0.43, blue: 0.52), location: 0.80),
-                .init(color: Color(red: 0.45, green: 0.50, blue: 0.58), location: 1.0)
+                .init(color: Color(red: 0.14, green: 0.18, blue: 0.25), location: 0.0),
+                .init(color: Color(red: 0.20, green: 0.26, blue: 0.33), location: 0.45),
+                .init(color: Color(red: 0.28, green: 0.34, blue: 0.41), location: 0.80),
+                .init(color: Color(red: 0.35, green: 0.40, blue: 0.47), location: 1.0)
             ]
         case .rainy:
             // Naturally overcast blue-gray sky with atmospheric depth

@@ -995,25 +995,49 @@ private struct SparkleStarShape: Shape {
     }
 }
 
-// 4. Volumetric Cloud Compound Shape
+// 4. Volumetric Cloud Compound Shape (Continuous organic silhouette without internal overlapping strokes)
 private struct VolumetricCloudShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
         let h = rect.height
 
-        let baseRect = CGRect(x: w * 0.05, y: h * 0.45, width: w * 0.90, height: h * 0.45)
-        path.addRoundedRect(in: baseRect, cornerSize: CGSize(width: h * 0.22, height: h * 0.22))
+        // Start at flat base left
+        path.move(to: CGPoint(x: w * 0.18, y: h * 0.82))
+        path.addLine(to: CGPoint(x: w * 0.82, y: h * 0.82))
 
-        let centerPuff = CGRect(x: w * 0.32, y: h * 0.12, width: w * 0.44, height: h * 0.68)
-        path.addEllipse(in: centerPuff)
+        // Right puff
+        path.addCurve(
+            to: CGPoint(x: w * 0.90, y: h * 0.58),
+            control1: CGPoint(x: w * 0.88, y: h * 0.82),
+            control2: CGPoint(x: w * 0.94, y: h * 0.70)
+        )
+        path.addCurve(
+            to: CGPoint(x: w * 0.72, y: h * 0.36),
+            control1: CGPoint(x: w * 0.90, y: h * 0.44),
+            control2: CGPoint(x: w * 0.82, y: h * 0.36)
+        )
 
-        let leftPuff = CGRect(x: w * 0.12, y: h * 0.26, width: w * 0.36, height: h * 0.54)
-        path.addEllipse(in: leftPuff)
+        // Center upper puff
+        path.addCurve(
+            to: CGPoint(x: w * 0.38, y: h * 0.30),
+            control1: CGPoint(x: w * 0.65, y: h * 0.14),
+            control2: CGPoint(x: w * 0.46, y: h * 0.14)
+        )
 
-        let rightPuff = CGRect(x: w * 0.58, y: h * 0.32, width: w * 0.32, height: h * 0.48)
-        path.addEllipse(in: rightPuff)
+        // Left puff
+        path.addCurve(
+            to: CGPoint(x: w * 0.12, y: h * 0.58),
+            control1: CGPoint(x: w * 0.24, y: h * 0.30),
+            control2: CGPoint(x: w * 0.10, y: h * 0.42)
+        )
+        path.addCurve(
+            to: CGPoint(x: w * 0.18, y: h * 0.82),
+            control1: CGPoint(x: w * 0.08, y: h * 0.72),
+            control2: CGPoint(x: w * 0.12, y: h * 0.82)
+        )
 
+        path.closeSubpath()
         return path
     }
 }
