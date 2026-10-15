@@ -103,22 +103,24 @@ public struct LocationsView: View {
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.white)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showCitySearch = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold))
+                    GlassEffectContainer(spacing: 4) {
+                        EditButton()
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white)
-                            .frame(width: 32, height: 32)
-                            .background(Circle().fill(AppTheme.accent))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+
+                        Button {
+                            showCitySearch = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                        }
+                        .accessibilityLabel("Add city")
                     }
-                    .accessibilityLabel("Add city")
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)

@@ -2,274 +2,294 @@ import SwiftUI
 
 public struct SettingsView: View {
     @Bindable private var viewModel: SettingsViewModel
-    @State private var showTemperatureUnit = false
-    @State private var showWindSpeedUnit = false
-    @State private var showPrecipitationUnit = false
+    private let locationService: LocationService
+    @State private var showLocationPermission = false
 
     public var condition: String?
     public var symbolName: String?
 
     public init(
         viewModel: SettingsViewModel? = nil,
+        locationService: LocationService? = nil,
         condition: String? = nil,
         symbolName: String? = nil
     ) {
         self.viewModel = viewModel ?? SettingsViewModel()
+        self.locationService = locationService ?? .shared
         self.condition = condition
         self.symbolName = symbolName
     }
 
     public var body: some View {
         NavigationStack {
-            ZStack {
-                WeatherBackgroundView(condition: condition, symbolName: symbolName)
+            Form {
+                // MARK: - Weather
+                Section {
+                    NavigationLink {
+                        UnitPickerView(
+                            title: "Temperature unit",
+                            options: TemperatureUnit.allCases.map { $0.rawValue },
+                            selected: viewModel.temperatureUnit.rawValue,
+                            condition: condition,
+                            symbolName: symbolName
+                        ) { newValue in
+                            if let unit = TemperatureUnit(rawValue: newValue) {
+                                viewModel.temperatureUnit = unit
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "thermometer.medium", color: .orange)
+                            Text("Temperature unit")
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text(viewModel.temperatureUnit.shortLabel)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Title
-                        Text("Settings")
-                            .font(.system(size: 34, weight: .bold))
+                    NavigationLink {
+                        UnitPickerView(
+                            title: "Wind speed unit",
+                            options: WindSpeedUnit.allCases.map { $0.rawValue },
+                            selected: viewModel.windSpeedUnit.rawValue,
+                            condition: condition,
+                            symbolName: symbolName
+                        ) { newValue in
+                            if let unit = WindSpeedUnit(rawValue: newValue) {
+                                viewModel.windSpeedUnit = unit
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "wind", color: Color(red: 45/255, green: 175/255, blue: 195/255))
+                            Text("Wind speed unit")
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text(viewModel.windSpeedUnit.rawValue)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
+
+                    NavigationLink {
+                        UnitPickerView(
+                            title: "Precipitation unit",
+                            options: PrecipitationUnit.allCases.map { $0.rawValue },
+                            selected: viewModel.precipitationUnit.rawValue,
+                            condition: condition,
+                            symbolName: symbolName
+                        ) { newValue in
+                            if let unit = PrecipitationUnit(rawValue: newValue) {
+                                viewModel.precipitationUnit = unit
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "drop.fill", color: Color(red: 0/255, green: 122/255, blue: 255/255))
+                            Text("Precipitation unit")
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text(viewModel.precipitationUnit.rawValue)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
+                } header: {
+                    Text("Weather")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .listRowBackground(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppTheme.cardMaterial))
+
+                // MARK: - Notifications
+                Section {
+                    Toggle(isOn: $viewModel.weatherChangesEnabled) {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "cloud.fill", color: Color(red: 50/255, green: 155/255, blue: 245/255))
+                            Text("Weather changes")
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .tint(AppTheme.accent)
+
+                    Toggle(isOn: $viewModel.rainAlertsEnabled) {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "umbrella.fill", color: Color(red: 88/255, green: 86/255, blue: 214/255))
+                            Text("Rain alerts")
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .tint(AppTheme.accent)
+
+                    Toggle(isOn: $viewModel.severeAlertsEnabled) {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "exclamationmark.triangle.fill", color: Color(red: 255/255, green: 59/255, blue: 48/255))
+                            Text("Severe weather alerts")
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .tint(AppTheme.accent)
+                } header: {
+                    Text("Notifications")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .listRowBackground(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppTheme.cardMaterial))
+
+                // MARK: - Location
+                Section {
+                    HStack(spacing: 12) {
+                        iconBadge(icon: "location.fill", color: Color(red: 0/255, green: 122/255, blue: 255/255))
+                        Text("Current location")
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            .padding(.bottom, 28)
-
-                        // MARK: - Weather
-                        sectionHeader("Weather")
-
-                        VStack(spacing: 0) {
-                            settingsRow(
-                                icon: "thermometer.medium",
-                                iconColor: .orange,
-                                title: "Temperature unit",
-                                value: viewModel.temperatureUnit.shortLabel
-                            ) {
-                                showTemperatureUnit = true
-                            }
-                            divider
-                            settingsRow(
-                                icon: "wind",
-                                iconColor: Color(red: 45/255, green: 175/255, blue: 195/255),
-                                title: "Wind speed unit",
-                                value: viewModel.windSpeedUnit.rawValue
-                            ) {
-                                showWindSpeedUnit = true
-                            }
-                            divider
-                            settingsRow(
-                                icon: "drop.fill",
-                                iconColor: Color(red: 0/255, green: 122/255, blue: 255/255),
-                                title: "Precipitation unit",
-                                value: viewModel.precipitationUnit.rawValue
-                            ) {
-                                showPrecipitationUnit = true
-                            }
-                        }
-                        .glassCard()
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-
-                        // MARK: - Notifications
-                        sectionHeader("Notifications")
-
-                        VStack(spacing: 0) {
-                            toggleRow(
-                                icon: "cloud.fill",
-                                iconColor: Color(red: 50/255, green: 155/255, blue: 245/255),
-                                title: "Weather changes",
-                                isOn: $viewModel.weatherChangesEnabled
-                            )
-                            divider
-                            toggleRow(
-                                icon: "umbrella.fill",
-                                iconColor: Color(red: 88/255, green: 86/255, blue: 214/255),
-                                title: "Rain alerts",
-                                isOn: $viewModel.rainAlertsEnabled
-                            )
-                            divider
-                            toggleRow(
-                                icon: "exclamationmark.triangle.fill",
-                                iconColor: Color(red: 255/255, green: 59/255, blue: 48/255),
-                                title: "Severe weather alerts",
-                                isOn: $viewModel.severeAlertsEnabled
-                            )
-                        }
-                        .glassCard()
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-
-                        // MARK: - Location
-                        sectionHeader("Location")
-
-                        VStack(spacing: 0) {
-                            infoRow(
-                                icon: "location.fill",
-                                iconColor: Color(red: 0/255, green: 122/255, blue: 255/255),
-                                title: "Current location",
-                                value: viewModel.currentLocationName
-                            )
-                            divider
-                            settingsRow(
-                                icon: "hand.raised.fill",
-                                iconColor: Color(red: 52/255, green: 199/255, blue: 89/255),
-                                title: "Location permissions",
-                                value: viewModel.locationPermission
-                            ) {
-                                if let url = URL(string: UIApplication.openSettingsURLString),
-                                   UIApplication.shared.canOpenURL(url) {
-                                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                                }
-                            }
-                        }
-                        .glassCard()
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-
-                        // MARK: - Appearance
-                        sectionHeader("Appearance")
-
-                        segmentedControl(
-                            options: AppearanceMode.allCases.map { $0.rawValue },
-                            selected: viewModel.appearanceMode.rawValue
-                        ) { newValue in
-                            if let mode = AppearanceMode(rawValue: newValue) {
-                                viewModel.appearanceMode = mode
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-
-                        // MARK: - Text size
-                        sectionHeader("Text size")
-
-                        segmentedControl(
-                            options: TextSize.allCases.map { $0.rawValue },
-                            selected: viewModel.textSize.rawValue
-                        ) { newValue in
-                            if let size = TextSize(rawValue: newValue) {
-                                viewModel.textSize = size
-                            }
-                        }
-                        .padding(.horizontal, 20)
-
-                        Text("Preview of Dynamic Type. Layouts reflow; nothing truncates.")
-                            .font(.system(size: 13))
-                            .italic()
-                            .foregroundStyle(AppTheme.textTertiary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 8)
-                            .padding(.bottom, 24)
-
-                        // MARK: - About
-                        sectionHeader("About")
-
-                        VStack(spacing: 0) {
-                            infoRow(
-                                icon: "cloud.sun.fill",
-                                iconColor: Color(red: 50/255, green: 155/255, blue: 245/255),
-                                title: "Weather data provider",
-                                value: viewModel.weatherDataProvider
-                            )
-                            divider
-                            settingsRow(
-                                icon: "apple.logo",
-                                iconColor: Color.white.opacity(0.3),
-                                title: "Apple Weather attribution",
-                                value: nil
-                            ) {
-                                if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
-                                    UIApplication.shared.open(url)
-                                }
-                            }
-                            divider
-                            infoRow(
-                                icon: "info.circle.fill",
-                                iconColor: Color.gray,
-                                title: "App version",
-                                value: viewModel.appVersion
-                            )
-                        }
-                        .glassCard()
-                        .padding(.horizontal, 20)
-
-                        // Apple Weather footer mark & legal link
-                        VStack(spacing: 8) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "apple.logo")
-                                    .font(.system(size: 14, weight: .semibold))
-                                Text("Weather")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .foregroundStyle(Color.white.opacity(0.85))
-
-                            Link("Data Sources & Legal Notices", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.white.opacity(0.65))
-                                .underline()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 24)
-                        .padding(.bottom, 120)
+                        Spacer()
+                        Text(viewModel.currentLocationName)
+                            .foregroundStyle(AppTheme.textSecondary)
                     }
+
+                    Button {
+                        if locationService.authorizationStatus == .notDetermined {
+                            showLocationPermission = true
+                        } else if let url = URL(string: UIApplication.openSettingsURLString),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "hand.raised.fill", color: Color(red: 52/255, green: 199/255, blue: 89/255))
+                            Text("Location permissions")
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text(viewModel.locationPermission)
+                                .foregroundStyle(AppTheme.textSecondary)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
+                    }
+                } header: {
+                    Text("Location")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .listRowBackground(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppTheme.cardMaterial))
+
+                // MARK: - Appearance
+                Section {
+                    Picker("Appearance", selection: $viewModel.appearanceMode) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .glassEffect(cornerRadius: 12)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                } header: {
+                    Text("Appearance")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+
+                // MARK: - Text Size
+                Section {
+                    Picker("Text Size", selection: $viewModel.textSize) {
+                        ForEach(TextSize.allCases, id: \.self) { size in
+                            Text(size.rawValue).tag(size)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .glassEffect(cornerRadius: 12)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                } header: {
+                    Text("Text Size")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                } footer: {
+                    Text("Preview of Dynamic Type. Layouts reflow; nothing truncates.")
+                        .font(.system(size: 13))
+                        .italic()
+                        .foregroundStyle(AppTheme.textTertiary)
+                }
+
+                // MARK: - About
+                Section {
+                    HStack(spacing: 12) {
+                        iconBadge(icon: "cloud.sun.fill", color: Color(red: 50/255, green: 155/255, blue: 245/255))
+                        Text("Weather data provider")
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text(viewModel.weatherDataProvider)
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+
+                    Button {
+                        if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            iconBadge(icon: "apple.logo", color: Color.white.opacity(0.3))
+                            Text("Apple Weather attribution")
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
+                    }
+
+                    HStack(spacing: 12) {
+                        iconBadge(icon: "info.circle.fill", color: .gray)
+                        Text("App version")
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text(viewModel.appVersion)
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                } header: {
+                    Text("About")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .listRowBackground(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(AppTheme.cardMaterial))
+
+                // MARK: - Apple Weather Legal Footer
+                Section {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Weather")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundStyle(Color.white.opacity(0.85))
+
+                        Link("Data Sources & Legal Notices", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.white.opacity(0.65))
+                            .underline()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
                 }
             }
-            .navigationDestination(isPresented: $showTemperatureUnit) {
-                UnitPickerView(
-                    title: "Temperature unit",
-                    options: TemperatureUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.temperatureUnit.rawValue,
-                    condition: condition,
-                    symbolName: symbolName
-                ) { newValue in
-                    if let unit = TemperatureUnit(rawValue: newValue) {
-                        viewModel.temperatureUnit = unit
+            .scrollContentBackground(.hidden)
+            .background(WeatherBackgroundView(condition: condition, symbolName: symbolName))
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
+            .fullScreenCover(isPresented: $showLocationPermission) {
+                LocationPermissionView(
+                    onAllow: {
+                        showLocationPermission = false
+                        locationService.requestAuthorization()
+                    },
+                    onSearchInstead: {
+                        showLocationPermission = false
                     }
-                }
-            }
-            .navigationDestination(isPresented: $showWindSpeedUnit) {
-                UnitPickerView(
-                    title: "Wind speed unit",
-                    options: WindSpeedUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.windSpeedUnit.rawValue,
-                    condition: condition,
-                    symbolName: symbolName
-                ) { newValue in
-                    if let unit = WindSpeedUnit(rawValue: newValue) {
-                        viewModel.windSpeedUnit = unit
-                    }
-                }
-            }
-            .navigationDestination(isPresented: $showPrecipitationUnit) {
-                UnitPickerView(
-                    title: "Precipitation unit",
-                    options: PrecipitationUnit.allCases.map { $0.rawValue },
-                    selected: viewModel.precipitationUnit.rawValue,
-                    condition: condition,
-                    symbolName: symbolName
-                ) { newValue in
-                    if let unit = PrecipitationUnit(rawValue: newValue) {
-                        viewModel.precipitationUnit = unit
-                    }
-                }
+                )
             }
         }
-    }
-
-    // MARK: - Components
-
-    private var divider: some View {
-        Rectangle()
-            .fill(Color.white.opacity(0.10))
-            .frame(height: 1)
-            .padding(.leading, 16)
-    }
-
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 10)
     }
 
     private func iconBadge(icon: String, color: Color) -> some View {
@@ -281,160 +301,6 @@ public struct SettingsView: View {
                 .foregroundStyle(.white)
         }
         .frame(width: 28, height: 28)
-    }
-
-    private func settingsRow(
-        icon: String?,
-        iconColor: Color,
-        title: String,
-        value: String?,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                if let icon {
-                    iconBadge(icon: icon, color: iconColor)
-                }
-
-                Text(title)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .layoutPriority(1)
-
-                Spacer()
-
-                if let value {
-                    Text(value)
-                        .font(.system(size: 15))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineLimit(1)
-                }
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func toggleRow(
-        icon: String?,
-        iconColor: Color,
-        title: String,
-        isOn: Binding<Bool>
-    ) -> some View {
-        HStack(spacing: 12) {
-            if let icon {
-                iconBadge(icon: icon, color: iconColor)
-            }
-
-            Text(title)
-                .font(.system(size: 16))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-
-            Spacer()
-
-            Toggle("", isOn: isOn)
-                .labelsHidden()
-                .tint(.green)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-    }
-
-    private func infoRow(
-        icon: String?,
-        iconColor: Color,
-        title: String,
-        value: String
-    ) -> some View {
-        HStack(spacing: 12) {
-            if let icon {
-                iconBadge(icon: icon, color: iconColor)
-            }
-
-            Text(title)
-                .font(.system(size: 16))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .layoutPriority(1)
-
-            Spacer()
-
-            Text(value)
-                .font(.system(size: 15))
-                .foregroundStyle(AppTheme.textSecondary)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-    }
-
-
-    private func segmentedControl(
-        options: [String],
-        selected: String,
-        onSelect: @escaping (String) -> Void
-    ) -> some View {
-        HStack(spacing: 0) {
-            ForEach(options, id: \.self) { option in
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        onSelect(option)
-                    }
-                } label: {
-                    Text(option)
-                        .font(.system(size: 15, weight: selected == option ? .semibold : .regular))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            Group {
-                                if selected == option {
-                                    Capsule()
-                                        .fill(Color.white.opacity(0.24))
-                                        .overlay(
-                                            Capsule()
-                                                .stroke(Color.white.opacity(0.25), lineWidth: 0.5)
-                                        )
-                                } else {
-                                    Color.clear
-                                }
-                            }
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(
-            Capsule()
-                .fill(Color.white.opacity(0.10))
-        )
-    }
-}
-
-// MARK: - Glass Card Modifier
-
-private struct GlassCardModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppTheme.cardGlass)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-}
-
-extension View {
-    fileprivate func glassCard() -> some View {
-        modifier(GlassCardModifier())
     }
 }
 

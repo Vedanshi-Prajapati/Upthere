@@ -103,10 +103,10 @@ private struct WeatherScrollContent: View {
                 precipitationChart
                 temperatureChart
                 todaySection
-                Spacer(minLength: 110)
             }
             .padding(.horizontal, 20)
-            .padding(.top, 62)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
         }
     }
 

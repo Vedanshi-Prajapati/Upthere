@@ -22,7 +22,7 @@ public struct LoadingSkeletonView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 62)
+                .padding(.top, 16)
                 .padding(.bottom, 20)
 
                 // Skeleton header area

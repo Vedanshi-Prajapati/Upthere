@@ -22,55 +22,46 @@ public struct MainTabView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(viewModel: homeViewModel, onNavigateToInsights: {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                    selectedTab = .insights
-                }
-            })
-            .tabItem {
-                Label("Home", systemImage: "house")
-            }
-            .tag(AppTab.home)
-
-            ForecastView(viewModel: homeViewModel)
-                .tabItem {
-                    Label("Forecast", systemImage: "calendar")
-                }
-                .tag(AppTab.forecast)
-
-            InsightsView(viewModel: homeViewModel)
-                .tabItem {
-                    Label("Insights", systemImage: "sparkles")
-                }
-                .tag(AppTab.insights)
-
-            LocationsView(
-                condition: homeViewModel.displayedWeather?.condition,
-                symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
-                locationService: locationService,
-                onSelectLocation: { location in
-                    homeViewModel.selectLocation(location)
+            Tab("Home", systemImage: "house", value: .home) {
+                HomeView(viewModel: homeViewModel, onNavigateToInsights: {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                        selectedTab = .home
+                        selectedTab = .insights
                     }
-                }
-            )
-            .tabItem {
-                Label("Locations", systemImage: "mappin.and.ellipse")
+                })
             }
-            .tag(AppTab.locations)
 
-            SettingsView(
-                viewModel: settingsViewModel,
-                condition: homeViewModel.displayedWeather?.condition,
-                symbolName: homeViewModel.displayedWeather?.weatherSymbolName
-            )
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
-                }
-                .tag(AppTab.settings)
+            Tab("Forecast", systemImage: "calendar", value: .forecast) {
+                ForecastView(viewModel: homeViewModel)
+            }
+
+            Tab("Insights", systemImage: "sparkles", value: .insights) {
+                InsightsView(viewModel: homeViewModel)
+            }
+
+            Tab("Locations", systemImage: "mappin.and.ellipse", value: .locations) {
+                LocationsView(
+                    condition: homeViewModel.displayedWeather?.condition,
+                    symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
+                    locationService: locationService,
+                    onSelectLocation: { location in
+                        homeViewModel.selectLocation(location)
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                            selectedTab = .home
+                        }
+                    }
+                )
+            }
+
+            Tab("Settings", systemImage: "gearshape", value: .settings) {
+                SettingsView(
+                    viewModel: settingsViewModel,
+                    locationService: locationService,
+                    condition: homeViewModel.displayedWeather?.condition,
+                    symbolName: homeViewModel.displayedWeather?.weatherSymbolName
+                )
+            }
         }
-        .ignoresSafeArea()
+        .tabBarMinimizeBehavior(.onScrollDown)
         .fullScreenCover(isPresented: $showPermission) {
             LocationPermissionView(
                 onAllow: {
@@ -91,7 +82,7 @@ public struct MainTabView: View {
 
 // MARK: - Tab enum
 
-public enum AppTab: String, CaseIterable {
+public enum AppTab: String, CaseIterable, Hashable, Sendable {
     case home, forecast, insights, locations, settings
 }
 

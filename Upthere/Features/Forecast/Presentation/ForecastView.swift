@@ -52,7 +52,7 @@ public struct ForecastView: View {
                         hourlyView(weather: weather)
                     }
                 }
-                .padding(.bottom, 110)
+                .padding(.bottom, 24)
             }
             .padding(.top, 16)
         }
@@ -69,19 +69,15 @@ public struct ForecastView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
-        .padding(.top, 62)
-        .padding(.bottom, 24)
+        .padding(.top, 8)
+        .padding(.bottom, 20)
     }
 
     private var picker: some View {
-        HStack(spacing: 0) {
+        GlassEffectContainer(spacing: 2) {
             pickerButton(title: "Hourly", tab: .hourly)
             pickerButton(title: "Daily", tab: .daily)
         }
-        .padding(4)
-        .background(
-            Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1)
-        )
         .padding(.horizontal, 20)
     }
 
@@ -92,20 +88,21 @@ public struct ForecastView: View {
             }
         } label: {
             Text(title)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .medium))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .padding(.vertical, 8)
                 .background(
                     Group {
                         if selectedTab == tab {
-                            Capsule().fill(Color.white.opacity(0.2))
+                            Capsule().fill(Color.white.opacity(0.24))
                         } else {
                             Color.clear
                         }
                     }
                 )
         }
+        .buttonStyle(.plain)
     }
 
     private func dailyView(weather: Weather) -> some View {
@@ -421,8 +418,15 @@ private struct HourlyCard: View {
         .padding(.horizontal, 12)
         .frame(width: 80)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(isNow ? Color.white.opacity(0.15) : AppTheme.cardGlass)
+            Group {
+                if isNow {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.18))
+                } else {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(AppTheme.cardMaterial)
+                }
+            }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)

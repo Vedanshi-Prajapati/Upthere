@@ -22,7 +22,7 @@ public struct InsightsView: View {
                         insightsSection(weather: weather)
                         footer
                     }
-                    .padding(.bottom, 120)
+                    .padding(.bottom, 24)
                 }
             } else {
                 switch viewModel.state {
@@ -59,8 +59,8 @@ public struct InsightsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
-        .padding(.top, 62)
-        .padding(.bottom, 28)
+        .padding(.top, 8)
+        .padding(.bottom, 24)
     }
 
     // MARK: - Weather Alerts
