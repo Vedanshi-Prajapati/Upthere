@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct MainTabView: View {
-    @State private var selectedTab: AppTab = .home
+    @State private var selectedTab: AppTab
     @State private var showPermission: Bool
 
     private let homeViewModel: HomeViewModel
@@ -11,13 +11,15 @@ public struct MainTabView: View {
     public init(
         homeViewModel: HomeViewModel,
         settingsViewModel: SettingsViewModel? = nil,
-        locationService: LocationService? = nil
+        locationService: LocationService? = nil,
+        initialTab: AppTab = .home
     ) {
         self.homeViewModel = homeViewModel
         let loc = locationService ?? homeViewModel.locationService
         self.locationService = loc
         self.settingsViewModel = settingsViewModel ?? SettingsViewModel(locationService: loc)
         self._showPermission = State(initialValue: loc.authorizationStatus == .notDetermined)
+        self._selectedTab = State(initialValue: initialTab)
     }
 
     public var body: some View {

@@ -278,6 +278,7 @@ public struct SettingsView: View {
             .background(WeatherBackgroundView(condition: condition, symbolName: symbolName))
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .fullScreenCover(isPresented: $showLocationPermission) {
                 LocationPermissionView(
                     onAllow: {
