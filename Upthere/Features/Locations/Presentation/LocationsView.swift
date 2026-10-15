@@ -103,24 +103,31 @@ public struct LocationsView: View {
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    EditButton()
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white)
-
-                    Button {
-                        showCitySearch = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 15, weight: .semibold))
+                ToolbarItem(placement: .topBarTrailing) {
+                    GlassEffectContainer(spacing: 2) {
+                        EditButton()
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .frame(height: 32)
+
+                        Button {
+                            showCitySearch = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 30, height: 32)
+                        }
+                        .accessibilityLabel("Add city")
                     }
-                    .accessibilityLabel("Add city")
+                    .buttonStyle(.plain)
                 }
             }
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(.hidden, for: .navigationBar)
         }
+        .environment(\.colorScheme, .dark)
         .task {
             updateCurrentLocationHeader()
             await fetchWeatherForLocations(locationsManager.locations)

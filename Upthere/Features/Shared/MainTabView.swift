@@ -12,13 +12,14 @@ public struct MainTabView: View {
         homeViewModel: HomeViewModel,
         settingsViewModel: SettingsViewModel? = nil,
         locationService: LocationService? = nil,
-        initialTab: AppTab = .home
+        initialTab: AppTab = .home,
+        showPermission: Bool? = nil
     ) {
         self.homeViewModel = homeViewModel
         let loc = locationService ?? homeViewModel.locationService
         self.locationService = loc
         self.settingsViewModel = settingsViewModel ?? SettingsViewModel(locationService: loc)
-        self._showPermission = State(initialValue: loc.authorizationStatus == .notDetermined)
+        self._showPermission = State(initialValue: showPermission ?? (loc.authorizationStatus == .notDetermined))
         self._selectedTab = State(initialValue: initialTab)
     }
 

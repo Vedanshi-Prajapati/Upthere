@@ -99,14 +99,15 @@ public struct GlassEffectContainer<Content: View>: View {
         HStack(spacing: spacing) {
             content
         }
-        .padding(4)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(
             Capsule()
                 .stroke(
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.40),
+                            Color.white.opacity(0.35),
                             Color.white.opacity(0.12)
                         ],
                         startPoint: .topLeading,
@@ -115,7 +116,6 @@ public struct GlassEffectContainer<Content: View>: View {
                     lineWidth: 0.8
                 )
         )
-        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 4)
     }
 }
 

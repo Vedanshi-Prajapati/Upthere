@@ -1,119 +1,141 @@
-# UpThere ⛅
+# UpThere
 
 [![Swift](https://img.shields.io/badge/Swift-5.10%20%7C%206.0-orange?logo=swift&logoColor=white)](https://swift.org)
-[![Platform](https://img.shields.io/badge/Platform-iOS%2018%2B-blue?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
-[![UI Framework](https://img.shields.io/badge/UI-SwiftUI-red?logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
-[![WeatherKit](https://img.shields.io/badge/Powered%20By-Apple%20WeatherKit-blueviolet)](https://developer.apple.com/weatherkit/)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-green)](https://en.wikipedia.org/wiki/Clean_architecture)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/iOS-18.0%2B-blue?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![UI Framework](https://img.shields.io/badge/SwiftUI-purple?logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)
 
-> **Atmospheric Intelligence for iOS.**  
-> A weather experience crafted in pure SwiftUI, combining Apple WeatherKit, photorealistic atmospheric rendering, custom animated vector illustrations, deterministic insight analytics, Lock Screen / Home Screen widgets, Control Center controls, and system-wide Spotlight integration.
+An iOS weather application built with SwiftUI, Apple WeatherKit, and deterministic forecast intelligence algorithms.
 
 ---
 
-## 🌟 Overview
+## Overview
 
-**UpThere** reimagines how weather forecasts are presented. Rather than overwhelming users with raw numbers and disconnected charts, UpThere translates meteorological telemetry into **actionable human insights**—answering what the forecast actually means for your day.
-
-From pinpointing the exact dry window for your afternoon run, to tracking sudden barometric shifts and peak UV windows, UpThere pairs high-precision Apple WeatherKit data with an ambient, glassmorphic design that adapts naturally to time and weather conditions.
+Most weather applications present raw meteorological metrics—barometric pressures, percentages, and millibar measurements—leaving the user to interpret what those numbers mean for their daily schedule. UpThere bridges this gap by transforming hourly forecast telemetry into clear, actionable context: identifying exact precipitation windows, assessing outdoor activity suitability, tracking temperature swings, and flagging peak UV periods. Designed natively for iOS, the app pairs this analytical engine with dynamic atmospheric sky rendering, custom vector animations, and platform integrations across widgets, Control Center, Siri, and Spotlight.
 
 ---
 
-## ✨ Features
+## Key Features
 
-### 🎨 Atmospheric Visual Engine & Dynamic Motion
-- **Photorealistic Sky Canvas**: Ambient sky gradients and particle systems tuned for rain, thunder, snow, fog, overcast, and clear day/night conditions.
-- **Pure Vector Animated Illustrations**: Lightweight, dependency-free SwiftUI vector animations (`WeatherIllustrationView`) that breathe life into weather conditions without static raster assets.
-- **Glassmorphic Material Styling**: Translucent background blurs, ambient contrast badges, and cohesive typography conforming to Apple's Human Interface Guidelines.
+### 1. Weather Experience
+- **Atmospheric Sky Engine**: Multi-layer background canvas reflecting real-time weather conditions, ambient lighting, and diurnal shifts with restrained particle motion for rain, snow, fog, and storms.
+- **Animated Vector Illustrations**: Custom SwiftUI path-based vector illustrations (`WeatherIllustrationView`) providing fluid visual feedback without static raster assets.
+- **Interactive Temperature Scrubbing**: Canvas-rendered hourly temperature curve (`TemperatureLineChart`) supporting touch scrubbing to inspect discrete hourly data points.
+- **Glassmorphic Material Design**: Cohesive visual hierarchy using native system materials, translucent vibrancy, and dynamic typography.
 
-### 💡 Deterministic InsightEngine
-A pure Swift domain engine (`InsightEngine`) analyzes 24+ hours of hourly telemetry to generate actionable context:
-- **🌧️ Rain Window**: Detects precipitation onset, cessation, peak probability hour, and accumulated rainfall.
-- **🌡️ Temperature Trends**: Identifies daily diurnal swings, inflection points, and notable temperature dips.
-- **💨 Wind & Gust Timeline**: Predicts peak gusts and advises on high-wind windows.
-- **🏃 Best Outdoor Window**: Multi-factor heuristic scoring (balancing comfortable temperature bands 18–25°C, precipitation penalties, wind velocity, and UV index) to identify ideal times for outdoor activities.
-- **☀️ Peak UV Windows**: Flags peak solar radiation intervals to promote sun safety.
-- **☁️ Cloud Cover Shifts**: Tracks clearing patterns and cloud ceiling shifts across the day.
+### 2. Forecast Intelligence
+- **Precipitation Windows**: Identifies rain onset, cessation, peak probability hour, and accumulated volume from hourly data slices.
+- **Outdoor Suitability Scoring**: Multi-factor heuristic evaluating temperature comfort bands (18–25°C), precipitation penalties, wind velocity, and UV exposure to score the best time for outdoor activities.
+- **Diurnal Temperature Trends**: Identifies daily highs, lows, and rapid swings between sequential hours.
+- **Extended Forecasts**: 24-hour continuous timeline and 10-day outlook with high/low range bars and precipitation probabilities.
 
-### 📈 Interactive Charts & Metrics
-- **Interactive Temperature Curve**: Custom SwiftUI canvas chart (`TemperatureLineChart`) with hourly temperature points, gradient fills, and touch scrubbing.
-- **Hourly & 10-Day Extended Forecasts**: High/low temperature bars, condition badges, and precipitation probability timelines.
-- **Atmospheric Metric Tiles**: Comprehensive telemetry cards for Feels Like, Humidity, Wind Speed, UV Index, Visibility, Pressure, and Sunrise/Sunset times.
+### 3. Location and Personalization
+- **Multi-City Management**: Saved locations list with reordering, swipe deletion, and automatic pinning of the device's current location.
+- **Proximity Deduplication**: Enforces a 5 km minimum threshold (`CLLocation.distance`) to prevent duplicate city entries within the same metropolitan area.
+- **Unit Preferences**: Configurable temperature (°C / °F), wind speed (km/h / mph / m/s / kn), and precipitation (mm / in) units.
+- **Graceful Fallbacks**: Deterministic fallback to coordinate presets (Ghaziabad) when location services are disabled, denied, or unavailable.
 
-### 📍 Multi-Location Management
-- **Intelligent Location Services**: Automated reverse geocoding with Apple CoreLocation and AsyncStream tracking.
-- **Persistent Storage**: Robust file-based JSON persistence (`LocationStore`) in the Application Support directory with automatic migration.
-- **5km Deduplication**: Smart proximity detection preventing redundant saves of the same metropolitan areas.
-- **Offline & Graceful Fallback**: Deterministic fallback mechanism (Ghaziabad anchor) ensuring uninterrupted functionality when permissions are denied or network is unavailable.
-
-### 📲 Deep iOS Platform Integrations
-- **WidgetKit (Home & Lock Screen)**:
-  - Rich widget family coverage: `.systemSmall`, `.systemMedium`, `.systemLarge`, `.accessoryCircular`, `.accessoryRectangular`, and `.accessoryInline`.
-  - Hourly forecast ribbons and precipitation summaries directly on your Home Screen.
-- **Control Center Controls (iOS 18+)**:
-  - Quick launch button (`UpthereQuickWeatherControl`).
-  - Interactive Severe Alert toggle (`UpthereAlertsControl`).
-- **App Intents & Siri Shortcuts**:
-  - Native shortcuts via `AppShortcutsProvider`: *"Check Weather in UpThere"*, *"Open London in UpThere"*, and severe alerts toggle.
-- **CoreSpotlight Search**:
-  - Automatic indexing of current conditions and saved cities (`SpotlightService`), allowing users to search weather directly from iOS Spotlight.
-
-### ⚙️ User Customization & Accessibility
-- **Units**: Full support for Metric (°C, km/h, mm) and Imperial (°F, mph, in) units.
-- **Appearance & Typography**: Dynamic Type scaling and dedicated Dark, Light, or System appearance overrides.
-- **VoiceOver & Accessibility**: Clear accessibility labels, high-contrast text modes, and semantic layout structuring.
+### 4. Native iOS Integration
+- **WidgetKit**: Home Screen and Lock Screen widgets supporting `.systemSmall`, `.systemMedium`, `.systemLarge`, `.accessoryCircular`, `.accessoryRectangular`, and `.accessoryInline` families.
+- **Control Center (iOS 18+)**: Quick weather launcher control and severe weather alert toggle widget (`ControlWidget`).
+- **App Intents & Siri Shortcuts**: Native Siri shortcuts (`UpthereShortcuts`) for checking current conditions, switching cities, and updating notification settings.
+- **CoreSpotlight Indexing**: Automatic indexing of current weather conditions and saved cities into iOS system search via `CSSearchableItem`.
 
 ---
 
-## 🏛️ Architecture & Project Structure
+## Technical Highlights
 
-UpThere is designed around **Clean Architecture**, **SOLID principles**, and **Unidirectional Data Flow**:
+### Deterministic Insight Engine (`InsightEngine`)
+Rather than relying on server-side processing or machine learning models, forecast insights are computed entirely on-device using pure Swift algorithms. The `InsightEngine` inspects `[HourlyWeather]` slices across six deterministic functions:
+- `rainWindow`: Scans hourly probabilities to compute start, peak, and end timestamps along with total precipitation volume.
+- `bestOutdoorWindow`: Implements a scoring function penalizing rain probability (up to -80 pts), deviation from optimal comfort temperatures (18–25°C), high winds (>20 km/h), and extreme UV (>7) across sliding 3-hour windows.
+- `temperatureTrend`: Calculates daily swings and inflection point timestamps.
+- `strongestWind`: Evaluates sustained speeds against peak gust windows.
+- `peakUV`: Pinpoints midday solar intensity boundaries.
+- `cloudChange`: Measures delta rates across cloud coverage arrays to detect incoming fronts or clearing skies.
+
+### Repository Abstraction & Testing Architecture
+Data access is isolated behind the `WeatherRepository` protocol:
+- **`WeatherKitWeatherRepository`**: Wraps Apple's `WeatherService`, handles geocoding coordinate resolution, maps system errors into strongly-typed `WeatherServiceError` cases, and caches responses.
+- **`MockWeatherRepository`**: Provides fully deterministic mock fixtures and simulated network latency for testing and simulator development without active Apple Developer certificates.
+
+### State Management & Concurrency
+- **Observation Framework**: ViewModels utilize Swift's `@Observable` macro for property-level view invalidation and reduced view re-renders compared to `ObservableObject`.
+- **Actor Isolation**: All UI-facing view models and container factories are pinned to `@MainActor`.
+- **AsyncStream Location Updates**: `LocationService` bridges CoreLocation delegate callbacks into an asynchronous sequence (`AsyncStream<CLLocation>`), allowing view models to reactively consume location changes without tight delegate coupling.
+- **Request Cancellation**: In-flight fetch tasks are managed via structured `Task` references, automatically cancelling superseded requests on city change or rapid refresh.
+
+### Cache Strategy & Storage
+- **`WeatherCacheManager`**: Stores timestamped JSON payloads in `UserDefaults` using sanitized city and coordinate keys. Cache records maintain freshness for 30 minutes and allow stale reads up to 24 hours to support offline launches.
+- **`FileLocationStore`**: Stores saved location metadata as JSON directly in `Application Support/Upthere/`, ensuring persistence independent of cache flushes, and includes an automated migration routine for legacy `UserDefaults` stores.
+
+---
+
+## Architecture and Project Structure
+
+The project follows a clean layered separation between UI Presentation, Domain business logic, Data repositories, and Platform integration.
+
+```mermaid
+graph TD
+    UI[SwiftUI Views] -->|Binds to state| VM[HomeViewModel @Observable]
+    VM -->|Executes| UC[GetWeatherUseCase]
+    VM -->|Computes insights| IE[InsightEngine]
+    UC -->|Queries interface| RP[WeatherRepository Protocol]
+    RP -->|Production| WR[WeatherKitWeatherRepository]
+    RP -->|Offline / Testing| MR[MockWeatherRepository]
+    WR -->|Apple API| WK[WeatherService / CoreLocation]
+    WR -->|Caches to| CM[WeatherCacheManager]
+    VM -->|Manages cities| LM[SavedLocationsManager]
+    LM -->|Persists to| FS[FileLocationStore]
+```
+
+### Directory Structure
 
 ```
 Upthere/
-├── App/                            # Application entry and dependency container
-│   ├── AppContainer.swift          # MainActor dependency injection container
-│   ├── AppTheme.swift              # Design system tokens, materials, and colors
-│   └── WeatherFormatter.swift      # Localized formatting for temperatures & units
-│
-├── Domain/                         # Pure business logic (framework agnostic)
-│   ├── Models/                     # Core entities (Weather, HourlyWeather, etc.)
-│   ├── Repositories/               # Repository interfaces (WeatherRepository)
-│   ├── UseCases/                   # Use case contracts and implementations
-│   └── InsightEngine.swift         # Deterministic weather insight algorithms
-│
-├── Data/                           # Data access and platform adapters
-│   ├── Repositories/               # WeatherKit and Mock repository implementations
-│   └── Services/                   # CoreLocation, LocationStore, and WeatherCache
-│
-├── Features/                       # UI Feature modules (SwiftUI + @Observable)
-│   ├── Home/                       # Main weather screen & interactive charts
-│   ├── Forecast/                   # 10-day extended outlook
-│   ├── Insights/                   # InsightEngine breakdown cards & visual charts
-│   ├── Locations/                  # Multi-city management, search, and ordering
-│   ├── Settings/                   # Units, appearance, notifications, and about
-│   └── Shared/                     # Reusable components, backgrounds, and animations
-│
-├── Platform/                       # Native system integrations
-│   ├── Intents/                    # App Intents and Siri AppShortcutsProvider
-│   └── Spotlight/                  # CoreSpotlight indexing service
-│
-├── UpthereWidgets/                 # WidgetKit extension & Control Center controls
-└── UpthereTests/                   # Swift Testing suite (@Suite, @Test)
+├── App/
+│   ├── AppContainer.swift              # MainActor dependency injection container
+│   ├── AppTheme.swift                  # Color tokens, materials, and card styles
+│   └── WeatherFormatter.swift          # Unit formatting and measurement conversion
+├── Domain/
+│   ├── Models/                         # Weather, HourlyWeather, DailyWeather entities
+│   ├── Repositories/
+│   │   └── WeatherRepository.swift     # Repository protocol definition
+│   ├── UseCases/
+│   │   └── GetWeatherUseCase.swift     # Weather retrieval business logic
+│   └── InsightEngine.swift             # Deterministic weather-insight algorithms
+├── Data/
+│   ├── Repositories/
+│   │   ├── WeatherKitWeatherRepository.swift # Live WeatherKit implementation
+│   │   └── MockWeatherRepository.swift       # Deterministic mock implementation
+│   └── Services/
+│       ├── LocationService.swift       # CoreLocation wrapper with AsyncStream
+│       ├── LocationStore.swift         # File-based JSON persistence in Application Support
+│       ├── SavedLocationsManager.swift # 5km duplicate detection and city ordering
+│       └── WeatherCacheManager.swift   # Cache policy (30m fresh, 24h stale fallback)
+├── Features/
+│   ├── Home/                           # Main view, ViewModel, and temperature line chart
+│   ├── Forecast/                       # 10-day extended outlook
+│   ├── Insights/                       # InsightEngine metric cards and charts
+│   ├── Locations/                      # City search sheet and saved locations list
+│   ├── Settings/                       # Native form for units, theme, and permissions
+│   └── Shared/                         # Sky canvas, illustrations, and loading skeletons
+├── Platform/
+│   ├── Intents/                        # App Shortcuts and Siri intent definitions
+│   └── Spotlight/                      # CoreSpotlight CSSearchableIndex service
+├── UpthereWidgets/                     # WidgetKit timelines and Control Center controls
+└── UpthereTests/                       # Swift Testing suite (@Suite, @Test)
 ```
 
 ---
 
-## 🚀 Getting Started
+## Quick Start
 
 ### Prerequisites
-- **macOS Sonoma 14.5+** or **macOS Sequoia 15.0+**
-- **Xcode 16.0+**
-- **iOS 17.6+ / iOS 18.0+** simulator or physical device
-- *(Optional)* Apple Developer Account with WeatherKit capability enabled (for live WeatherKit telemetry)
+- macOS 14.5+ or macOS 15.0+
+- Xcode 16.0+
+- iOS 18.0+ Simulator or physical device
 
-### Installation
+### Building the Project
 
 1. **Clone the repository:**
    ```bash
@@ -121,36 +143,40 @@ Upthere/
    cd Upthere
    ```
 
-2. **Open in Xcode:**
+2. **Open the project in Xcode:**
    ```bash
    open Upthere.xcodeproj
    ```
 
-3. **Select Scheme & Device:**
+3. **Select Scheme and Destination:**
    - Select the `Upthere` scheme.
-   - Choose an iOS 18.0+ Simulator (e.g., iPhone 16 Pro) or your connected physical device.
+   - Choose an iOS 18.0+ Simulator (such as `iPhone 16 Pro`).
 
-4. **Build and Run:**
-   - Press `Cmd + R` or click the **Play** button in Xcode.
+4. **Run:**
+   - Press `Cmd + R` to build and launch.
 
-> [!TIP]
-> **No Developer Account?**  
-> The project includes a full-featured `MockWeatherRepository` that simulates realistic diurnal curves, rain windows, gusts, and multi-day forecasts. You can preview all views, widgets, and charts in the simulator without setting up WeatherKit certificates!
+### Live Data vs. Mock Development
+- **Live WeatherKit Data**: Apple WeatherKit requires an active Apple Developer Program account, an explicit App ID with the WeatherKit capability enabled, and proper code signing. The entitlement is defined in `Upthere/Upthere.entitlements`.
+- **Offline / Simulator Testing**: To run the project without an active Apple Developer team or certificate, inject `MockWeatherRepository` into `AppContainer` (`Upthere/App/AppContainer.swift`), which provides full synthetic hourly and 10-day forecasts without external network calls.
 
 ---
 
-## 🧪 Testing
+## Testing
 
-UpThere utilizes Apple's modern **Swift Testing** framework (`@Suite`, `@Test`, `#expect`) to guarantee domain correctness and UI state resilience:
+The project uses Apple's **Swift Testing** framework (`@Suite`, `@Test`, `#expect`) to validate domain logic, state lifecycles, and edge cases.
 
-- **InsightEngine Edge Cases**: Validates rain window bounds, dead calm handling, extreme heat/cold swings, UV peak detection, and cloud transitions.
-- **Location Lifecycle Tests**: Verifies permission-grant flows, denied fallbacks, service shutdowns, and isolated test storage suites.
-- **Deduplication Tests**: Asserts that cities within a 5km radius are identified as duplicates during search.
-
-### Running Tests via Xcode
-Press `Cmd + U` to execute the full test suite.
+### Verified Test Suites
+- **`InsightEngineTests`**: Tests all six insight algorithms across synthetic meteorological fixtures (Clear Day, Rainy Afternoon, Stormy Night, Overcast Day, Polar Daylight, and Empty Hourly data).
+- **`UpthereTests`**: Validates:
+  - Permission grant and denial lifecycles with deterministic fallback coordinates.
+  - Asynchronous race conditions (stale responses discarded when newer requests initiate).
+  - Rapid refresh debouncing and pull-to-refresh preservation.
+  - Multi-city proximity deduplication (rejecting candidates within 5 km).
+  - File-based `LocationStore` persistence and automated migration from legacy `UserDefaults`.
+  - CoreSpotlight identifier resolution and App Intent toggle execution.
 
 ### Running Tests via Terminal
+
 ```bash
 xcodebuild test \
   -scheme Upthere \
@@ -160,12 +186,9 @@ xcodebuild test \
 
 ---
 
-## 🛡️ License
+## Limitations
 
-UpThere is open-source software licensed under the **[MIT License](LICENSE)**.
-
----
-
-<p align="center">
-  Crafted with care using SwiftUI and Swift.
-</p>
+- **WeatherKit Entitlement Requirement**: Fetching real-time meteorological data requires a paid Apple Developer account and signed bundle provisioning with the `com.apple.developer.weatherkit` entitlement.
+- **Control Center Version Dependency**: Control Center controls (`ControlWidget`) require iOS 18.0 or later; they do not appear on earlier iOS releases.
+- **Forecast Horizon**: The application displays up to 24 hourly intervals and a 10-day daily forecast based on the maximum forecast windows provided by Apple's WeatherService.
+- **Geocoding Availability**: City name resolution and reverse geocoding rely on Apple's `CLGeocoder` service and require network connectivity.
