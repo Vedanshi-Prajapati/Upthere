@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 public struct LocationsView: View {
     @State private var searchText = ""
@@ -6,114 +7,64 @@ public struct LocationsView: View {
     @ObservedObject private var locationsManager = SavedLocationsManager.shared
     @State private var editMode: EditMode = .inactive
 
+    @State private var weatherSummaries: [UUID: (temperature: Double, symbolName: String)] = [:]
+
     public var condition: String?
     public var symbolName: String?
     public var onSelectLocation: ((SavedLocation) -> Void)?
     private let locationService: LocationService
+    private let weatherRepository: any WeatherRepository
+    private let cacheManager: WeatherCacheManager
 
     public init(
         condition: String? = nil,
         symbolName: String? = nil,
         locationService: LocationService? = nil,
+        weatherRepository: (any WeatherRepository)? = nil,
+        cacheManager: WeatherCacheManager? = nil,
         onSelectLocation: ((SavedLocation) -> Void)? = nil
     ) {
         self.condition = condition
         self.symbolName = symbolName
-        self.locationService = locationService ?? .shared
+        let loc = locationService ?? .shared
+        self.locationService = loc
+        self.weatherRepository = weatherRepository ?? WeatherKitWeatherRepository(locationService: loc)
+        self.cacheManager = cacheManager ?? .shared
         self.onSelectLocation = onSelectLocation
     }
 
     public var body: some View {
-        ZStack {
-            WeatherBackgroundView(condition: condition, symbolName: symbolName)
+        NavigationStack {
+            ZStack {
+                WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
-            VStack(spacing: 0) {
-                // Navigation bar area
-                HStack {
-                    Text("Locations")
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    HStack(spacing: 16) {
-                        EditButton()
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white)
-                            .environment(\.editMode, $editMode)
-                        Button {
-                            showCitySearch = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 32, height: 32)
-                                .background(Circle().fill(AppTheme.accent))
-                        }
-                        .accessibilityLabel("Add city")
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 62)
-                .padding(.bottom, 14)
-
-                // Search bar
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .font(.system(size: 16))
-                    TextField("", text: $searchText, prompt:
-                        Text("Search saved cities").foregroundColor(AppTheme.textSecondary)
-                    )
-                    .foregroundStyle(.white)
-                    .font(.system(size: 16))
-                    .textInputAutocapitalization(.words)
-                    .autocorrectionDisabled(true)
-                    if !searchText.isEmpty {
-                        Button { searchText = "" } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(AppTheme.textSecondary)
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 13)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.12))
-                )
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
-
-                // List
                 List {
                     ForEach(filteredLocations) { location in
                         LocationRowView(
                             location: location,
-                            isSelected: locationsManager.selectedLocationId == location.id,
+                            isSelected: isLocationSelected(location),
+                            weatherSummary: weatherSummaries[location.id],
                             onSelect: {
                                 onSelectLocation?(location)
                             }
                         )
                         .listRowBackground(Color.clear)
                         .listRowSeparatorTint(Color.white.opacity(0.12))
-                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .moveDisabled(location.isCurrentLocation)
+                        .deleteDisabled(location.isCurrentLocation)
                     }
                     .onDelete { indexSet in
-                        guard editMode == .active else { return }
                         for idx in indexSet {
+                            guard idx < filteredLocations.count else { continue }
                             let loc = filteredLocations[idx]
                             if !loc.isCurrentLocation {
                                 locationsManager.removeLocation(id: loc.id)
                             }
                         }
                     }
-                    .onMove { from, to in
-                        guard editMode == .active else { return }
-                        // Guard: current location must stay at index 0
-                        for sourceIndex in from {
-                            if sourceIndex > 0 && to > 0 {
-                                locationsManager.moveLocation(fromIndex: sourceIndex, toIndex: to > sourceIndex ? to - 1 : to)
-                            }
-                        }
+                    .onMove { fromOffsets, toOffset in
+                        locationsManager.moveLocation(fromOffsets: fromOffsets, toOffset: toOffset, within: filteredLocations)
                     }
 
                     // Hint + legal
@@ -146,17 +97,40 @@ public struct LocationsView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+                .searchable(text: $searchText, prompt: "Search saved cities")
                 .environment(\.editMode, $editMode)
             }
+            .navigationTitle("Locations")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showCitySearch = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(AppTheme.accent))
+                    }
+                    .accessibilityLabel("Add city")
+                }
+            }
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .onAppear {
-            let subtitle = locationService.currentSubtitle.isEmpty
-                ? "Current GPS location"
-                : locationService.currentSubtitle
-            locationsManager.updateCurrentLocationHeader(
-                cityName: locationService.currentCityName,
-                subtitle: subtitle
-            )
+        .task {
+            updateCurrentLocationHeader()
+            await fetchWeatherForLocations(locationsManager.locations)
+        }
+        .onChange(of: locationsManager.locations) { _, newLocations in
+            Task {
+                await fetchWeatherForLocations(newLocations)
+            }
         }
         .sheet(isPresented: $showCitySearch) {
             CitySearchSheet(
@@ -178,6 +152,104 @@ public struct LocationsView: View {
             $0.regionName.localizedCaseInsensitiveContains(searchText)
         }
     }
+
+    private func isLocationSelected(_ location: SavedLocation) -> Bool {
+        if location.isCurrentLocation {
+            return locationsManager.selectedLocationId == nil || locationsManager.selectedLocationId == location.id
+        }
+        return locationsManager.selectedLocationId == location.id
+    }
+
+    private func updateCurrentLocationHeader() {
+        let subtitle = locationService.currentSubtitle.isEmpty
+            ? "Current GPS location"
+            : locationService.currentSubtitle
+        locationsManager.updateCurrentLocationHeader(
+            cityName: locationService.currentCityName,
+            subtitle: subtitle
+        )
+    }
+
+    // MARK: - Concurrent Per-City Weather Fetching (Max 3 concurrent requests, with Cache)
+    private func fetchWeatherForLocations(_ locations: [SavedLocation]) async {
+        // Step 1: Pre-populate any cached records immediately
+        for loc in locations {
+            if let cached = loadCachedSummary(for: loc) {
+                weatherSummaries[loc.id] = (cached.weather.temperature, cached.weather.weatherSymbolName)
+            }
+        }
+
+        // Step 2: Determine which locations need network fetch
+        let needed = locations.filter { loc in
+            guard let cached = loadCachedSummary(for: loc) else { return true }
+            return !cached.isFresh
+        }
+
+        guard !needed.isEmpty else { return }
+
+        // Step 3: Concurrency pool with at most 3 concurrent requests
+        await withTaskGroup(of: (UUID, (Double, String)?).self) { group in
+            var iterator = needed.makeIterator()
+
+            for _ in 0..<3 {
+                if let next = iterator.next() {
+                    group.addTask {
+                        let res = await self.fetchSingleWeather(for: next)
+                        return (next.id, res)
+                    }
+                }
+            }
+
+            for await (id, res) in group {
+                if let res = res {
+                    self.weatherSummaries[id] = res
+                }
+                if let next = iterator.next() {
+                    group.addTask {
+                        let res = await self.fetchSingleWeather(for: next)
+                        return (next.id, res)
+                    }
+                }
+            }
+        }
+    }
+
+    private func loadCachedSummary(for location: SavedLocation) -> CachedWeatherRecord? {
+        let coord: (lat: Double, lon: Double)? = {
+            if let lat = location.latitude, let lon = location.longitude {
+                return (lat, lon)
+            }
+            if location.isCurrentLocation {
+                let currentCoord = locationService.currentLocation?.coordinate ?? LocationService.fallbackCoordinate.coordinate
+                return (currentCoord.latitude, currentCoord.longitude)
+            }
+            return nil
+        }()
+
+        let key = cacheManager.cacheKey(for: location.cityName, coordinate: coord)
+        return cacheManager.load(key: key, allowExpired: true)
+    }
+
+    private func fetchSingleWeather(for location: SavedLocation) async -> (Double, String)? {
+        do {
+            let weather: Weather
+            if location.isCurrentLocation {
+                weather = try await weatherRepository.fetchCurrentWeather()
+            } else if let lat = location.latitude, let lon = location.longitude {
+                let clLoc = CLLocation(latitude: lat, longitude: lon)
+                weather = try await weatherRepository.fetchWeather(
+                    for: clLoc,
+                    cityName: location.cityName,
+                    locationSubtitle: location.regionName
+                )
+            } else {
+                return nil
+            }
+            return (weather.temperature, weather.weatherSymbolName)
+        } catch {
+            return nil
+        }
+    }
 }
 
 // MARK: - LocationRowView
@@ -185,30 +257,24 @@ public struct LocationsView: View {
 private struct LocationRowView: View {
     let location: SavedLocation
     let isSelected: Bool
+    let weatherSummary: (temperature: Double, symbolName: String)?
     var onSelect: (() -> Void)?
 
     var body: some View {
         Button(action: { onSelect?() }) {
             HStack(spacing: 12) {
-                // Left indicator
+                // Left indicator: location arrow for GPS
                 if location.isCurrentLocation {
                     Image(systemName: "location.fill")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppTheme.accent)
-                        .frame(width: 22)
-                } else if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(AppTheme.accent)
-                        .frame(width: 22)
-                } else {
-                    Color.clear.frame(width: 22)
+                        .frame(width: 18)
                 }
 
-                // City info
+                // City & Region
                 VStack(alignment: .leading, spacing: 3) {
                     Text(location.cityName)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
                     Text(subtitleText)
                         .font(.system(size: 13))
@@ -216,23 +282,31 @@ private struct LocationRowView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Condition badge
-                if !location.condition.isEmpty && location.condition != "--" {
-                    HStack(spacing: 4) {
-                        if location.isCurrentLocation {
-                            Circle()
-                                .fill(Color.green)
-                                .frame(width: 6, height: 6)
-                        }
-                        Text(location.condition)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(location.isCurrentLocation
-                                ? Color.green
-                                : AppTheme.textSecondary)
+                // Current temperature and weather symbol
+                if let summary = weatherSummary {
+                    HStack(spacing: 8) {
+                        Text(WeatherFormatter.shared.temp(summary.temperature))
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+
+                        Image(systemName: summary.symbolName)
+                            .symbolRenderingMode(.multicolor)
+                            .symbolVariant(.fill)
+                            .foregroundStyle(.white)
+                            .font(.system(size: 22))
+                            .frame(width: 26, height: 26)
                     }
                 }
+
+                // Selected city checkmark
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.accent)
+                        .frame(width: 20)
+                }
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, 8)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

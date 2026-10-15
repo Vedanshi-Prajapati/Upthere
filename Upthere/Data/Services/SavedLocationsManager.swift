@@ -1,19 +1,18 @@
 import Foundation
 import Combine
+import CoreLocation
 
 @MainActor
 public final class SavedLocationsManager: ObservableObject {
     public static let shared = SavedLocationsManager()
 
-    private let defaults: UserDefaults
-    private let locationsKey = "upthere.saved_locations.list"
-    private let selectedIdKey = "upthere.saved_locations.selected_id"
+    private let store: LocationStore
 
     @Published public private(set) var locations: [SavedLocation] = []
     @Published public private(set) var selectedLocationId: UUID?
 
-    public init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
+    public init(store: LocationStore? = nil, defaults: UserDefaults = .standard) {
+        self.store = store ?? FileLocationStore(defaults: defaults)
         load()
     }
 
@@ -27,34 +26,105 @@ public final class SavedLocationsManager: ObservableObject {
     public func selectLocation(_ location: SavedLocation?) {
         if let location = location, !location.isCurrentLocation {
             self.selectedLocationId = location.id
-            defaults.set(location.id.uuidString, forKey: selectedIdKey)
+            store.saveSelectedLocationId(location.id)
         } else {
             self.selectedLocationId = nil
-            defaults.removeObject(forKey: selectedIdKey)
+            store.saveSelectedLocationId(nil)
         }
+    }
+
+    // MARK: - Duplicate Detection (within ~5 km based on coordinates)
+    public func isDuplicate(_ location: SavedLocation) -> Bool {
+        if location.isCurrentLocation {
+            return locations.contains(where: { $0.isCurrentLocation })
+        }
+        guard let lat = location.latitude, let lon = location.longitude else {
+            return false
+        }
+        let target = CLLocation(latitude: lat, longitude: lon)
+        for existing in locations {
+            guard !existing.isCurrentLocation,
+                  let exLat = existing.latitude,
+                  let exLon = existing.longitude else {
+                continue
+            }
+            let existingLoc = CLLocation(latitude: exLat, longitude: exLon)
+            if target.distance(from: existingLoc) <= 5000.0 { // within ~5 km
+                return true
+            }
+        }
+        return false
     }
 
     public func addLocation(_ location: SavedLocation) {
-        // Prevent duplicate city additions
-        if !locations.contains(where: { $0.cityName.caseInsensitiveCompare(location.cityName) == .orderedSame }) {
-            locations.append(location)
-            save()
-        }
+        guard !isDuplicate(location) else { return }
+        locations.append(location)
+        ensureCurrentLocationPinned()
+        save()
     }
 
     public func removeLocation(id: UUID) {
+        // Never remove current location
+        guard let target = locations.first(where: { $0.id == id }), !target.isCurrentLocation else {
+            return
+        }
         locations.removeAll { $0.id == id && !$0.isCurrentLocation }
         if selectedLocationId == id {
             selectedLocationId = nil
-            defaults.removeObject(forKey: selectedIdKey)
+            store.saveSelectedLocationId(nil)
         }
+        ensureCurrentLocationPinned()
         save()
     }
 
     public func moveLocation(fromIndex: Int, toIndex: Int) {
         guard fromIndex > 0, toIndex > 0,
-              fromIndex < locations.count, toIndex < locations.count else { return }
+              fromIndex < locations.count, toIndex < locations.count,
+              !locations[fromIndex].isCurrentLocation,
+              !locations[toIndex].isCurrentLocation else { return }
         locations.swapAt(fromIndex, toIndex)
+        ensureCurrentLocationPinned()
+        save()
+    }
+
+    // MARK: - Reordering (supports normal and filtered moves)
+    public func moveLocation(fromOffsets: IndexSet, toOffset: Int, within filtered: [SavedLocation]? = nil) {
+        // Guard: current location at index 0 must never be moved or displaced
+        guard let filtered = filtered, filtered.count != locations.count else {
+            var mutableOffsets = fromOffsets
+            mutableOffsets.remove(0)
+            guard !mutableOffsets.isEmpty else { return }
+
+            let safeDestination = max(1, min(locations.count, toOffset))
+            locations.move(fromOffsets: mutableOffsets, toOffset: safeDestination)
+            ensureCurrentLocationPinned()
+            save()
+            return
+        }
+
+        // Filtered move
+        guard let fromFilteredIdx = fromOffsets.first, fromFilteredIdx < filtered.count else { return }
+        let itemToMove = filtered[fromFilteredIdx]
+        guard !itemToMove.isCurrentLocation else { return }
+
+        guard let sourceActualIdx = locations.firstIndex(where: { $0.id == itemToMove.id }) else { return }
+
+        let targetActualIdx: Int
+        if toOffset >= filtered.count {
+            guard let lastFiltered = filtered.last,
+                  let lastActual = locations.firstIndex(where: { $0.id == lastFiltered.id }) else { return }
+            targetActualIdx = lastActual + 1
+        } else {
+            let destFiltered = filtered[toOffset]
+            guard let destActual = locations.firstIndex(where: { $0.id == destFiltered.id }) else { return }
+            targetActualIdx = destActual
+        }
+
+        let safeTarget = max(1, min(locations.count, targetActualIdx))
+        locations.remove(at: sourceActualIdx)
+        let insertIdx = (safeTarget > sourceActualIdx) ? safeTarget - 1 : safeTarget
+        locations.insert(itemToMove, at: max(1, min(locations.count, insertIdx)))
+        ensureCurrentLocationPinned()
         save()
     }
 
@@ -67,44 +137,72 @@ public final class SavedLocationsManager: ObservableObject {
             condition: "Live",
             isCurrentLocation: true
         )
+        save()
+    }
+
+    private func ensureCurrentLocationPinned() {
+        if let currentIdx = locations.firstIndex(where: { $0.isCurrentLocation }) {
+            if currentIdx != 0 {
+                let current = locations.remove(at: currentIdx)
+                locations.insert(current, at: 0)
+            }
+        } else {
+            locations.insert(Self.defaultCurrentLocation, at: 0)
+        }
     }
 
     private func load() {
-        if let data = defaults.data(forKey: locationsKey),
-           let saved = try? JSONDecoder().decode([SavedLocation].self, from: data),
-           !saved.isEmpty {
+        if let saved = try? store.loadLocations(), !saved.isEmpty {
             self.locations = saved
         } else {
             self.locations = Self.defaultLocations
             save()
         }
 
-        if let idString = defaults.string(forKey: selectedIdKey),
-           let uuid = UUID(uuidString: idString) {
-            self.selectedLocationId = uuid
+        ensureCurrentLocationPinned()
+
+        if let savedId = store.loadSelectedLocationId() {
+            self.selectedLocationId = savedId
         }
+
         Task.detached(priority: .utility) { [locations] in
             SpotlightService.shared.indexSavedLocations(locations)
         }
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(locations) {
-            defaults.set(data, forKey: locationsKey)
-        }
+        try? store.saveLocations(locations)
+        store.saveSelectedLocationId(selectedLocationId)
         Task.detached(priority: .utility) { [locations] in
             SpotlightService.shared.indexSavedLocations(locations)
         }
     }
 
+    public static var defaultCurrentLocation: SavedLocation {
+        SavedLocation(cityName: "Current location", regionName: "GPS location", condition: "Live", isCurrentLocation: true)
+    }
+
     public static var defaultLocations: [SavedLocation] {
         [
-            SavedLocation(cityName: "Current location", regionName: "GPS location", condition: "Live", isCurrentLocation: true),
+            defaultCurrentLocation,
             SavedLocation(cityName: "Sydney",    regionName: "New South Wales, Australia", condition: "--", isCurrentLocation: false, latitude: -33.8688, longitude: 151.2093),
             SavedLocation(cityName: "Cupertino", regionName: "California, USA",            condition: "--", isCurrentLocation: false, latitude: 37.3230,  longitude: -122.0322),
             SavedLocation(cityName: "London",    regionName: "United Kingdom",             condition: "--", isCurrentLocation: false, latitude: 51.5074,  longitude: -0.1278),
             SavedLocation(cityName: "Tokyo",     regionName: "Japan",                      condition: "--", isCurrentLocation: false, latitude: 35.6762,  longitude: 139.6503),
             SavedLocation(cityName: "Delhi",     regionName: "National Capital Territory", condition: "--", isCurrentLocation: false, latitude: 28.6139,  longitude: 77.2090),
         ]
+    }
+}
+
+private extension Array {
+    mutating func move(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        let sortedOffsets = offsets.sorted()
+        let itemsToMove = sortedOffsets.map { self[$0] }
+        for index in sortedOffsets.reversed() {
+            self.remove(at: index)
+        }
+        let adjustedDestination = destination - offsets.filter { $0 < destination }.count
+        let clampedDestination = Swift.max(0, Swift.min(self.count, adjustedDestination))
+        self.insert(contentsOf: itemsToMove, at: clampedDestination)
     }
 }

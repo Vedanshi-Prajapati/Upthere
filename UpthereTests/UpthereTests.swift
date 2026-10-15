@@ -594,4 +594,141 @@ struct UpthereTests {
             #expect(detail.contains(peakTime))
         }
     }
+
+    // MARK: - Location Store & Management Tests
+
+    @Test("Add location persists to LocationStore")
+    func addLocationPersists() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_locs_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = FileLocationStore(fileURL: tempURL)
+        let manager = SavedLocationsManager(store: store)
+
+        let initialCount = manager.locations.count
+        let berlin = SavedLocation(cityName: "Berlin", regionName: "Germany", condition: "Sunny", isCurrentLocation: false, latitude: 52.52, longitude: 13.405)
+        manager.addLocation(berlin)
+
+        #expect(manager.locations.count == initialCount + 1)
+        #expect(manager.locations.contains(where: { $0.cityName == "Berlin" }))
+
+        // Re-read with a fresh manager instance
+        let manager2 = SavedLocationsManager(store: store)
+        #expect(manager2.locations.contains(where: { $0.cityName == "Berlin" }))
+    }
+
+    @Test("Remove location deletes non-current location but protects Current location")
+    func removeLocationProtectsCurrentLocation() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_locs_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = FileLocationStore(fileURL: tempURL)
+        let manager = SavedLocationsManager(store: store)
+
+        guard let currentLoc = manager.locations.first(where: { $0.isCurrentLocation }),
+              let nonCurrentLoc = manager.locations.first(where: { !$0.isCurrentLocation }) else {
+            Issue.record("Expected current and non-current locations in manager")
+            return
+        }
+
+        let initialCount = manager.locations.count
+
+        // Attempt to remove current location: should be rejected
+        manager.removeLocation(id: currentLoc.id)
+        #expect(manager.locations.contains(where: { $0.id == currentLoc.id }))
+        #expect(manager.locations.count == initialCount)
+
+        // Remove non-current location: should succeed
+        manager.removeLocation(id: nonCurrentLoc.id)
+        #expect(!manager.locations.contains(where: { $0.id == nonCurrentLoc.id }))
+        #expect(manager.locations.count == initialCount - 1)
+    }
+
+    @Test("Reorder while filtered correctly updates underlying locations while keeping Current location pinned")
+    func reorderWhileFiltered() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_locs_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = FileLocationStore(fileURL: tempURL)
+        let manager = SavedLocationsManager(store: store)
+
+        let loc1 = SavedLocation(cityName: "Chicago", regionName: "Illinois, USA", condition: "--", isCurrentLocation: false, latitude: 41.8781, longitude: -87.6298)
+        let loc2 = SavedLocation(cityName: "Boston", regionName: "Massachusetts, USA", condition: "--", isCurrentLocation: false, latitude: 42.3601, longitude: -71.0589)
+        let loc3 = SavedLocation(cityName: "Miami", regionName: "Florida, USA", condition: "--", isCurrentLocation: false, latitude: 25.7617, longitude: -80.1918)
+        let loc4 = SavedLocation(cityName: "Dallas", regionName: "Texas, USA", condition: "--", isCurrentLocation: false, latitude: 32.7767, longitude: -96.7970)
+
+        // Reset locations
+        let currentLoc = manager.locations[0]
+        try? store.saveLocations([currentLoc, loc1, loc2, loc3, loc4])
+        let testManager = SavedLocationsManager(store: store)
+
+        // Filter for non-current cities with "a": [Chicago, Miami, Dallas]
+        let filtered = testManager.locations.filter { !$0.isCurrentLocation && $0.cityName.localizedCaseInsensitiveContains("a") }
+        #expect(filtered.count == 3)
+        #expect(filtered[0].cityName == "Chicago")
+        #expect(filtered[1].cityName == "Miami")
+        #expect(filtered[2].cityName == "Dallas")
+
+        // In the filtered list, move Dallas (filtered index 2) to before Miami (filtered index 1)
+        testManager.moveLocation(fromOffsets: IndexSet(integer: 2), toOffset: 1, within: filtered)
+
+        // Verify underlying locations:
+        // Index 0 must remain Current location
+        #expect(testManager.locations[0].isCurrentLocation)
+        // Dallas should now be before Miami
+        let dallasIdx = testManager.locations.firstIndex(where: { $0.cityName == "Dallas" })!
+        let miamiIdx = testManager.locations.firstIndex(where: { $0.cityName == "Miami" })!
+        #expect(dallasIdx < miamiIdx)
+    }
+
+    @Test("Duplicate detection allows identical city names far apart but rejects places within 5km")
+    func duplicateDetectionCoordinates() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_locs_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = FileLocationStore(fileURL: tempURL)
+        let manager = SavedLocationsManager(store: store)
+
+        // Portland, Oregon vs Portland, Maine (same name, ~4100 km apart)
+        let portlandOR = SavedLocation(cityName: "Portland", regionName: "Oregon, USA", condition: "Rain", isCurrentLocation: false, latitude: 45.5152, longitude: -122.6784)
+        let portlandME = SavedLocation(cityName: "Portland", regionName: "Maine, USA", condition: "Sunny", isCurrentLocation: false, latitude: 43.6615, longitude: -70.2553)
+
+        manager.addLocation(portlandOR)
+        #expect(manager.locations.contains(where: { $0.regionName == "Oregon, USA" }))
+
+        // Adding Portland, ME with same name must be allowed
+        manager.addLocation(portlandME)
+        #expect(manager.locations.contains(where: { $0.regionName == "Maine, USA" }), "Same city name with distant coordinates must not be treated as duplicate")
+
+        let countBeforeNear = manager.locations.count
+        // Location very close to Portland, OR (~1.2 km away at 45.5200, -122.6820)
+        let nearbyPlace = SavedLocation(cityName: "Portland Downtown", regionName: "Oregon", condition: "--", isCurrentLocation: false, latitude: 45.5200, longitude: -122.6820)
+        #expect(manager.isDuplicate(nearbyPlace), "Coordinates within 5km must be detected as duplicate")
+
+        manager.addLocation(nearbyPlace)
+        #expect(manager.locations.count == countBeforeNear, "Duplicate within 5km must not be added")
+    }
+
+    @Test("One-time migration from UserDefaults to FileLocationStore")
+    func userDefaultsMigration() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_migration_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        // Seed old UserDefaults key with custom locations
+        let testLoc = SavedLocation(cityName: "Zurich", regionName: "Switzerland", condition: "Snow", isCurrentLocation: false, latitude: 47.3769, longitude: 8.5417)
+        let encoded = try! JSONEncoder().encode([SavedLocationsManager.defaultCurrentLocation, testLoc])
+        mockDefaults.set(encoded, forKey: "upthere.saved_locations.list")
+        mockDefaults.set(testLoc.id.uuidString, forKey: "upthere.saved_locations.selected_id")
+
+        // Initialize store with no existing file: should migrate from defaults
+        let store = FileLocationStore(fileURL: tempURL, defaults: mockDefaults)
+        let loaded = try? store.loadLocations()
+
+        #expect(loaded?.contains(where: { $0.cityName == "Zurich" }) == true)
+        #expect(store.loadSelectedLocationId() == testLoc.id)
+        #expect(FileManager.default.fileExists(atPath: tempURL.path))
+    }
 }
