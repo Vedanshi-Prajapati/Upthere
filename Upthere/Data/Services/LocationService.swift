@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import MapKit
 import Observation
 
 public enum LocationResolutionStatus: Equatable, Sendable {
@@ -64,7 +65,6 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     private let clManager: CLLocationManager
-    private let geocoder = CLGeocoder()
     private var locationContinuations: [CheckedContinuation<CLLocation, Error>] = []
     private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
     private var lastRequestTime: Date?
@@ -188,14 +188,15 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
 
         // Reverse geocode with 2.5-second timeout
         let geocodedCity: String? = await withTaskGroup(of: String?.self) { group in
-            group.addTask { [geocoder] in
+            group.addTask {
                 do {
-                    let placemarks = try await geocoder.reverseGeocodeLocation(location)
-                    if let placemark = placemarks.first {
-                        return placemark.locality ?? placemark.subAdministrativeArea ?? placemark.name
+                    guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+                    let mapItems = try await request.mapItems
+                    if let first = mapItems.first {
+                        return first.addressRepresentations?.cityName ?? first.name
                     }
                 } catch {
-                    // Apple's server failed or timed out
+                    // Apple's reverse geocoding failed or timed out
                 }
                 return nil
             }

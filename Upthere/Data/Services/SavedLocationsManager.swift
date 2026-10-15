@@ -166,7 +166,7 @@ public final class SavedLocationsManager: ObservableObject {
         }
 
         Task.detached(priority: .utility) { [locations] in
-            SpotlightService.shared.indexSavedLocations(locations)
+            await SpotlightService.shared.indexSavedLocations(locations)
         }
     }
 
@@ -174,7 +174,7 @@ public final class SavedLocationsManager: ObservableObject {
         try? store.saveLocations(locations)
         store.saveSelectedLocationId(selectedLocationId)
         Task.detached(priority: .utility) { [locations] in
-            SpotlightService.shared.indexSavedLocations(locations)
+            await SpotlightService.shared.indexSavedLocations(locations)
         }
     }
 

@@ -2,8 +2,8 @@ import Foundation
 import CoreSpotlight
 import UniformTypeIdentifiers
 
-/// Service managing CoreSpotlight indexing for current weather, forecast insights, and saved cities
-public final class SpotlightService: @unchecked Sendable {
+@MainActor
+public final class SpotlightService {
     public static let shared = SpotlightService()
 
     public static let weatherDomain = "com.vedanshi.upthere.weather"
@@ -20,7 +20,7 @@ public final class SpotlightService: @unchecked Sendable {
         let tempInt = Int(round(weather.temperature))
         let highInt = Int(round(weather.highTemperature))
         let lowInt = Int(round(weather.lowTemperature))
-        let rainChance = weather.chanceOfRain ?? weather.precipitationChance
+        let rainChance = weather.chanceOfRain
 
         let attributeSet = CSSearchableItemAttributeSet(contentType: .content)
         attributeSet.title = "\(weather.cityName) Weather · \(tempInt)° \(weather.condition)"

@@ -51,7 +51,7 @@ public struct CheckWeatherIntent: AppIntent {
 
         let tempStr = "\(Int(round(weather.temperature)))°"
         let condition = weather.condition
-        let rainChance = weather.chanceOfRain ?? weather.precipitationChance
+        let rainChance = weather.chanceOfRain
         let highStr = "\(Int(round(weather.highTemperature)))°"
         let lowStr = "\(Int(round(weather.lowTemperature)))°"
 
@@ -110,7 +110,7 @@ private struct WeatherSnippetView: View {
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.white.opacity(0.85))
 
-                        let rainChance = weather.chanceOfRain ?? weather.precipitationChance
+                        let rainChance = weather.chanceOfRain
                         if rainChance > 0 {
                             HStack(spacing: 3) {
                                 Image(systemName: "umbrella.fill")
