@@ -176,7 +176,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: 3_500_000_000)
             guard let self = self else { return }
-            await self.handleTimeout(for: generation)
+            self.handleTimeout(for: generation)
         }
 
         let location = try await withCheckedThrowingContinuation { continuation in

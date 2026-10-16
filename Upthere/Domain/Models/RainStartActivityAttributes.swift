@@ -1,7 +1,7 @@
 import Foundation
 import ActivityKit
 
-public struct RainStartActivityAttributes: ActivityAttributes {
+public nonisolated struct RainStartActivityAttributes: ActivityAttributes, Sendable {
     public struct ContentState: Codable, Hashable, Sendable {
         public var minutesUntilRain: Int
         public var intensity: String
