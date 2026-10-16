@@ -464,7 +464,7 @@ struct UpthereTests {
     // MARK: - ToggleSevereAlertsIntent
     @Test("ToggleSevereAlertsIntent inverts severe alerts setting")
     func toggleSevereAlertsIntent() async throws {
-        let initial = AppGroup.defaults.bool(forKey: "settings.severeAlertsEnabled")
+        let initial = AppGroup.defaults.bool(forKey: AppGroup.severeAlertsKey)
         let intent = ToggleSevereAlertsIntent()
         let result = try await intent.perform()
 
@@ -921,4 +921,147 @@ struct UpthereTests {
         #expect(entry.updatedAtText == nil)
         #expect(entry.cityName == "Paris")
     }
+
+    // MARK: - Intent Offline & Cache Fallback Tests
+
+    @Test("CheckWeatherIntent returns cached weather when network fails")
+    func checkWeatherIntentReturnsCachedWhenNetworkFails() async throws {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cacheManager = WeatherCacheManager(defaults: mockDefaults)
+        let location = LocationEntity(
+            id: "test-sf",
+            name: "San Francisco",
+            region: "CA",
+            latitude: 37.7749,
+            longitude: -122.4194
+        )
+
+        let cached = MockWeatherRepository.makeGhaziabadWeather()
+        let coordKey = cacheManager.cacheKey(
+            for: location.name,
+            coordinate: (lat: location.latitude, lon: location.longitude)
+        )
+        cacheManager.save(weather: cached, key: coordKey)
+
+        let failingRepo = MockWeatherRepository(errorToThrow: WeatherServiceError.offline, delayNanoseconds: 0)
+        let intent = CheckWeatherIntent(
+            location: location,
+            repository: failingRepo,
+            cacheManager: cacheManager
+        )
+
+        let result = try await intent.perform()
+        #expect(result.value?.contains(cached.cityName) == true || result.value?.contains(location.name) == true)
+    }
+
+    @Test("CheckWeatherIntent throws WeatherUnavailableError when network fails and cache is missing")
+    func checkWeatherIntentThrowsWhenBothMissing() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let emptyCache = WeatherCacheManager(defaults: mockDefaults)
+        let location = LocationEntity(
+            id: "test-ny",
+            name: "New York",
+            region: "NY",
+            latitude: 40.7128,
+            longitude: -74.0060
+        )
+        let failingRepo = MockWeatherRepository(errorToThrow: WeatherServiceError.offline, delayNanoseconds: 0)
+        let intent = CheckWeatherIntent(
+            location: location,
+            repository: failingRepo,
+            cacheManager: emptyCache
+        )
+
+        do {
+            _ = try await intent.perform()
+            Issue.record("Expected WeatherUnavailableError to be thrown")
+        } catch let error as WeatherUnavailableError {
+            #expect(error.errorDescription == "I couldn't get the weather right now. Open UpThere and try again.")
+            #expect(error.localizedStringResource.key == "I couldn't get the weather right now. Open UpThere and try again.")
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("TrackRainIntent returns cached weather when network fails")
+    func trackRainIntentReturnsCachedWhenNetworkFails() async throws {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cacheManager = WeatherCacheManager(defaults: mockDefaults)
+        let location = LocationEntity(
+            id: "test-sf",
+            name: "San Francisco",
+            region: "CA",
+            latitude: 37.7749,
+            longitude: -122.4194
+        )
+
+        let cached = MockWeatherRepository.makeGhaziabadWeather()
+        let coordKey = cacheManager.cacheKey(
+            for: location.name,
+            coordinate: (lat: location.latitude, lon: location.longitude)
+        )
+        cacheManager.save(weather: cached, key: coordKey)
+
+        let failingRepo = MockWeatherRepository(errorToThrow: WeatherServiceError.offline, delayNanoseconds: 0)
+        let intent = TrackRainIntent(
+            location: location,
+            repository: failingRepo,
+            cacheManager: cacheManager
+        )
+
+        let result = try await intent.perform()
+        // Ghaziabad mock weather has no rain in first 2 hours, so track rain completes with false
+        #expect(result.value == false)
+    }
+
+    @Test("TrackRainIntent throws WeatherUnavailableError when network fails and cache is missing")
+    func trackRainIntentThrowsWhenBothMissing() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let emptyCache = WeatherCacheManager(defaults: mockDefaults)
+        let location = LocationEntity(
+            id: "test-ny",
+            name: "New York",
+            region: "NY",
+            latitude: 40.7128,
+            longitude: -74.0060
+        )
+        let failingRepo = MockWeatherRepository(errorToThrow: WeatherServiceError.offline, delayNanoseconds: 0)
+        let intent = TrackRainIntent(
+            location: location,
+            repository: failingRepo,
+            cacheManager: emptyCache
+        )
+
+        do {
+            _ = try await intent.perform()
+            Issue.record("Expected WeatherUnavailableError to be thrown")
+        } catch let error as WeatherUnavailableError {
+            #expect(error.errorDescription == "I couldn't get the weather right now. Open UpThere and try again.")
+            #expect(error.localizedStringResource.key == "I couldn't get the weather right now. Open UpThere and try again.")
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("SettingsViewModel reads and writes severeAlertsKey from AppGroup")
+    func settingsViewModelUsesSharedAppGroupKey() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        mockDefaults.set(false, forKey: AppGroup.severeAlertsKey)
+        let vm = SettingsViewModel(defaults: mockDefaults)
+        #expect(vm.severeAlertsEnabled == false)
+
+        vm.severeAlertsEnabled = true
+        #expect(mockDefaults.bool(forKey: AppGroup.severeAlertsKey) == true)
+    }
 }
+

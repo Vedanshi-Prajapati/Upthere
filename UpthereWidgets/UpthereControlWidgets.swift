@@ -29,7 +29,7 @@ struct UpthereAlertsControl: ControlWidget {
         StaticControlConfiguration(kind: Self.kind) {
             ControlWidgetToggle(
                 "Severe Alerts",
-                isOn: AppGroup.defaults.bool(forKey: "settings.severeAlertsEnabled"),
+                isOn: AppGroup.defaults.bool(forKey: AppGroup.severeAlertsKey),
                 action: ToggleSevereAlertsControlIntent()
             ) { isOn in
                 Label(isOn ? "Alerts Active" : "Alerts Muted", systemImage: isOn ? "bell.badge.fill" : "bell.slash")
@@ -67,7 +67,9 @@ struct ToggleSevereAlertsControlIntent: SetValueIntent {
     init(value: Bool) { self.value = value }
 
     func perform() async throws -> some IntentResult {
-        AppGroup.defaults.set(value, forKey: "settings.severeAlertsEnabled")
+        AppGroup.defaults.set(value, forKey: AppGroup.severeAlertsKey)
+        WidgetCenter.shared.reloadAllTimelines()
+        ControlCenter.shared.reloadAllControls()
         return .result()
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import AppIntents
+import WidgetKit
 
 /// AppIntent to toggle Severe Weather Alerts from Shortcuts or Control Center
 public struct ToggleSevereAlertsIntent: AppIntent {
@@ -11,9 +12,14 @@ public struct ToggleSevereAlertsIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some ReturnsValue<Bool> & ProvidesDialog {
-        let current = AppGroup.defaults.bool(forKey: "settings.severeAlertsEnabled")
+        let current = AppGroup.defaults.bool(forKey: AppGroup.severeAlertsKey)
         let newState = !current
-        AppGroup.defaults.set(newState, forKey: "settings.severeAlertsEnabled")
+        AppGroup.defaults.set(newState, forKey: AppGroup.severeAlertsKey)
+
+        WidgetCenter.shared.reloadAllTimelines()
+        if #available(iOS 18.0, *) {
+            ControlCenter.shared.reloadAllControls()
+        }
 
         let statusText = newState ? "enabled" : "disabled"
         return .result(

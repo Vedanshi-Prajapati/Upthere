@@ -4,22 +4,25 @@ public enum AppGroup: Sendable {
     public static let identifier = "group.com.vedanshi.upthereapp"
 
     /// Shared UserDefaults suite for sharing state across the app, widget, and controls.
-    public static var defaults: UserDefaults {
+    nonisolated public static var defaults: UserDefaults {
         UserDefaults(suiteName: identifier) ?? .standard
     }
 
     /// Shared App Group container URL.
-    public static var containerURL: URL? {
+    nonisolated public static var containerURL: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
     }
 
     /// Returns a subfolder URL within the App Group container, creating it if needed.
-    public static func containerURL(forSubdirectory subdirectory: String) -> URL? {
+    nonisolated public static func containerURL(forSubdirectory subdirectory: String) -> URL? {
         guard let base = containerURL else { return nil }
         let dir = base.appendingPathComponent(subdirectory, isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
+
+    // MARK: - Setting Keys
+    public static let severeAlertsKey = "settings.severeAlertsEnabled"
 
     // MARK: - Migration Keys
     public static let settingsKeys = [
@@ -36,7 +39,7 @@ public enum AppGroup: Sendable {
 
     /// Migrates existing values from standard UserDefaults into the App Group suite exactly once.
     /// Does not overwrite existing values in the group suite or subsequent modifications.
-    public static func migrateSettingsIfNeeded(
+    nonisolated public static func migrateSettingsIfNeeded(
         standard: UserDefaults = .standard,
         group: UserDefaults = AppGroup.defaults
     ) {
@@ -57,4 +60,18 @@ public enum AppGroup: Sendable {
 
         group.set(true, forKey: migrationKey)
     }
+}
+
+// MARK: - Intent Errors
+
+public struct WeatherUnavailableError: Error, LocalizedError, CustomLocalizedStringResourceConvertible, Sendable, Equatable {
+    public var errorDescription: String? {
+        "I couldn't get the weather right now. Open UpThere and try again."
+    }
+
+    public var localizedStringResource: LocalizedStringResource {
+        "I couldn't get the weather right now. Open UpThere and try again."
+    }
+
+    public init() {}
 }

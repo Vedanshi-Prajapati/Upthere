@@ -11,9 +11,21 @@ public struct TrackRainIntent: AppIntent {
     @Parameter(title: "Location", description: "City or location to track rain for")
     public var location: LocationEntity?
 
-    public init() {}
+    private var repository: (any WeatherRepository)?
+    private var cacheManager: WeatherCacheManager?
 
-    public init(location: LocationEntity?) {
+    public init() {
+        self.repository = nil
+        self.cacheManager = nil
+    }
+
+    public init(
+        location: LocationEntity?,
+        repository: (any WeatherRepository)? = nil,
+        cacheManager: WeatherCacheManager? = nil
+    ) {
+        self.repository = repository
+        self.cacheManager = cacheManager
         self.location = location
     }
 
@@ -34,18 +46,28 @@ public struct TrackRainIntent: AppIntent {
             coordinate = LocationService.shared.currentLocation?.coordinate ?? LocationService.fallbackCoordinate.coordinate
         }
 
-        // Fetch current weather
+        // Fetch current weather or fallback to cached
+        let cache = cacheManager ?? WeatherCacheManager.shared
+        let repo = repository ?? WeatherKitWeatherRepository(locationService: LocationService.shared, cacheManager: cache)
+
         let weather: Weather
         do {
-            let repo = WeatherKitWeatherRepository(locationService: LocationService.shared)
             weather = try await repo.fetchWeather(
                 for: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
                 cityName: targetCity,
                 locationSubtitle: targetCity == LocationService.shared.currentCityName ? "Current Location" : ""
             )
         } catch {
-            let cacheKey = WeatherCacheManager.shared.cacheKey(for: targetCity)
-            weather = WeatherCacheManager.shared.load(key: cacheKey, allowExpired: true)?.weather ?? MockWeatherRepository.makeGhaziabadWeather()
+            let coordKey = cache.cacheKey(
+                for: targetCity,
+                coordinate: (lat: coordinate.latitude, lon: coordinate.longitude)
+            )
+            let cityKey = cache.cacheKey(for: targetCity)
+            if let cached = cache.load(key: coordKey, allowExpired: true)?.weather ?? cache.load(key: cityKey, allowExpired: true)?.weather {
+                weather = cached
+            } else {
+                throw WeatherUnavailableError()
+            }
         }
 
         guard let rainWindow = InsightEngine().rainWindow(from: weather.hourlyForecast),

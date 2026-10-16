@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 
 @Observable
 @MainActor
@@ -23,7 +24,13 @@ public final class SettingsViewModel {
         didSet { defaults.set(rainAlertsEnabled, forKey: "settings.rainAlertsEnabled") }
     }
     public var severeAlertsEnabled: Bool = true {
-        didSet { defaults.set(severeAlertsEnabled, forKey: "settings.severeAlertsEnabled") }
+        didSet {
+            defaults.set(severeAlertsEnabled, forKey: AppGroup.severeAlertsKey)
+            WidgetCenter.shared.reloadAllTimelines()
+            if #available(iOS 18.0, *) {
+                ControlCenter.shared.reloadAllControls()
+            }
+        }
     }
 
     // MARK: - Location
@@ -98,8 +105,8 @@ public final class SettingsViewModel {
         if defaults.object(forKey: "settings.rainAlertsEnabled") != nil {
             self.rainAlertsEnabled = defaults.bool(forKey: "settings.rainAlertsEnabled")
         }
-        if defaults.object(forKey: "settings.severeAlertsEnabled") != nil {
-            self.severeAlertsEnabled = defaults.bool(forKey: "settings.severeAlertsEnabled")
+        if defaults.object(forKey: AppGroup.severeAlertsKey) != nil {
+            self.severeAlertsEnabled = defaults.bool(forKey: AppGroup.severeAlertsKey)
         }
     }
 
