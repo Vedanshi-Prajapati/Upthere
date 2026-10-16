@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4030729A6200BD49AF /* AppGroup.swift */; };
 		ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4030729A6200BD49AF /* AppGroup.swift */; };
+		ECB9CC4530729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */; };
+		ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,10 +24,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		ECB9CBFB30729A6200BD49AF /* Upthere.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Upthere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC2030729A6200BD49AF /* UpthereTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UpthereTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UpthereWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
+		ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -76,14 +79,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		ECB9CC4330729A6200BD49AF /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				ECB9CC4030729A6200BD49AF /* AppGroup.swift */,
-			);
-			path = Shared;
-			sourceTree = "<group>";
-		};
 		ECB9CBFC30729A6200BD49AF /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -92,6 +87,15 @@
 				ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		ECB9CC4330729A6200BD49AF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				ECB9CC4030729A6200BD49AF /* AppGroup.swift */,
+				ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -220,6 +224,7 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */,
+				ECB9CC4530729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
 			);
 		};
 		ECB9CC2230729A6200BD49AF /* Sources */ = {
@@ -231,6 +236,7 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */,
+				ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */

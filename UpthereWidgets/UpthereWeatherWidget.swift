@@ -3,64 +3,8 @@ import SwiftUI
 
 // MARK: - Models
 
-struct WidgetHourlyItem: Identifiable, Sendable {
-    let id: String
-    let time: String
-    let temp: Int
-    let symbol: String
-    let rainProb: Int
-}
-
-struct WidgetDailyItem: Identifiable, Sendable {
-    let id: String
-    let day: String
-    let symbol: String
-    let low: Int
-    let high: Int
-    let rainProb: Int
-}
-
-struct WeatherWidgetEntry: TimelineEntry {
-    let date: Date
-    let cityName: String
-    let condition: String
-    let temperature: Int
-    let feelsLike: Int
-    let high: Int
-    let low: Int
-    let rainChance: Int
-    let symbolName: String
-    let rainInsight: String
-    let hourly: [WidgetHourlyItem]
-    let daily: [WidgetDailyItem]
-
-    static var preview: WeatherWidgetEntry {
-        WeatherWidgetEntry(
-            date: Date(),
-            cityName: "Ghaziabad",
-            condition: "Partly Cloudy",
-            temperature: 28,
-            feelsLike: 30,
-            high: 35,
-            low: 25,
-            rainChance: 65,
-            symbolName: "cloud.sun.fill",
-            rainInsight: "Rain likely near 4 PM · 65%",
-            hourly: [
-                .init(id: "1", time: "Now", temp: 28, symbol: "cloud.sun.fill", rainProb: 5),
-                .init(id: "2", time: "2 PM", temp: 33, symbol: "cloud.fill", rainProb: 20),
-                .init(id: "3", time: "4 PM", temp: 31, symbol: "cloud.rain.fill", rainProb: 65),
-                .init(id: "4", time: "6 PM", temp: 29, symbol: "cloud.drizzle.fill", rainProb: 40),
-                .init(id: "5", time: "8 PM", temp: 27, symbol: "moon.fill", rainProb: 10)
-            ],
-            daily: [
-                .init(id: "1", day: "Today", symbol: "cloud.rain.fill", low: 25, high: 35, rainProb: 65),
-                .init(id: "2", day: "Wed",   symbol: "cloud.sun.fill",  low: 24, high: 34, rainProb: 10),
-                .init(id: "3", day: "Thu",   symbol: "sun.max.fill",    low: 23, high: 33, rainProb: 5)
-            ]
-        )
-    }
-}
+typealias WidgetHourlyItem = WidgetHourlySnapshot
+typealias WidgetDailyItem = WidgetDailySnapshot
 
 // MARK: - Timeline Provider
 
@@ -70,12 +14,17 @@ struct WeatherWidgetTimelineProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WeatherWidgetEntry) -> Void) {
-        completion(.preview)
+        if context.isPreview {
+            completion(.preview)
+        } else {
+            let snapshot = WidgetSnapshotStore.shared.load()
+            completion(WeatherWidgetEntry(from: snapshot))
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherWidgetEntry>) -> Void) {
-        // Attempt to load from UserDefaults shared with app
-        let entry = WeatherWidgetEntry.preview
+        let snapshot = WidgetSnapshotStore.shared.load()
+        let entry = WeatherWidgetEntry(from: snapshot)
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
@@ -150,264 +99,410 @@ struct UpthereWidgetEntryView: View {
     // MARK: - Lock Screen Accessories
 
     private var circularAccessoryView: some View {
-        Gauge(value: Double(entry.temperature), in: Double(entry.low)...Double(entry.high)) {
-            Image(systemName: entry.symbolName)
-        } currentValueLabel: {
-            Text("\(entry.temperature)°")
-                .font(.system(size: 15, weight: .bold))
+        Group {
+            if entry.isEmpty {
+                VStack(spacing: 2) {
+                    Image(systemName: "cloud.fill")
+                        .font(.caption)
+                    Text("Open")
+                        .font(.caption2.bold())
+                }
+            } else {
+                Gauge(value: Double(entry.temperature), in: Double(min(entry.low, entry.temperature))...Double(max(entry.high, entry.temperature + 1))) {
+                    Image(systemName: entry.symbolName)
+                } currentValueLabel: {
+                    Text("\(entry.temperature)°")
+                        .font(.headline)
+                }
+                .gaugeStyle(.accessoryCircular)
+            }
         }
-        .gaugeStyle(.accessoryCircular)
     }
 
     private var rectangularAccessoryView: some View {
-        HStack(spacing: 8) {
-            Image(systemName: entry.symbolName)
-                .font(.system(size: 22))
+        Group {
+            if entry.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "cloud.fill")
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("UpThere")
+                            .font(.headline)
+                        Text("Open UpThere to load weather")
+                            .font(.caption2)
+                            .lineLimit(2)
+                    }
+                }
+            } else if entry.isStale {
+                HStack(spacing: 8) {
+                    Image(systemName: entry.symbolName)
+                        .font(.title3)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(entry.cityName) · \(entry.temperature)°")
-                    .font(.system(size: 13, weight: .bold))
-                Text(entry.condition)
-                    .font(.system(size: 11))
-                if entry.rainChance > 0 {
-                    Text("Rain: \(entry.rainChance)%")
-                        .font(.system(size: 10, weight: .semibold))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("\(entry.cityName) · \(entry.temperature)°")
+                            .font(.subheadline.bold())
+                        Text("Open UpThere to load weather")
+                            .font(.caption2)
+                            .lineLimit(1)
+                        if let updated = entry.updatedAtText {
+                            Text(updated)
+                                .font(.caption2)
+                        }
+                    }
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: entry.symbolName)
+                        .font(.title3)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(entry.cityName) · \(entry.temperature)°")
+                            .font(.subheadline.bold())
+                        Text(entry.condition)
+                            .font(.caption2)
+                        if entry.rainChance > 0 {
+                            Text("Rain: \(entry.rainChance)%")
+                                .font(.caption2.weight(.semibold))
+                        }
+                    }
                 }
             }
         }
     }
 
     private var inlineAccessoryView: some View {
-        Text("\(entry.cityName): \(entry.temperature)° · \(entry.condition)")
+        if entry.isEmpty {
+            return Text("Open UpThere to load weather")
+        } else if entry.isStale {
+            let updateSuffix = entry.updatedAtText.map { " · \($0)" } ?? ""
+            return Text("\(entry.cityName): Open UpThere\(updateSuffix)")
+        } else {
+            return Text("\(entry.cityName): \(entry.temperature)° · \(entry.condition)")
+        }
     }
 
     // MARK: - System Small
 
     private var smallWidgetView: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(entry.cityName)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Spacer()
-                Image(systemName: entry.symbolName)
-                    .symbolRenderingMode(.multicolor)
-                    .font(.system(size: 22))
-                    .foregroundStyle(.white)
-            }
-
-            Spacer()
-
-            Text("\(entry.temperature)°")
-                .font(.system(size: 46, weight: .thin, design: .rounded))
-                .foregroundStyle(.white)
-
-            Text(entry.condition)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.85))
-                .lineLimit(1)
-
-            HStack {
-                Text("H \(entry.high)°  L \(entry.low)°")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.75))
-
-                Spacer()
-
-                if entry.rainChance > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "umbrella.fill")
-                            .font(.system(size: 9))
-                        Text("\(entry.rainChance)%")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+        Group {
+            if entry.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "cloud.sun.fill")
+                        .font(.title2)
+                        .foregroundStyle(.white)
+                    Text("UpThere")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text("Open UpThere to load weather")
+                        .font(.caption)
+                        .foregroundStyle(Color.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(4)
+            } else if entry.isStale {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(entry.cityName)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: entry.symbolName)
+                            .symbolRenderingMode(.multicolor)
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                    }
+
+                    Spacer()
+
+                    Text("\(entry.temperature)°")
+                        .font(.system(.largeTitle, design: .rounded).weight(.light))
+                        .foregroundStyle(.white)
+
+                    Text("Open UpThere to load weather")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Color.white.opacity(0.85))
+                        .lineLimit(1)
+
+                    if let updated = entry.updatedAtText {
+                        Text(updated)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                    }
+                }
+                .padding(4)
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(entry.cityName)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: entry.symbolName)
+                            .symbolRenderingMode(.multicolor)
+                            .font(.title3)
+                            .foregroundStyle(.white)
+                    }
+
+                    Spacer()
+
+                    Text("\(entry.temperature)°")
+                        .font(.system(.largeTitle, design: .rounded).weight(.light))
+                        .foregroundStyle(.white)
+
+                    Text(entry.condition)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Color.white.opacity(0.85))
+                        .lineLimit(1)
+
+                    HStack {
+                        Text("H \(entry.high)°  L \(entry.low)°")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Color.white.opacity(0.75))
+
+                        Spacer()
+
+                        if entry.rainChance > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "umbrella.fill")
+                                    .font(.caption2)
+                                Text("\(entry.rainChance)%")
+                                    .font(.caption2.weight(.semibold))
+                            }
+                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                        }
+                    }
+                }
+                .padding(4)
             }
         }
-        .padding(4)
     }
 
     // MARK: - System Medium
 
     private var mediumWidgetView: some View {
-        HStack(spacing: 16) {
-            // Left pane: Current weather
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(entry.cityName)
-                        .font(.system(size: 16, weight: .bold))
+        Group {
+            if entry.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "cloud.sun.fill")
+                        .font(.title)
                         .foregroundStyle(.white)
-                        .lineLimit(1)
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.white.opacity(0.7))
+                    Text("UpThere Weather")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text("Open UpThere to load weather")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.white.opacity(0.85))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(4)
+            } else {
+                HStack(spacing: 16) {
+                    // Left pane: Current weather
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text(entry.cityName)
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            Image(systemName: "location.fill")
+                                .font(.caption2)
+                                .foregroundStyle(Color.white.opacity(0.7))
+                        }
 
-                Text("\(entry.temperature)°")
-                    .font(.system(size: 42, weight: .thin, design: .rounded))
-                    .foregroundStyle(.white)
+                        Text("\(entry.temperature)°")
+                            .font(.system(.largeTitle, design: .rounded).weight(.light))
+                            .foregroundStyle(.white)
 
-                Text(entry.condition)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.85))
-                    .lineLimit(1)
+                        Text(entry.isStale ? "Open UpThere to load weather" : entry.condition)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Color.white.opacity(0.85))
+                            .lineLimit(1)
 
-                Text("H \(entry.high)°  L \(entry.low)°")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.75))
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Divider()
-                .overlay(Color.white.opacity(0.18))
-
-            // Right pane: 4-hour timeline strip
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 10) {
-                    ForEach(entry.hourly.prefix(4)) { item in
-                        VStack(spacing: 5) {
-                            Text(item.time)
-                                .font(.system(size: 10, weight: .medium))
+                        if let updated = entry.updatedAtText {
+                            Text(updated)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                        } else {
+                            Text("H \(entry.high)°  L \(entry.low)°")
+                                .font(.caption2.weight(.semibold))
                                 .foregroundStyle(Color.white.opacity(0.75))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                            Image(systemName: item.symbol)
-                                .symbolRenderingMode(.multicolor)
-                                .font(.system(size: 16))
-                                .foregroundStyle(.white)
+                    Divider()
+                        .overlay(Color.white.opacity(0.18))
 
-                            Text("\(item.temp)°")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white)
+                    // Right pane: 4-hour timeline strip
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 10) {
+                            ForEach(entry.hourly.prefix(4)) { item in
+                                VStack(spacing: 5) {
+                                    Text(item.time)
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(Color.white.opacity(0.75))
 
-                            if item.rainProb > 0 {
-                                Text("\(item.rainProb)%")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
-                            } else {
-                                Text(" ")
-                                    .font(.system(size: 9))
+                                    Image(systemName: item.symbol)
+                                        .symbolRenderingMode(.multicolor)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.white)
+
+                                    Text("\(item.temp)°")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.white)
+
+                                    if item.rainProb > 0 {
+                                        Text("\(item.rainProb)%")
+                                            .font(.caption2.bold())
+                                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                    } else {
+                                        Text(" ")
+                                            .font(.caption2)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
                             }
                         }
-                        .frame(maxWidth: .infinity)
                     }
+                    .frame(maxWidth: .infinity)
                 }
+                .padding(4)
             }
-            .frame(maxWidth: .infinity)
         }
-        .padding(4)
     }
 
     // MARK: - System Large
 
     private var largeWidgetView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.cityName)
-                        .font(.system(size: 20, weight: .bold))
+        Group {
+            if entry.isEmpty {
+                VStack(spacing: 10) {
+                    Spacer()
+                    Image(systemName: "cloud.sun.fill")
+                        .font(.largeTitle)
                         .foregroundStyle(.white)
-                    Text("\(entry.condition) · Feels like \(entry.feelsLike)°")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.8))
+                    Text("UpThere Weather")
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+                    Text("Open UpThere to load weather")
+                        .font(.headline)
+                        .foregroundStyle(Color.white.opacity(0.85))
+                    Spacer()
                 }
-                Spacer()
-                Text("\(entry.temperature)°")
-                    .font(.system(size: 40, weight: .thin, design: .rounded))
-                    .foregroundStyle(.white)
-            }
-
-            // Insight pill
-            HStack(spacing: 6) {
-                Image(systemName: "umbrella.fill")
-                    .font(.system(size: 11))
-                Text(entry.rainInsight)
-                    .font(.system(size: 12, weight: .semibold))
-            }
-            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                Capsule()
-                    .fill(Color.white.opacity(0.12))
-            )
-
-            // Hourly timeline
-            HStack(spacing: 8) {
-                ForEach(entry.hourly.prefix(5)) { item in
-                    VStack(spacing: 4) {
-                        Text(item.time)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.75))
-
-                        Image(systemName: item.symbol)
-                            .symbolRenderingMode(.multicolor)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white)
-
-                        Text("\(item.temp)°")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-
-                        if item.rainProb > 0 {
-                            Text("\(item.rainProb)%")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
-                        } else {
-                            Text(" ")
-                                .font(.system(size: 9))
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-            )
-
-            // 3-day forecast preview
-            VStack(spacing: 6) {
-                ForEach(entry.daily) { item in
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(4)
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Header
                     HStack {
-                        Text(item.day)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 45, alignment: .leading)
-
-                        Image(systemName: item.symbol)
-                            .symbolRenderingMode(.multicolor)
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white)
-                            .frame(width: 25)
-
-                        if item.rainProb > 0 {
-                            Text("\(item.rainProb)%")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
-                                .frame(width: 32, alignment: .leading)
-                        } else {
-                            Spacer()
-                                .frame(width: 32)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(entry.cityName)
+                                .font(.title3.bold())
+                                .foregroundStyle(.white)
+                            Text(entry.isStale ? "Open UpThere to load weather" : "\(entry.condition) · Feels like \(entry.feelsLike)°")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(Color.white.opacity(0.8))
                         }
-
                         Spacer()
-
-                        Text("L \(item.low)°   H \(item.high)°")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.85))
+                        Text("\(entry.temperature)°")
+                            .font(.system(.largeTitle, design: .rounded).weight(.light))
+                            .foregroundStyle(.white)
                     }
+
+                    // Insight pill
+                    HStack(spacing: 6) {
+                        Image(systemName: "umbrella.fill")
+                            .font(.caption2)
+                        Text(entry.rainInsight)
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.12))
+                    )
+
+                    // Hourly timeline
+                    HStack(spacing: 8) {
+                        ForEach(entry.hourly.prefix(5)) { item in
+                            VStack(spacing: 4) {
+                                Text(item.time)
+                                    .font(.caption2.weight(.medium))
+                                    .foregroundStyle(Color.white.opacity(0.75))
+
+                                Image(systemName: item.symbol)
+                                    .symbolRenderingMode(.multicolor)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white)
+
+                                Text("\(item.temp)°")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.white)
+
+                                if item.rainProb > 0 {
+                                    Text("\(item.rainProb)%")
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                } else {
+                                    Text(" ")
+                                        .font(.caption2)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                    )
+
+                    // 3-day forecast preview
+                    VStack(spacing: 6) {
+                        ForEach(entry.daily) { item in
+                            HStack {
+                                Text(item.day)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 45, alignment: .leading)
+
+                                Image(systemName: item.symbol)
+                                    .symbolRenderingMode(.multicolor)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white)
+                                    .frame(width: 25)
+
+                                if item.rainProb > 0 {
+                                    Text("\(item.rainProb)%")
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                        .frame(width: 32, alignment: .leading)
+                                } else {
+                                    Spacer()
+                                        .frame(width: 32)
+                                }
+
+                                Spacer()
+
+                                Text("L \(item.low)°   H \(item.high)°")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(Color.white.opacity(0.85))
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.white.opacity(0.08))
+                    )
                 }
+                .padding(4)
             }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-            )
         }
-        .padding(4)
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import Observation
+import WidgetKit
 
 @Observable
 @MainActor
@@ -147,6 +148,10 @@ public final class HomeViewModel {
             self.currentLoadedWeather = weather
             self.isRefreshing = false
             self.state = .loaded(weather: weather, banner: banner)
+
+            let snapshot = WidgetSnapshot(from: weather)
+            try? WidgetSnapshotStore.shared.save(snapshot)
+            WidgetCenter.shared.reloadAllTimelines()
 
             Task.detached(priority: .utility) {
                 await SpotlightService.shared.indexWeather(weather)
