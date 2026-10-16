@@ -6,6 +6,10 @@ struct UpthereApp: App {
     @State private var container = AppContainer()
     @State private var showSplash = true
 
+    init() {
+        AppGroup.migrateSettingsIfNeeded()
+    }
+
     private var selectedColorScheme: ColorScheme? {
         container.settingsViewModel.appearanceMode.colorScheme
     }

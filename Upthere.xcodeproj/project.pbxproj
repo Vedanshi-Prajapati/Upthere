@@ -6,6 +6,11 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4030729A6200BD49AF /* AppGroup.swift */; };
+		ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4030729A6200BD49AF /* AppGroup.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		ECB9CC2530729A6200BD49AF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -17,6 +22,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		ECB9CBFB30729A6200BD49AF /* Upthere.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Upthere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC2030729A6200BD49AF /* UpthereTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UpthereTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UpthereWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -65,8 +71,17 @@
 				ECB9CBFD30729A6200BD49AF /* Upthere */,
 				ECB9CC2130729A6200BD49AF /* UpthereTests */,
 				ECB9CC3130729A6200BD49AF /* UpthereWidgets */,
+				ECB9CC4330729A6200BD49AF /* Shared */,
 				ECB9CBFC30729A6200BD49AF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		ECB9CC4330729A6200BD49AF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				ECB9CC4030729A6200BD49AF /* AppGroup.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		ECB9CBFC30729A6200BD49AF /* Products */ = {
@@ -204,6 +219,7 @@
 		ECB9CBF730729A6200BD49AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */,
 			);
 		};
 		ECB9CC2230729A6200BD49AF /* Sources */ = {
@@ -214,6 +230,7 @@
 		ECB9CC3230729A6200BD49AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -470,6 +487,7 @@
 		ECB9CC3930729A6400BD49AF /* Debug configuration for PBXNativeTarget "UpthereWidgets" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = UpthereWidgets/UpthereWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KS9FU7AL7J;
@@ -494,6 +512,7 @@
 		ECB9CC3A30729A6400BD49AF /* Release configuration for PBXNativeTarget "UpthereWidgets" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = UpthereWidgets/UpthereWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = KS9FU7AL7J;

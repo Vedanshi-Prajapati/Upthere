@@ -11,9 +11,9 @@ public struct ToggleSevereAlertsIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some ReturnsValue<Bool> & ProvidesDialog {
-        let current = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
+        let current = AppGroup.defaults.bool(forKey: "settings.severeAlertsEnabled")
         let newState = !current
-        UserDefaults.standard.set(newState, forKey: "settings.severeAlertsEnabled")
+        AppGroup.defaults.set(newState, forKey: "settings.severeAlertsEnabled")
 
         let statusText = newState ? "enabled" : "disabled"
         return .result(

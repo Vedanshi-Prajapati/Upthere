@@ -6,28 +6,29 @@ import Observation
 public final class SettingsViewModel {
     // MARK: - Weather Units
     public var temperatureUnit: TemperatureUnit {
-        didSet { UserDefaults.standard.set(temperatureUnit.rawValue, forKey: "settings.temperatureUnit") }
+        didSet { defaults.set(temperatureUnit.rawValue, forKey: "settings.temperatureUnit") }
     }
     public var windSpeedUnit: WindSpeedUnit {
-        didSet { UserDefaults.standard.set(windSpeedUnit.rawValue, forKey: "settings.windSpeedUnit") }
+        didSet { defaults.set(windSpeedUnit.rawValue, forKey: "settings.windSpeedUnit") }
     }
     public var precipitationUnit: PrecipitationUnit {
-        didSet { UserDefaults.standard.set(precipitationUnit.rawValue, forKey: "settings.precipitationUnit") }
+        didSet { defaults.set(precipitationUnit.rawValue, forKey: "settings.precipitationUnit") }
     }
 
     // MARK: - Notifications
     public var weatherChangesEnabled: Bool = true {
-        didSet { UserDefaults.standard.set(weatherChangesEnabled, forKey: "settings.weatherChangesEnabled") }
+        didSet { defaults.set(weatherChangesEnabled, forKey: "settings.weatherChangesEnabled") }
     }
     public var rainAlertsEnabled: Bool = true {
-        didSet { UserDefaults.standard.set(rainAlertsEnabled, forKey: "settings.rainAlertsEnabled") }
+        didSet { defaults.set(rainAlertsEnabled, forKey: "settings.rainAlertsEnabled") }
     }
     public var severeAlertsEnabled: Bool = true {
-        didSet { UserDefaults.standard.set(severeAlertsEnabled, forKey: "settings.severeAlertsEnabled") }
+        didSet { defaults.set(severeAlertsEnabled, forKey: "settings.severeAlertsEnabled") }
     }
 
     // MARK: - Location
     private let locationService: LocationService
+    private let defaults: UserDefaults
 
     public var currentLocationName: String {
         if locationService.isAuthorized {
@@ -51,51 +52,54 @@ public final class SettingsViewModel {
 
     // MARK: - Appearance
     public var appearanceMode: AppearanceMode {
-        didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
+        didSet { defaults.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
     }
 
     // MARK: - About
     public let weatherDataProvider = "Apple WeatherKit"
     public let appVersion = "1.0 (24)"
 
-    public init(locationService: LocationService? = nil) {
+    public init(locationService: LocationService? = nil, defaults: UserDefaults = AppGroup.defaults) {
         self.locationService = locationService ?? .shared
-        if let rawTemp = UserDefaults.standard.string(forKey: "settings.temperatureUnit"),
+        self.defaults = defaults
+        AppGroup.migrateSettingsIfNeeded(standard: .standard, group: defaults)
+
+        if let rawTemp = defaults.string(forKey: "settings.temperatureUnit"),
            let unit = TemperatureUnit(rawValue: rawTemp) {
             self.temperatureUnit = unit
         } else {
             self.temperatureUnit = .celsius
         }
 
-        if let rawWind = UserDefaults.standard.string(forKey: "settings.windSpeedUnit"),
+        if let rawWind = defaults.string(forKey: "settings.windSpeedUnit"),
            let unit = WindSpeedUnit(rawValue: rawWind) {
             self.windSpeedUnit = unit
         } else {
             self.windSpeedUnit = .kmh
         }
 
-        if let rawPrecip = UserDefaults.standard.string(forKey: "settings.precipitationUnit"),
+        if let rawPrecip = defaults.string(forKey: "settings.precipitationUnit"),
            let unit = PrecipitationUnit(rawValue: rawPrecip) {
             self.precipitationUnit = unit
         } else {
             self.precipitationUnit = .mm
         }
 
-        if let rawApp = UserDefaults.standard.string(forKey: "settings.appearanceMode"),
+        if let rawApp = defaults.string(forKey: "settings.appearanceMode"),
            let mode = AppearanceMode(rawValue: rawApp) {
             self.appearanceMode = mode
         } else {
             self.appearanceMode = .system
         }
 
-        if UserDefaults.standard.object(forKey: "settings.weatherChangesEnabled") != nil {
-            self.weatherChangesEnabled = UserDefaults.standard.bool(forKey: "settings.weatherChangesEnabled")
+        if defaults.object(forKey: "settings.weatherChangesEnabled") != nil {
+            self.weatherChangesEnabled = defaults.bool(forKey: "settings.weatherChangesEnabled")
         }
-        if UserDefaults.standard.object(forKey: "settings.rainAlertsEnabled") != nil {
-            self.rainAlertsEnabled = UserDefaults.standard.bool(forKey: "settings.rainAlertsEnabled")
+        if defaults.object(forKey: "settings.rainAlertsEnabled") != nil {
+            self.rainAlertsEnabled = defaults.bool(forKey: "settings.rainAlertsEnabled")
         }
-        if UserDefaults.standard.object(forKey: "settings.severeAlertsEnabled") != nil {
-            self.severeAlertsEnabled = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
+        if defaults.object(forKey: "settings.severeAlertsEnabled") != nil {
+            self.severeAlertsEnabled = defaults.bool(forKey: "settings.severeAlertsEnabled")
         }
     }
 

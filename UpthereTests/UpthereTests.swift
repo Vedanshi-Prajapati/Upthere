@@ -464,7 +464,7 @@ struct UpthereTests {
     // MARK: - ToggleSevereAlertsIntent
     @Test("ToggleSevereAlertsIntent inverts severe alerts setting")
     func toggleSevereAlertsIntent() async throws {
-        let initial = UserDefaults.standard.bool(forKey: "settings.severeAlertsEnabled")
+        let initial = AppGroup.defaults.bool(forKey: "settings.severeAlertsEnabled")
         let intent = ToggleSevereAlertsIntent()
         let result = try await intent.perform()
 
@@ -730,5 +730,60 @@ struct UpthereTests {
         #expect(loaded?.contains(where: { $0.cityName == "Zurich" }) == true)
         #expect(store.loadSelectedLocationId() == testLoc.id)
         #expect(FileManager.default.fileExists(atPath: tempURL.path))
+    }
+
+    // MARK: - App Group Settings Migration
+    @Test("App Group migration copies settings once and does not overwrite later changes")
+    func appGroupSettingsMigration() {
+        let (mockStandard, standardSuite) = makeIsolatedDefaults()
+        defer { mockStandard.removePersistentDomain(forName: standardSuite) }
+
+        let (mockGroup, groupSuite) = makeIsolatedDefaults()
+        defer { mockGroup.removePersistentDomain(forName: groupSuite) }
+
+        // 1. Seed standard defaults with settings data
+        mockStandard.set("fahrenheit", forKey: "settings.temperatureUnit")
+        mockStandard.set("mph", forKey: "settings.windSpeedUnit")
+        mockStandard.set("inch", forKey: "settings.precipitationUnit")
+        mockStandard.set("dark", forKey: "settings.appearanceMode")
+        mockStandard.set(false, forKey: "settings.weatherChangesEnabled")
+        mockStandard.set(false, forKey: "settings.rainAlertsEnabled")
+        mockStandard.set(false, forKey: "settings.severeAlertsEnabled")
+
+        // 2. Perform migration
+        AppGroup.migrateSettingsIfNeeded(standard: mockStandard, group: mockGroup)
+
+        // 3. Verify values were copied to group suite
+        #expect(mockGroup.string(forKey: "settings.temperatureUnit") == "fahrenheit")
+        #expect(mockGroup.string(forKey: "settings.windSpeedUnit") == "mph")
+        #expect(mockGroup.string(forKey: "settings.precipitationUnit") == "inch")
+        #expect(mockGroup.string(forKey: "settings.appearanceMode") == "dark")
+        #expect(mockGroup.bool(forKey: "settings.weatherChangesEnabled") == false)
+        #expect(mockGroup.bool(forKey: "settings.rainAlertsEnabled") == false)
+        #expect(mockGroup.bool(forKey: "settings.severeAlertsEnabled") == false)
+        #expect(mockGroup.bool(forKey: AppGroup.migrationKey) == true)
+
+        // 4. Update group suite values with later changes
+        mockGroup.set("celsius", forKey: "settings.temperatureUnit")
+        mockGroup.set("kmh", forKey: "settings.windSpeedUnit")
+        mockGroup.set(true, forKey: "settings.severeAlertsEnabled")
+
+        // Also change standard to different values to ensure standard has conflicting data
+        mockStandard.set("kelvin", forKey: "settings.temperatureUnit")
+
+        // 5. Run migration again
+        AppGroup.migrateSettingsIfNeeded(standard: mockStandard, group: mockGroup)
+
+        // 6. Verify later changes in group suite were NOT overwritten
+        #expect(mockGroup.string(forKey: "settings.temperatureUnit") == "celsius")
+        #expect(mockGroup.string(forKey: "settings.windSpeedUnit") == "kmh")
+        #expect(mockGroup.bool(forKey: "settings.severeAlertsEnabled") == true)
+    }
+
+    @Test("AppGroup containerURL returns valid or nil URL without crash")
+    func appGroupContainerURL() {
+        #expect(AppGroup.identifier == "group.com.vedanshi.upthereapp")
+        _ = AppGroup.containerURL
+        _ = AppGroup.containerURL(forSubdirectory: "WeatherCache")
     }
 }

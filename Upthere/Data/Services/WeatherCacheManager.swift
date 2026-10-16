@@ -30,7 +30,7 @@ public final class WeatherCacheManager: @unchecked Sendable {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    public init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = AppGroup.defaults) {
         self.defaults = defaults
     }
 

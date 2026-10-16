@@ -77,7 +77,7 @@ public final class WeatherFormatter {
     // MARK: - Private Helpers
 
     private var currentTemperatureUnit: TemperatureUnit {
-        if let raw = UserDefaults.standard.string(forKey: "settings.temperatureUnit"),
+        if let raw = AppGroup.defaults.string(forKey: "settings.temperatureUnit"),
            let unit = TemperatureUnit(rawValue: raw) {
             return unit
         }
@@ -85,7 +85,7 @@ public final class WeatherFormatter {
     }
 
     private var currentWindUnit: WindSpeedUnit {
-        if let raw = UserDefaults.standard.string(forKey: "settings.windSpeedUnit"),
+        if let raw = AppGroup.defaults.string(forKey: "settings.windSpeedUnit"),
            let unit = WindSpeedUnit(rawValue: raw) {
             return unit
         }
@@ -93,7 +93,7 @@ public final class WeatherFormatter {
     }
 
     private var currentPrecipitationUnit: PrecipitationUnit {
-        if let raw = UserDefaults.standard.string(forKey: "settings.precipitationUnit"),
+        if let raw = AppGroup.defaults.string(forKey: "settings.precipitationUnit"),
            let unit = PrecipitationUnit(rawValue: raw) {
             return unit
         }
