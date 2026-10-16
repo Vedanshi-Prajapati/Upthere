@@ -15,6 +15,7 @@ public struct LocationsView: View {
     private let locationService: LocationService
     private let weatherRepository: any WeatherRepository
     private let cacheManager: WeatherCacheManager
+    private let citySearchService: any CitySearching
 
     public init(
         condition: String? = nil,
@@ -22,6 +23,7 @@ public struct LocationsView: View {
         locationService: LocationService? = nil,
         weatherRepository: (any WeatherRepository)? = nil,
         cacheManager: WeatherCacheManager? = nil,
+        citySearchService: (any CitySearching)? = nil,
         onSelectLocation: ((SavedLocation) -> Void)? = nil
     ) {
         self.condition = condition
@@ -30,6 +32,7 @@ public struct LocationsView: View {
         self.locationService = loc
         self.weatherRepository = weatherRepository ?? WeatherKitWeatherRepository(locationService: loc)
         self.cacheManager = cacheManager ?? .shared
+        self.citySearchService = citySearchService ?? MapKitCitySearchService()
         self.onSelectLocation = onSelectLocation
     }
 
@@ -142,7 +145,8 @@ public struct LocationsView: View {
         .sheet(isPresented: $showCitySearch) {
             CitySearchSheet(
                 condition: condition,
-                symbolName: symbolName
+                symbolName: symbolName,
+                searchService: citySearchService
             ) { savedLocation in
                 locationsManager.addLocation(savedLocation)
                 onSelectLocation?(savedLocation)
