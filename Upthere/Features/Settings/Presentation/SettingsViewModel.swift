@@ -17,19 +17,67 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Notifications
-    public var weatherChangesEnabled: Bool = true {
-        didSet { defaults.set(weatherChangesEnabled, forKey: "settings.weatherChangesEnabled") }
+    public var rainAlertsEnabled: Bool {
+        didSet {
+            defaults.set(rainAlertsEnabled, forKey: AppGroup.rainAlertsKey)
+        }
     }
-    public var rainAlertsEnabled: Bool = true {
-        didSet { defaults.set(rainAlertsEnabled, forKey: "settings.rainAlertsEnabled") }
-    }
-    public var severeAlertsEnabled: Bool = true {
+    public var severeAlertsEnabled: Bool {
         didSet {
             defaults.set(severeAlertsEnabled, forKey: AppGroup.severeAlertsKey)
             WidgetCenter.shared.reloadAllTimelines()
             if #available(iOS 18.0, *) {
                 ControlCenter.shared.reloadAllControls()
             }
+        }
+    }
+
+    public var notificationsDenied: Bool = false
+    private let notificationScheduler: any NotificationSchedulerProtocol
+
+    public func checkNotificationStatus() async {
+        let status = await notificationScheduler.authorizationStatus()
+        notificationsDenied = (status == .denied)
+    }
+
+    public func setRainAlerts(_ enabled: Bool) async {
+        if enabled {
+            let allowed = await requestNotificationPermissionIfNeeded()
+            if !allowed {
+                self.rainAlertsEnabled = false
+                return
+            }
+        }
+        self.rainAlertsEnabled = enabled
+    }
+
+    public func setSevereAlerts(_ enabled: Bool) async {
+        if enabled {
+            let allowed = await requestNotificationPermissionIfNeeded()
+            if !allowed {
+                self.severeAlertsEnabled = false
+                return
+            }
+        }
+        self.severeAlertsEnabled = enabled
+    }
+
+    private func requestNotificationPermissionIfNeeded() async -> Bool {
+        let status = await notificationScheduler.authorizationStatus()
+        if status == .notDetermined {
+            let granted = await notificationScheduler.requestAuthorization()
+            if !granted {
+                self.notificationsDenied = true
+                return false
+            }
+            self.notificationsDenied = false
+            return true
+        } else if status == .denied {
+            self.notificationsDenied = true
+            return false
+        } else {
+            self.notificationsDenied = false
+            return true
         }
     }
 
@@ -66,9 +114,14 @@ public final class SettingsViewModel {
     public let weatherDataProvider = "Apple WeatherKit"
     public let appVersion = "1.0 (24)"
 
-    public init(locationService: LocationService? = nil, defaults: UserDefaults = AppGroup.defaults) {
+    public init(
+        locationService: LocationService? = nil,
+        defaults: UserDefaults = AppGroup.defaults,
+        notificationScheduler: (any NotificationSchedulerProtocol)? = nil
+    ) {
         self.locationService = locationService ?? .shared
         self.defaults = defaults
+        self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
         AppGroup.migrateSettingsIfNeeded(standard: .standard, group: defaults)
 
         if let rawTemp = defaults.string(forKey: "settings.temperatureUnit"),
@@ -99,14 +152,15 @@ public final class SettingsViewModel {
             self.appearanceMode = .system
         }
 
-        if defaults.object(forKey: "settings.weatherChangesEnabled") != nil {
-            self.weatherChangesEnabled = defaults.bool(forKey: "settings.weatherChangesEnabled")
-        }
-        if defaults.object(forKey: "settings.rainAlertsEnabled") != nil {
-            self.rainAlertsEnabled = defaults.bool(forKey: "settings.rainAlertsEnabled")
+        if defaults.object(forKey: AppGroup.rainAlertsKey) != nil {
+            self.rainAlertsEnabled = defaults.bool(forKey: AppGroup.rainAlertsKey)
+        } else {
+            self.rainAlertsEnabled = false
         }
         if defaults.object(forKey: AppGroup.severeAlertsKey) != nil {
             self.severeAlertsEnabled = defaults.bool(forKey: AppGroup.severeAlertsKey)
+        } else {
+            self.severeAlertsEnabled = false
         }
     }
 

@@ -33,6 +33,8 @@ public final class HomeViewModel {
     private let getWeatherUseCase: any GetWeatherUseCaseProtocol
     private let cacheManager: WeatherCacheManager
     private let locationsManager: SavedLocationsManager
+    private let notificationScheduler: any NotificationSchedulerProtocol
+    private let defaults: UserDefaults
     private var locationTask: Task<Void, Never>?
     private var latestRequestId = UUID()
 
@@ -40,7 +42,9 @@ public final class HomeViewModel {
         getWeatherUseCase: any GetWeatherUseCaseProtocol,
         cacheManager: WeatherCacheManager? = nil,
         locationsManager: SavedLocationsManager? = nil,
-        locationService: LocationService? = nil
+        locationService: LocationService? = nil,
+        notificationScheduler: (any NotificationSchedulerProtocol)? = nil,
+        defaults: UserDefaults = AppGroup.defaults
     ) {
         self.getWeatherUseCase = getWeatherUseCase
         self.cacheManager = cacheManager ?? .shared
@@ -49,6 +53,8 @@ public final class HomeViewModel {
         self.selectedLocation = locManager.selectedLocation
         let locService = locationService ?? .shared
         self.locationService = locService
+        self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
+        self.defaults = defaults
 
         // Consume AsyncStream of location updates
         self.locationTask = Task { [weak self, locService] in
@@ -163,6 +169,15 @@ public final class HomeViewModel {
                     city: weather.cityName
                 )
             }
+
+            let rainEnabled = defaults.bool(forKey: AppGroup.rainAlertsKey)
+            let severeEnabled = defaults.bool(forKey: AppGroup.severeAlertsKey)
+            await notificationScheduler.handleWeatherRefresh(
+                weather: weather,
+                rainAlertsEnabled: rainEnabled,
+                severeAlertsEnabled: severeEnabled,
+                now: Date()
+            )
         } catch {
             guard !Task.isCancelled, self.latestRequestId == requestId else {
                 return

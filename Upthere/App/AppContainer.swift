@@ -11,7 +11,8 @@ public final class AppContainer {
 
     public init(
         weatherRepository: (any WeatherRepository)? = nil,
-        locationService: LocationService? = nil
+        locationService: LocationService? = nil,
+        notificationScheduler: (any NotificationSchedulerProtocol)? = nil
     ) {
         let locService = locationService ?? LocationService()
         self.locationService = locService
@@ -19,10 +20,15 @@ public final class AppContainer {
         self.weatherRepository = repository
         let useCase = GetWeatherUseCase(repository: repository)
         self.getWeatherUseCase = useCase
-        self.settingsViewModel = SettingsViewModel(locationService: locService)
+        let scheduler = notificationScheduler ?? NotificationScheduler.shared
+        self.settingsViewModel = SettingsViewModel(
+            locationService: locService,
+            notificationScheduler: scheduler
+        )
         self.homeViewModel = HomeViewModel(
             getWeatherUseCase: useCase,
-            locationService: locService
+            locationService: locService,
+            notificationScheduler: scheduler
         )
     }
 

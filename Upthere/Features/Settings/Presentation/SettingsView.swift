@@ -67,6 +67,9 @@ public struct SettingsView: View {
                 )
             }
         }
+        .task {
+            await viewModel.checkNotificationStatus()
+        }
         .environment(\.colorScheme, .dark)
     }
 
@@ -181,19 +184,14 @@ public struct SettingsView: View {
             sectionHeader("Notifications")
 
             groupedCard {
-                Toggle(isOn: $viewModel.weatherChangesEnabled) {
-                    HStack(spacing: AppTheme.spacingMedium) {
-                        iconBadge(icon: "cloud.fill", color: Color(red: 50/255, green: 155/255, blue: 245/255))
-                        Text("Weather changes")
-                            .font(.body)
-                            .foregroundStyle(AppTheme.textPrimary)
+                Toggle(isOn: Binding(
+                    get: { viewModel.rainAlertsEnabled },
+                    set: { newValue in
+                        Task { @MainActor in
+                            await viewModel.setRainAlerts(newValue)
+                        }
                     }
-                }
-                .tint(AppTheme.accent)
-
-                divider
-
-                Toggle(isOn: $viewModel.rainAlertsEnabled) {
+                )) {
                     HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "umbrella.fill", color: Color(red: 88/255, green: 86/255, blue: 214/255))
                         Text("Rain alerts")
@@ -205,7 +203,14 @@ public struct SettingsView: View {
 
                 divider
 
-                Toggle(isOn: $viewModel.severeAlertsEnabled) {
+                Toggle(isOn: Binding(
+                    get: { viewModel.severeAlertsEnabled },
+                    set: { newValue in
+                        Task { @MainActor in
+                            await viewModel.setSevereAlerts(newValue)
+                        }
+                    }
+                )) {
                     HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "exclamationmark.triangle.fill", color: Color(red: 255/255, green: 59/255, blue: 48/255))
                         Text("Severe weather alerts")
@@ -214,6 +219,31 @@ public struct SettingsView: View {
                     }
                 }
                 .tint(AppTheme.accent)
+            }
+
+            if viewModel.notificationsDenied {
+                VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
+                    HStack(spacing: AppTheme.spacingMedium) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text("Notifications are off in iOS Settings")
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.textPrimary)
+                    }
+
+                    Button("Open Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.accent)
+                }
+                .padding(AppTheme.spacingMedium)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
         }
     }

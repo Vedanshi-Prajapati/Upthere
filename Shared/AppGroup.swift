@@ -23,6 +23,7 @@ public enum AppGroup: Sendable {
 
     // MARK: - Setting Keys
     public static let severeAlertsKey = "settings.severeAlertsEnabled"
+    public static let rainAlertsKey = "settings.rainAlertsEnabled"
 
     // MARK: - Migration Keys
     public static let settingsKeys = [
@@ -30,7 +31,6 @@ public enum AppGroup: Sendable {
         "settings.windSpeedUnit",
         "settings.precipitationUnit",
         "settings.appearanceMode",
-        "settings.weatherChangesEnabled",
         "settings.rainAlertsEnabled",
         "settings.severeAlertsEnabled"
     ]
