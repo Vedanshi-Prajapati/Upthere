@@ -17,16 +17,16 @@ public struct PermissionDeniedView: View {
             VStack(spacing: 20) {
                 // Location icon
                 Image(systemName: "mappin.circle.fill")
-                    .font(.system(size: 52, weight: .medium))
+                    .font(.largeTitle)
                     .foregroundStyle(.white.opacity(0.8))
                     .padding(.bottom, 4)
 
                 Text("Location unavailable")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("You can still search for a location manually,\nor turn on access in Settings › Privacy ›\nLocation Services.")
-                    .font(.system(size: 16))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -35,7 +35,7 @@ public struct PermissionDeniedView: View {
                     // Search button (primary)
                     Button(action: onSearch) {
                         Text("Search for a location")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: 280)
                             .frame(height: 54)
@@ -48,7 +48,7 @@ public struct PermissionDeniedView: View {
                     // Open settings button (secondary)
                     Button(action: onOpenSettings) {
                         Text("Open settings")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: 280)
                             .frame(height: 54)

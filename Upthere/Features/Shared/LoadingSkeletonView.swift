@@ -3,6 +3,7 @@ import SwiftUI
 /// Skeleton loading screen shown while weather data is being fetched.
 /// Displays animated shimmer placeholders matching the home screen layout.
 public struct LoadingSkeletonView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shimmer = false
 
     public init() {}
@@ -18,7 +19,7 @@ public struct LoadingSkeletonView: View {
                         .tint(.white.opacity(0.6))
                         .scaleEffect(0.8)
                     Text("Updating forecast...")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.horizontal, 20)
@@ -54,6 +55,7 @@ public struct LoadingSkeletonView: View {
             }
         }
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
                 shimmer = true
             }

@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct InsightsView: View {
     @State private var viewModel: HomeViewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     public init(viewModel: HomeViewModel) {
         self._viewModel = State(initialValue: viewModel)
@@ -35,13 +36,18 @@ public struct InsightsView: View {
                         Button("Retry") {
                             Task { await viewModel.refreshWeather() }
                         }
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.accent)
                     }
                     .padding(.horizontal, 20)
                 case .loaded:
                     ProgressView().tint(.white)
                 }
+            }
+        }
+        .task {
+            if viewModel.displayedWeather == nil {
+                await viewModel.loadWeather()
             }
         }
     }
@@ -51,10 +57,10 @@ public struct InsightsView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Insights")
-                .font(.system(size: 34, weight: .bold))
+                .font(.largeTitle.weight(.bold))
                 .foregroundStyle(.white)
             Text("What the forecast actually means.")
-                .font(.system(size: 16))
+                .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -67,92 +73,105 @@ public struct InsightsView: View {
 
     private func alertSection(weather: Weather) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Weather alerts")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-                Spacer()
-                Text("Official source")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weather alerts")
+                        .font(AppFont.title3Bold)
+                        .foregroundStyle(.white)
+                    Text("Official source")
+                        .font(AppFont.subheadlineMedium)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                .padding(.horizontal, 20)
+            } else {
+                HStack {
+                    Text("Weather alerts")
+                        .font(AppFont.title3Bold)
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Text("Official source")
+                        .font(AppFont.subheadlineMedium)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
 
             if let alert = weather.alert {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Badge
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(AppTheme.alertAmber)
-                        Text(alert.severity != nil ? "\(alert.severity?.capitalized ?? "") Weather Alert" : "Official weather alert")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
+                WeatherCard(
+                    cornerRadius: AppTheme.radiusCard,
+                    padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16),
+                    borderColor: AppTheme.alertAmber.opacity(0.3)
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Badge
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.alertAmber)
+                            Text(alert.severity != nil ? "\(alert.severity?.capitalized ?? "") Weather Alert" : "Official weather alert")
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
 
-                    // Title
-                    Text(alert.title)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-
-                    // Description
-                    if let details = alert.details, !details.isEmpty {
-                        Text(details)
-                            .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .lineSpacing(3)
-                    }
-
-                    // Source
-                    let sourceText = alert.source.isEmpty ? "Meteorological Agency" : alert.source
-                    Text("Issued by \(sourceText) · \(alert.validUntil)")
-                        .font(.system(size: 12))
-                        .foregroundStyle(AppTheme.textTertiary)
-                        .lineSpacing(2)
-
-                    Rectangle()
-                        .fill(Color.white.opacity(0.10))
-                        .frame(height: 1)
-
-                    // Attribution link
-                    HStack {
-                        Text("Read official attribution")
-                            .font(.system(size: 14))
+                        // Title
+                        Text(alert.title)
+                            .font(.headline)
                             .foregroundStyle(.white)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
+
+                        // Description
+                        if let details = alert.details, !details.isEmpty {
+                            Text(details)
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineSpacing(3)
+                        }
+
+                        // Source
+                        let sourceText = alert.source.isEmpty ? "Meteorological Agency" : alert.source
+                        Text("Issued by \(sourceText) · \(alert.validUntil)")
+                            .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
+                            .lineSpacing(2)
+
+                        Rectangle()
+                            .fill(Color.white.opacity(0.10))
+                            .frame(height: 1)
+
+                        // Attribution link
+                        HStack {
+                            Text("Read official attribution")
+                                .font(.subheadline)
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
                     }
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(AppTheme.cardGlass)
-                )
                 .padding(.horizontal, 20)
             } else {
                 // No active alerts state card
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.shield.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Color.green.opacity(0.85))
+                WeatherCard(
+                    cornerRadius: AppTheme.radiusCard,
+                    padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
+                ) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .font(.title3)
+                            .foregroundStyle(Color.green.opacity(0.85))
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("No active weather alerts")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white)
-                        Text("No severe weather warnings are currently in effect for this region.")
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.textSecondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("No active weather alerts")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.white)
+                            Text("No severe weather warnings are currently in effect for this region.")
+                                .font(.footnote)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                        Spacer()
                     }
-                    Spacer()
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(AppTheme.cardGlass)
-                )
                 .padding(.horizontal, 20)
             }
         }
@@ -187,7 +206,7 @@ public struct InsightsView: View {
 
         return VStack(alignment: .leading, spacing: 16) {
             Text("UpThere insights")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 20)
 
@@ -225,7 +244,7 @@ public struct InsightsView: View {
                 InsightBadge(icon: "cloud.rain.fill", label: "Rain window")
 
                 Text(formatTimeRange(start: rain.startDate, end: rain.endDate))
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
 
                 let peakProb = Int((rain.peakProbability * 100).rounded())
@@ -233,22 +252,22 @@ public struct InsightsView: View {
                 let precipDetail = "Peak precipitation around \(peakTime), \(peakProb)% probability."
 
                 Text(precipDetail)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
                 // Now indicator
                 HStack(spacing: 4) {
                     Text("Now")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
                     let precipProb = Int(((hourly.first?.precipitationChance ?? 0.0) * 100).rounded())
                     Text("\(precipProb)%")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                     Spacer()
                     Text("100%")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(AppTheme.textTertiary)
                 }
                 .padding(.top, 4)
@@ -259,6 +278,14 @@ public struct InsightsView: View {
 
                 // Time labels
                 HourlyTimeLabels(hourly: hourly)
+
+                if RainActivityStateCalculator.isRainWithinTwoHours(rainWindow: rain) {
+                    TrackRainButton(
+                        cityName: viewModel.displayedWeather?.cityName ?? "Current Location",
+                        hourly: hourly
+                    )
+                    .padding(.top, 6)
+                }
             }
         }
     }
@@ -270,35 +297,64 @@ public struct InsightsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 InsightBadge(icon: "thermometer.sun.fill", label: "Temperature range")
 
-                HStack(alignment: .firstTextBaseline, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Now")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppTheme.textTertiary)
-                        Text(WeatherFormatter.shared.temp(trend.currentTemperature))
-                            .font(.system(size: 26, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("24h Range")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppTheme.textTertiary)
-                        HStack(spacing: 4) {
-                            Text(WeatherFormatter.shared.temp(trend.minTemperature))
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Now")
+                                .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
-                            Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                            Text(WeatherFormatter.shared.temp(trend.currentTemperature))
+                                .font(AppFont.title)
+                                .foregroundStyle(.white)
                         }
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppTheme.textSecondary)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("24h Range")
+                                .font(AppFont.captionMedium)
+                                .foregroundStyle(AppTheme.textTertiary)
+                            HStack(spacing: 4) {
+                                Text(WeatherFormatter.shared.temp(trend.minTemperature))
+                                Image(systemName: "arrow.right")
+                                    .font(AppFont.captionSemibold)
+                                    .foregroundStyle(AppTheme.textTertiary)
+                                Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                            }
+                            .font(AppFont.headline)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        }
                     }
+                    .padding(.vertical, 4)
+                } else {
+                    HStack(alignment: .firstTextBaseline, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Now")
+                                .font(AppFont.captionMedium)
+                                .foregroundStyle(AppTheme.textTertiary)
+                            Text(WeatherFormatter.shared.temp(trend.currentTemperature))
+                                .font(AppFont.title)
+                                .foregroundStyle(.white)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("24h Range")
+                                .font(AppFont.captionMedium)
+                                .foregroundStyle(AppTheme.textTertiary)
+                            HStack(spacing: 4) {
+                                Text(WeatherFormatter.shared.temp(trend.minTemperature))
+                                Image(systemName: "arrow.right")
+                                    .font(AppFont.captionSemibold)
+                                    .foregroundStyle(AppTheme.textTertiary)
+                                Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                            }
+                            .font(AppFont.headline)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
 
                 Text("Expected temperature swing of \(Int(trend.temperatureSwing.rounded()))° between \(formatHour(trend.minDate)) and \(formatHour(trend.maxDate)).")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
@@ -330,20 +386,20 @@ public struct InsightsView: View {
                 InsightBadge(icon: "wind", label: "Wind conditions")
 
                 Text("Current & Gusts")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text(windDetail)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
                 HStack(spacing: 4) {
                     Text("Now")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
                     Text(currentWindStr)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                 }
                 .padding(.top, 4)
@@ -376,18 +432,18 @@ public struct InsightsView: View {
                 InsightBadge(icon: "sun.max.fill", label: "Best outdoor conditions")
 
                 Text(formatTimeRange(start: outdoor.startDate, end: outdoor.endDate))
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text(detail)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
                 // Now indicator
                 HStack(spacing: 4) {
                     Text("Now")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
                 }
                 .padding(.top, 4)
@@ -409,19 +465,19 @@ public struct InsightsView: View {
                 InsightBadge(icon: "sun.max.fill", label: "Highest UV")
 
                 Text(timeRange)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("UV Index: \(uv.peakUVIndex) · \(uvCategoryStr)")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
 
                 HStack(spacing: 4) {
                     Text("Now")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
                     Text("\(currentUV)")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                 }
                 .padding(.top, 4)
@@ -465,11 +521,11 @@ public struct InsightsView: View {
                 InsightBadge(icon: "cloud.sun.fill", label: "Weather changing")
 
                 Text(heading)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text(description)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineSpacing(2)
 
@@ -482,7 +538,7 @@ public struct InsightsView: View {
 
     private var footer: some View {
         Text("Insights are UpThere's interpretation of forecast data and may change as forecasts update. For official warnings, refer to your national weather service.")
-            .font(.system(size: 12))
+            .font(.caption)
             .foregroundStyle(AppTheme.textTertiary)
             .lineSpacing(3)
             .padding(.horizontal, 20)
@@ -496,15 +552,13 @@ private struct InsightCard<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading) {
+        WeatherCard(
+            cornerRadius: AppTheme.radiusCard,
+            padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
+        ) {
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppTheme.cardGlass)
-        )
         .padding(.horizontal, 20)
     }
 }
@@ -516,10 +570,10 @@ private struct InsightBadge: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(Color.white.opacity(0.75))
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(AppTheme.textSecondary)
         }
         .padding(.bottom, 2)
@@ -534,7 +588,7 @@ private struct HourlyTimeLabels: View {
             ForEach(Array(hourly.enumerated()), id: \.element.id) { index, hour in
                 if index % 2 == 0 {
                     Text(hour.time)
-                        .font(.system(size: 10))
+                        .font(.caption2)
                         .foregroundStyle(AppTheme.textTertiary)
                         .frame(maxWidth: .infinity)
                 }
@@ -547,6 +601,13 @@ private struct HourlyTimeLabels: View {
 
 private struct PrecipitationBarChart: View {
     let hourly: [HourlyWeather]
+
+    private var chartSummary: String {
+        guard !hourly.isEmpty else { return "No precipitation data" }
+        let peak = hourly.max(by: { $0.precipitationProbability < $1.precipitationProbability })
+        let pct = Int(round((peak?.precipitationProbability ?? 0) * 100))
+        return "Precipitation probability timeline. Peak of \(pct)% at \(peak?.time ?? "")."
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -561,11 +622,22 @@ private struct PrecipitationBarChart: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Precipitation probability mini chart")
+        .accessibilityValue(chartSummary)
     }
 }
 
 private struct TemperatureBarChart: View {
     let hourly: [HourlyWeather]
+
+    private var chartSummary: String {
+        guard !hourly.isEmpty else { return "No temperature data" }
+        let temps = hourly.map(\.temperature)
+        let minT = WeatherFormatter.shared.temp(temps.min() ?? 0)
+        let maxT = WeatherFormatter.shared.temp(temps.max() ?? 0)
+        return "Temperature trend ranging from \(minT) to \(maxT)"
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -587,11 +659,20 @@ private struct TemperatureBarChart: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Temperature trend mini chart")
+        .accessibilityValue(chartSummary)
     }
 }
 
 private struct WindLineChart: View {
     let hourly: [HourlyWeather]
+
+    private var chartSummary: String {
+        guard !hourly.isEmpty else { return "No wind data" }
+        let maxSpeed = hourly.map(\.windSpeed).max() ?? 0
+        return "Wind speed trend with peak sustained wind of \(WeatherFormatter.shared.wind(maxSpeed))"
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -607,7 +688,7 @@ private struct WindLineChart: View {
                 HStack {
                     Spacer()
                     Text("\(value) km/h")
-                        .font(.system(size: 9))
+                        .font(.caption2)
                         .foregroundStyle(AppTheme.textTertiary)
                 }
                 .offset(y: y - 6)
@@ -644,12 +725,24 @@ private struct WindLineChart: View {
             }
             .fill(Color.white.opacity(0.10))
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Wind speed trend mini chart")
+        .accessibilityValue(chartSummary)
     }
 }
 
 private struct OutdoorTimeline: View {
     let hourly: [HourlyWeather]
     let outdoor: InsightEngine.BestOutdoorWindowResult
+
+    private var chartSummary: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.dateFormat = "ha"
+        let s = f.string(from: outdoor.startDate).lowercased()
+        let e = f.string(from: outdoor.endDate).lowercased()
+        return "Best outdoor window from \(s) to \(e) with average temperature of \(Int(outdoor.averageTemperature.rounded())) degrees"
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -682,11 +775,19 @@ private struct OutdoorTimeline: View {
                 HourlyTimeLabels(hourly: hourly)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Best outdoor activity timeline")
+        .accessibilityValue(chartSummary)
     }
 }
 
 private struct UVBarChart: View {
     let hourly: [HourlyWeather]
+
+    private var chartSummary: String {
+        let maxUV = hourly.map(\.uvIndex).max() ?? 0
+        return "UV Index timeline with peak index of \(maxUV)"
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -704,12 +805,20 @@ private struct UVBarChart: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("UV index forecast mini chart")
+        .accessibilityValue(chartSummary)
     }
 }
 
 private struct CloudCoverChart: View {
     let hourly: [HourlyWeather]
     let shiftIndex: Int
+
+    private var chartSummary: String {
+        let avgCloud = hourly.isEmpty ? 0 : Int(hourly.map(\.cloudCover).reduce(0, +) / Double(max(1, hourly.count)) * 100)
+        return "Cloud cover timeline averaging \(avgCloud)%"
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -729,7 +838,7 @@ private struct CloudCoverChart: View {
                                 .fill(Color.white.opacity(0.06))
                                 .frame(height: 1)
                             Text("\(value)%")
-                                .font(.system(size: 9))
+                                .font(.caption2)
                                 .foregroundStyle(AppTheme.textTertiary)
                                 .frame(width: labelWidth - 4, alignment: .trailing)
                         }
@@ -756,12 +865,23 @@ private struct CloudCoverChart: View {
                     .padding(.trailing, 28)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Cloud cover forecast mini chart")
+        .accessibilityValue(chartSummary)
     }
 }
 
-#Preview {
+#Preview("Insights") {
     let repo = MockWeatherRepository()
     let uc = GetWeatherUseCase(repository: repo)
     let vm = HomeViewModel(getWeatherUseCase: uc)
     InsightsView(viewModel: vm)
+}
+
+#Preview("Insights AX3") {
+    let repo = MockWeatherRepository()
+    let uc = GetWeatherUseCase(repository: repo)
+    let vm = HomeViewModel(getWeatherUseCase: uc)
+    InsightsView(viewModel: vm)
+        .dynamicTypeSize(.accessibility3)
 }

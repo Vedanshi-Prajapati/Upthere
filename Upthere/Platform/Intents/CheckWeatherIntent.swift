@@ -84,10 +84,10 @@ private struct WeatherSnippetView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(weather.cityName)
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.title3.weight(.bold))
                             .foregroundStyle(.white)
                         Text(weather.condition)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.white.opacity(0.8))
                     }
                     Spacer()
@@ -95,28 +95,28 @@ private struct WeatherSnippetView: View {
                         .symbolRenderingMode(.multicolor)
                         .symbolVariant(.fill)
                         .foregroundStyle(.white)
-                        .font(.system(size: 32))
+                        .font(.largeTitle)
                 }
 
                 HStack(alignment: .firstTextBaseline) {
                     Text(WeatherFormatter.shared.temp(weather.temperature))
-                        .font(.system(size: 44, weight: .thin, design: .rounded))
+                        .font(.largeTitle.weight(.thin))
                         .foregroundStyle(.white)
 
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 3) {
                         Text("H \(WeatherFormatter.shared.temp(weather.highTemperature))  L \(WeatherFormatter.shared.temp(weather.lowTemperature))")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(Color.white.opacity(0.85))
 
                         let rainChance = weather.chanceOfRain
                         if rainChance > 0 {
                             HStack(spacing: 3) {
                                 Image(systemName: "umbrella.fill")
-                                    .font(.system(size: 11))
+                                    .font(.caption2)
                                 Text("\(rainChance)%")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.caption.weight(.semibold))
                             }
                             .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
                         }

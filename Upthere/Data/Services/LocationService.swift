@@ -33,6 +33,20 @@ public enum LocationServiceError: LocalizedError, Sendable {
     }
 }
 
+public protocol LocationManagerProtocol: AnyObject {
+    var delegate: CLLocationManagerDelegate? { get set }
+    var desiredAccuracy: CLLocationAccuracy { get set }
+    var distanceFilter: CLLocationDistance { get set }
+    var authorizationStatus: CLAuthorizationStatus { get }
+    var accuracyAuthorization: CLAccuracyAuthorization { get }
+    func requestWhenInUseAuthorization()
+    func requestLocation()
+    func startUpdatingLocation()
+    func stopUpdatingLocation()
+}
+
+extension CLLocationManager: LocationManagerProtocol {}
+
 @Observable
 @MainActor
 public final class LocationService: NSObject, CLLocationManagerDelegate {
@@ -64,14 +78,23 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    private let clManager: CLLocationManager
+    private let clManager: any LocationManagerProtocol
+    private let isLocationServicesEnabledProvider: (@Sendable () -> Bool)?
     private var locationContinuations: [CheckedContinuation<CLLocation, Error>] = []
     private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
-    private var lastRequestTime: Date?
+    private var requestGeneration: Int = 0
+    private var geocodeCache: [String: (cityName: String, subtitle: String)] = [:]
 
-    public override init() {
-        let manager = CLLocationManager()
+    public convenience override init() {
+        self.init(manager: CLLocationManager(), isLocationServicesEnabledProvider: nil)
+    }
+
+    public init(
+        manager: any LocationManagerProtocol,
+        isLocationServicesEnabledProvider: (@Sendable () -> Bool)? = nil
+    ) {
         self.clManager = manager
+        self.isLocationServicesEnabledProvider = isLocationServicesEnabledProvider
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
         self.isLocationServicesEnabled = true
@@ -100,8 +123,11 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     public func requestCurrentLocation(force: Bool = false) async throws -> CLLocation {
-        let servicesEnabled = await Task.detached(priority: .userInitiated) {
-            CLLocationManager.locationServicesEnabled()
+        let servicesEnabled = await Task.detached(priority: .userInitiated) { [isLocationServicesEnabledProvider] in
+            if let custom = isLocationServicesEnabledProvider {
+                return custom()
+            }
+            return CLLocationManager.locationServicesEnabled()
         }.value
         self.isLocationServicesEnabled = servicesEnabled
         guard servicesEnabled else {
@@ -143,26 +169,44 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
             throw LocationServiceError.permissionDenied
         }
 
-        // Use a 3.5-second timeout to prevent infinite hangs indoors / no-GPS
-        return try await withThrowingTaskGroup(of: CLLocation.self) { group in
-            group.addTask { @MainActor [weak self] in
-                guard let self = self else { throw LocationServiceError.timeout }
-                return try await withCheckedThrowingContinuation { continuation in
-                    Task { @MainActor in
-                        self.locationContinuations.append(continuation)
-                        self.clManager.requestLocation()
-                    }
-                }
-            }
+        requestGeneration += 1
+        let generation = requestGeneration
 
-            group.addTask {
-                try await Task.sleep(nanoseconds: 3_500_000_000)
-                throw LocationServiceError.timeout
-            }
+        // 3.5-second timeout task tied to this request generation
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            guard let self = self else { return }
+            await self.handleTimeout(for: generation)
+        }
 
-            let result = try await group.next()!
-            group.cancelAll()
-            return result
+        let location = try await withCheckedThrowingContinuation { continuation in
+            self.locationContinuations.append(continuation)
+            self.clManager.requestLocation()
+        }
+
+        // Current-location flow: update currentCityName and currentSubtitle
+        let geo = await reverseGeocode(location: location)
+        self.currentCityName = geo.cityName
+        self.currentSubtitle = geo.subtitle
+
+        return location
+    }
+
+    private func handleTimeout(for generation: Int) {
+        guard self.requestGeneration == generation else {
+            // Newer request already in flight or already resolved
+            return
+        }
+        resumeContinuations(with: .failure(LocationServiceError.timeout))
+    }
+
+    private func resumeContinuations(with result: Result<CLLocation, Error>) {
+        guard !locationContinuations.isEmpty else { return }
+        let continuations = self.locationContinuations
+        self.locationContinuations.removeAll()
+        self.requestGeneration += 1
+        for continuation in continuations {
+            continuation.resume(with: result)
         }
     }
 
@@ -173,17 +217,18 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         return true
     }
 
+    /// Pure reverse geocode: returns (cityName, subtitle) without mutating currentCityName or currentSubtitle.
     public func reverseGeocode(location: CLLocation) async -> (cityName: String, subtitle: String) {
         guard isValidCoordinate(location.coordinate) else {
             return (Self.fallbackCityName, "Default location · \(Self.fallbackRegionName)")
         }
 
-        // Fast-path: recognize common preset coordinates immediately
-        if let presetCity = matchPresetCity(for: location.coordinate) {
-            let sub = formatSubtitle(forPreset: presetCity)
-            self.currentCityName = presetCity
-            self.currentSubtitle = sub
-            return (presetCity, sub)
+        let latRounded = String(format: "%.2f", location.coordinate.latitude)
+        let lonRounded = String(format: "%.2f", location.coordinate.longitude)
+        let cacheKey = "\(latRounded),\(lonRounded)"
+
+        if let cached = geocodeCache[cacheKey] {
+            return (cached.cityName, isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle())
         }
 
         // Reverse geocode with 2.5-second timeout
@@ -225,47 +270,8 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
             subtitle = isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle()
         }
 
-        self.currentCityName = resolvedCity
-        self.currentSubtitle = subtitle
+        geocodeCache[cacheKey] = (resolvedCity, subtitle)
         return (resolvedCity, subtitle)
-    }
-
-    private func matchPresetCity(for coord: CLLocationCoordinate2D) -> String? {
-        let presets: [(name: String, lat: Double, lon: Double)] = [
-            ("Sydney", -33.8688, 151.2093),
-            ("Cupertino", 37.3230, -122.0322),
-            ("San Francisco", 37.7749, -122.4194),
-            ("New York", 40.7128, -74.0060),
-            ("London", 51.5074, -0.1278),
-            ("Tokyo", 35.6762, 139.6503),
-            ("Paris", 48.8566, 2.3522),
-            ("Berlin", 52.5200, 13.4050),
-            ("Dubai", 25.2048, 55.2708),
-            ("Singapore", 1.3521, 103.8198),
-            ("Delhi", 28.6139, 77.2090),
-            ("Ghaziabad", 28.6692, 77.4538),
-            ("Mumbai", 19.0760, 72.8777),
-            ("Bengaluru", 12.9716, 77.5946),
-            ("Pune", 18.5204, 73.8567),
-            ("Jaipur", 26.9124, 75.7873),
-            ("Chennai", 13.0827, 80.2707),
-            ("Kolkata", 22.5726, 88.3639)
-        ]
-
-        for p in presets {
-            if abs(coord.latitude - p.lat) < 0.25 && abs(coord.longitude - p.lon) < 0.25 {
-                return p.name
-            }
-        }
-        return nil
-    }
-
-    private func formatSubtitle(forPreset city: String) -> String {
-        let prefix = isReducedAccuracy ? "Approximate location" : "Current location"
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
-        formatter.dateFormat = "EEE d MMM, h:mm a"
-        return "\(prefix) · \(formatter.string(from: Date()))"
     }
 
     private func formatCurrentDateSubtitle() -> String {
@@ -301,19 +307,27 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         }
 
         if isAuthorized {
-            manager.requestLocation()
+            clManager.requestLocation()
         }
     }
 
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last, isValidCoordinate(location.coordinate) else { return }
+        guard let location = locations.last else { return }
+        guard isValidCoordinate(location.coordinate) else {
+            resumeContinuations(with: .failure(LocationServiceError.invalidCoordinates))
+            return
+        }
+
         let previous = self.currentLocation
         self.currentLocation = location
 
-        let continuations = self.locationContinuations
-        self.locationContinuations.removeAll()
-        for continuation in continuations {
-            continuation.resume(returning: location)
+        resumeContinuations(with: .success(location))
+
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            let geo = await self.reverseGeocode(location: location)
+            self.currentCityName = geo.cityName
+            self.currentSubtitle = geo.subtitle
         }
 
         let shouldNotify: Bool
@@ -331,10 +345,6 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        let continuations = self.locationContinuations
-        self.locationContinuations.removeAll()
-        for continuation in continuations {
-            continuation.resume(throwing: error)
-        }
+        resumeContinuations(with: .failure(error))
     }
 }

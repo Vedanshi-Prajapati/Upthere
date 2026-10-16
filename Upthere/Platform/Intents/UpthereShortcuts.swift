@@ -35,6 +35,17 @@ public struct UpthereShortcuts: AppShortcutsProvider {
             shortTitle: "Toggle Severe Alerts",
             systemImageName: "exclamationmark.triangle.fill"
         )
+
+        AppShortcut(
+            intent: TrackRainIntent(),
+            phrases: [
+                "Track rain in \(.applicationName)",
+                "Start rain tracking in \(.applicationName)",
+                "Track rain with \(.applicationName)"
+            ],
+            shortTitle: "Track Rain",
+            systemImageName: "cloud.rain.fill"
+        )
     }
 
     public static var shortcutTileColor: ShortcutTileColor {

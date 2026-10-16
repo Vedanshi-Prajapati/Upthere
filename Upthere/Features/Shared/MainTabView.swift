@@ -31,14 +31,17 @@ public struct MainTabView: View {
                         selectedTab = .insights
                     }
                 })
+                .dynamicTypeSize(.xSmall ... .accessibility5)
             }
 
             Tab("Forecast", systemImage: "calendar", value: .forecast) {
                 ForecastView(viewModel: homeViewModel)
+                    .dynamicTypeSize(.xSmall ... .accessibility5)
             }
 
             Tab("Insights", systemImage: "sparkles", value: .insights) {
                 InsightsView(viewModel: homeViewModel)
+                    .dynamicTypeSize(.xSmall ... .accessibility5)
             }
 
             Tab("Locations", systemImage: "mappin.and.ellipse", value: .locations) {
@@ -53,6 +56,7 @@ public struct MainTabView: View {
                         }
                     }
                 )
+                .dynamicTypeSize(.xSmall ... .accessibility5)
             }
 
             Tab("Settings", systemImage: "gearshape", value: .settings) {
@@ -62,9 +66,16 @@ public struct MainTabView: View {
                     condition: homeViewModel.displayedWeather?.condition,
                     symbolName: homeViewModel.displayedWeather?.weatherSymbolName
                 )
+                .dynamicTypeSize(.xSmall ... .accessibility5)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+        .task {
+            if homeViewModel.displayedWeather == nil {
+                await homeViewModel.loadWeather()
+            }
+        }
         .fullScreenCover(isPresented: $showPermission) {
             LocationPermissionView(
                 onAllow: {

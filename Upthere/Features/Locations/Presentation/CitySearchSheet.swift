@@ -71,13 +71,13 @@ public struct CitySearchSheet: View {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(AppTheme.textSecondary)
-                    .font(.system(size: 16))
+                    .font(.body)
 
                 TextField("", text: $searchText, prompt:
                     Text("Search for a city").foregroundColor(AppTheme.textSecondary)
                 )
                 .foregroundStyle(.white)
-                .font(.system(size: 16))
+                .font(.body)
                 .submitLabel(.search)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled(true)
@@ -87,7 +87,7 @@ public struct CitySearchSheet: View {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 18))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textTertiary)
                     }
                 } else {
@@ -95,7 +95,7 @@ public struct CitySearchSheet: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 28, height: 28)
                             .background(
@@ -119,7 +119,7 @@ public struct CitySearchSheet: View {
             if sanitizedQuery.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Suggestions")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.headline)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 20)
 
@@ -130,7 +130,7 @@ public struct CitySearchSheet: View {
                                     select(city: city)
                                 } label: {
                                     Text(city.name)
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.primary)
                                         .padding(.horizontal, 18)
                                         .padding(.vertical, 10)
@@ -151,13 +151,13 @@ public struct CitySearchSheet: View {
                 if results.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 32))
+                            .font(.largeTitle)
                             .foregroundStyle(AppTheme.textTertiary)
                         Text("No matching cities found")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(AppTheme.textSecondary)
                         Text("Try searching by city name, state, or country.")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundStyle(AppTheme.textTertiary)
                     }
                     .padding(.top, 60)
@@ -170,14 +170,14 @@ public struct CitySearchSheet: View {
                                 } label: {
                                     HStack(spacing: 14) {
                                         Image(systemName: "mappin.circle.fill")
-                                            .font(.system(size: 22))
+                                            .font(.title2)
                                             .foregroundStyle(AppTheme.accent)
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(city.name)
-                                                .font(.system(size: 16, weight: .medium))
+                                                .font(.body.weight(.medium))
                                                 .foregroundStyle(.white)
                                             Text(city.region)
-                                                .font(.system(size: 13))
+                                                .font(.footnote)
                                                 .foregroundStyle(AppTheme.textSecondary)
                                         }
                                         Spacer()

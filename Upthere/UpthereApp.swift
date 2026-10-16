@@ -10,8 +10,21 @@ struct UpthereApp: App {
         container.settingsViewModel.appearanceMode.colorScheme
     }
 
-    private var selectedDynamicTypeSize: DynamicTypeSize {
-        container.settingsViewModel.textSize.dynamicTypeSize
+    private var initialTab: AppTab {
+        if let idx = ProcessInfo.processInfo.arguments.firstIndex(of: "-initialTab"),
+           idx + 1 < ProcessInfo.processInfo.arguments.count,
+           let tab = AppTab(rawValue: ProcessInfo.processInfo.arguments[idx + 1].lowercased()) {
+            return tab
+        }
+        return .home
+    }
+
+    private var disableSplash: Bool {
+        ProcessInfo.processInfo.arguments.contains("-disableSplash")
+    }
+
+    private var showPermission: Bool? {
+        ProcessInfo.processInfo.arguments.contains("-disablePermission") ? false : nil
     }
 
     var body: some Scene {
@@ -19,17 +32,18 @@ struct UpthereApp: App {
             ZStack {
                 MainTabView(
                     homeViewModel: container.homeViewModel,
-                    settingsViewModel: container.settingsViewModel
+                    settingsViewModel: container.settingsViewModel,
+                    initialTab: initialTab,
+                    showPermission: showPermission
                 )
-                    .opacity(showSplash ? 0 : 1)
+                    .opacity((showSplash && !disableSplash) ? 0 : 1)
 
-                if showSplash {
+                if showSplash && !disableSplash {
                     SplashView()
                         .transition(.opacity)
                 }
             }
             .preferredColorScheme(selectedColorScheme)
-            .dynamicTypeSize(selectedDynamicTypeSize)
             .animation(.easeInOut(duration: 0.5), value: showSplash)
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {

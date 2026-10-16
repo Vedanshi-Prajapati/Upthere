@@ -29,7 +29,7 @@ struct TemperatureLineChart: View {
         VStack(spacing: 8) {
             if hourly.isEmpty {
                 Text("Hourly forecast unavailable")
-                    .font(.system(size: 13))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(height: 95)
             } else {
@@ -77,8 +77,17 @@ struct TemperatureLineChart: View {
                 xAxisLabels
             }
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Temperature timeline chart showing \(hourly.count) hours")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Temperature forecast chart")
+        .accessibilityValue(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        guard !hourly.isEmpty else { return "Hourly forecast unavailable" }
+        let highStr = WeatherFormatter.shared.temp(high)
+        let lowStr = WeatherFormatter.shared.temp(low)
+        let currentStr = hourly.first.map { WeatherFormatter.shared.temp($0.temperature) } ?? ""
+        return "Current temperature \(currentStr), high of \(highStr), low of \(lowStr) across \(hourly.count) hours"
     }
 
     private func scrubberOverlay(index: Int, w: CGFloat, h: CGFloat) -> some View {
@@ -109,10 +118,10 @@ struct TemperatureLineChart: View {
             // Floating value badge
             HStack(spacing: 4) {
                 Text(item.time)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(Color.white.opacity(0.8))
                 Text(WeatherFormatter.shared.temp(item.temperature))
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
             }
             .padding(.horizontal, 10)
@@ -200,7 +209,7 @@ struct TemperatureLineChart: View {
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
                 Text("H \(WeatherFormatter.shared.temp(high))")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.white)
                     .position(x: min(max(px, 24), w - 24), y: max(10, py - 14))
             }
@@ -222,7 +231,7 @@ struct TemperatureLineChart: View {
                     .frame(width: 7, height: 7)
                     .position(x: xPos(0, in: w), y: py)
                 Text("Now \(WeatherFormatter.shared.temp(first.temperature))")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.white)
                     .position(x: 34, y: nowLabelY)
             }
@@ -233,7 +242,7 @@ struct TemperatureLineChart: View {
         HStack {
             ForEach(sampledLabels, id: \.self) { label in
                 Text(label)
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity)
             }

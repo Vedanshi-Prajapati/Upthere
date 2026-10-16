@@ -24,16 +24,16 @@ public struct NetworkErrorView: View {
             VStack(spacing: 20) {
                 // Wifi-off icon
                 Image(systemName: "wifi.slash")
-                    .font(.system(size: 48, weight: .medium))
+                    .font(.largeTitle)
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(.bottom, 4)
 
                 Text("Weather unavailable")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("We couldn't retrieve the latest forecast.\nCheck your connection and try again.")
-                    .font(.system(size: 16))
+                    .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -41,7 +41,7 @@ public struct NetworkErrorView: View {
                 // Try again button
                 Button(action: onRetry) {
                     Text("Try again")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: 240)
                         .frame(height: 54)

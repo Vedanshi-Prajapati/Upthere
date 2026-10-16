@@ -45,6 +45,8 @@ public enum WeatherVisualType: String, Equatable, Sendable {
 
 public struct WeatherBackgroundView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     public let type: WeatherVisualType
 
     public init(type: WeatherVisualType) {
@@ -58,37 +60,39 @@ public struct WeatherBackgroundView: View {
     public var body: some View {
         ZStack {
             // Layer 1: Photorealistic sky canvas with natural atmospheric gradient & subtle lighting
-            RealisticSkyCanvas(type: type)
+            RealisticSkyCanvas(type: type, reduceMotion: reduceMotion)
 
-            // Layer 2: Subtle, restrained atmospheric motion layer
-            switch type {
-            case .sunny:
-                SunnyAtmosphere()
-            case .partlyCloudy:
-                RealisticCloudAtmosphere(isOvercast: false)
-            case .cloudy:
-                RealisticCloudAtmosphere(isOvercast: true)
-            case .rainy:
-                RainAtmosphere()
-            case .thunderstorm:
-                ThunderstormAtmosphere()
-            case .snowy:
-                SnowAtmosphere()
-            case .night:
-                ClearNightAtmosphere()
-            case .defaultTheme:
-                RealisticCloudAtmosphere(isOvercast: false)
+            // Layer 2: Subtle atmospheric motion layer (stopped if reduceMotion is active)
+            if !reduceMotion {
+                switch type {
+                case .sunny:
+                    SunnyAtmosphere()
+                case .partlyCloudy:
+                    RealisticCloudAtmosphere(isOvercast: false)
+                case .cloudy:
+                    RealisticCloudAtmosphere(isOvercast: true)
+                case .rainy:
+                    RainAtmosphere()
+                case .thunderstorm:
+                    ThunderstormAtmosphere()
+                case .snowy:
+                    SnowAtmosphere()
+                case .night:
+                    ClearNightAtmosphere()
+                case .defaultTheme:
+                    RealisticCloudAtmosphere(isOvercast: false)
+                }
             }
 
             // Layer 3: Extra contrast scrim for bright daytime skies
-            // Ensures white text has ≥4.5:1 contrast on mid-blue backgrounds
+            // Ensures secondary text has ≥4.5:1 contrast on daytime skies
             if type == .sunny || type == .partlyCloudy || type == .defaultTheme {
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.40),  // Top — strong header protection
-                        Color.black.opacity(0.18),  // Upper-mid
-                        Color.black.opacity(0.06),  // Centre
-                        Color.black.opacity(0.28)   // Bottom — card / footer protection
+                        Color.black.opacity(0.42),  // Top — header protection
+                        Color.black.opacity(0.24),  // Upper-mid
+                        Color.black.opacity(0.14),  // Centre
+                        Color.black.opacity(0.38)   // Bottom — card / footer protection
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -102,12 +106,12 @@ public struct WeatherBackgroundView: View {
                     .allowsHitTesting(false)
             }
 
-            // Layer 5: Delicate contrast veil to guarantee Liquid Glass clarity & contrast
+            // Layer 5: Strengthened contrast veil to guarantee ≥4.5:1 secondary text contrast on every sky
             LinearGradient(
                 colors: [
-                    Color.black.opacity(colorScheme == .dark ? 0.20 : 0.10),
-                    Color.clear,
-                    Color.black.opacity(colorScheme == .dark ? 0.35 : 0.22)
+                    Color.black.opacity(colorScheme == .dark ? 0.25 : 0.16),
+                    Color.black.opacity(0.06),
+                    Color.black.opacity(colorScheme == .dark ? 0.42 : 0.32)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -122,50 +126,18 @@ public struct WeatherBackgroundView: View {
 
 private struct RealisticSkyCanvas: View {
     let type: WeatherVisualType
+    var reduceMotion: Bool = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            // Barely perceptible natural light breathing (period ~ 24s)
-            let lightShift = 0.03 * sin(t * (2.0 * .pi / 24.0))
-
-            GeometryReader { proxy in
-                let w = proxy.size.width
-                let h = proxy.size.height
-
-                ZStack {
-                    // True atmospheric sky gradient: zenith (top) -> horizon (bottom)
-                    LinearGradient(
-                        stops: skyStops(for: type, lightShift: lightShift),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-
-                    // Distant sunlight bleed from outside the upper-trailing frame (Sunny / Clear)
-                    if type == .sunny {
-                        RadialGradient(
-                            colors: [
-                                Color(red: 1.0, green: 0.96, blue: 0.88).opacity(0.22 + lightShift),
-                                Color(red: 0.85, green: 0.92, blue: 1.0).opacity(0.08),
-                                Color.clear
-                            ],
-                            center: UnitPoint(x: 1.15, y: -0.10), // Outside the frame
-                            startRadius: 80,
-                            endRadius: max(w, h) * 0.95
-                        )
-                    }
-
-                    // Soft ambient horizon haze (for Cloudy, Rain, Snow)
-                    if type == .cloudy || type == .rainy || type == .snowy {
-                        LinearGradient(
-                            colors: [
-                                Color.clear,
-                                horizonHazeColor(for: type).opacity(0.18)
-                            ],
-                            startPoint: .center,
-                            endPoint: .bottom
-                        )
-                    }
+        Group {
+            if reduceMotion {
+                // Static sky without TimelineView animation when reduce motion is enabled
+                skyBody(lightShift: 0.0)
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { timeline in
+                    let t = timeline.date.timeIntervalSinceReferenceDate
+                    let lightShift = 0.03 * sin(t * (2.0 * .pi / 24.0))
+                    skyBody(lightShift: lightShift)
                 }
             }
         }
@@ -173,23 +145,65 @@ private struct RealisticSkyCanvas: View {
         .allowsHitTesting(false)
     }
 
+    private func skyBody(lightShift: Double) -> some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width
+            let h = proxy.size.height
+
+            ZStack {
+                // True atmospheric sky gradient: zenith (top) -> horizon (bottom)
+                LinearGradient(
+                    stops: skyStops(for: type, lightShift: lightShift),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                // Distant sunlight bleed from outside the upper-trailing frame (Sunny / Clear)
+                if type == .sunny {
+                    RadialGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.96, blue: 0.88).opacity(0.22 + lightShift),
+                            Color(red: 0.85, green: 0.92, blue: 1.0).opacity(0.08),
+                            Color.clear
+                        ],
+                        center: UnitPoint(x: 1.15, y: -0.10), // Outside the frame
+                        startRadius: 80,
+                        endRadius: max(w, h) * 0.95
+                    )
+                }
+
+                // Soft ambient horizon haze (for Cloudy, Rain, Snow)
+                if type == .cloudy || type == .rainy || type == .snowy {
+                    LinearGradient(
+                        colors: [
+                            Color.clear,
+                            horizonHazeColor(for: type).opacity(0.18)
+                        ],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+                }
+            }
+        }
+    }
+
     private func skyStops(for type: WeatherVisualType, lightShift: Double) -> [Gradient.Stop] {
         switch type {
         case .sunny:
-            // Deep cerulean-blue at zenith — contrast-safe for white text
+            // Darkened lower gradient stops — ensures secondary text reaches ≥ 4.5:1 on sunny skies
             return [
-                .init(color: Color(red: 0.06, green: 0.24, blue: 0.58).opacity(1.0 + lightShift), location: 0.0),
-                .init(color: Color(red: 0.10, green: 0.34, blue: 0.68), location: 0.40),
-                .init(color: Color(red: 0.20, green: 0.48, blue: 0.78), location: 0.75),
-                .init(color: Color(red: 0.32, green: 0.60, blue: 0.86), location: 1.0)
+                .init(color: Color(red: 0.05, green: 0.20, blue: 0.50).opacity(1.0 + lightShift), location: 0.0),
+                .init(color: Color(red: 0.08, green: 0.28, blue: 0.58), location: 0.40),
+                .init(color: Color(red: 0.12, green: 0.34, blue: 0.62), location: 0.72),
+                .init(color: Color(red: 0.16, green: 0.38, blue: 0.66), location: 1.0)
             ]
         case .partlyCloudy:
-            // Slightly softer but still contrast-safe deep sky
+            // Darkened lower gradient stops — contrast-safe for secondary text
             return [
-                .init(color: Color(red: 0.07, green: 0.20, blue: 0.48), location: 0.0),
-                .init(color: Color(red: 0.12, green: 0.28, blue: 0.56), location: 0.45),
-                .init(color: Color(red: 0.22, green: 0.40, blue: 0.64), location: 0.80),
-                .init(color: Color(red: 0.32, green: 0.52, blue: 0.72), location: 1.0)
+                .init(color: Color(red: 0.06, green: 0.18, blue: 0.44), location: 0.0),
+                .init(color: Color(red: 0.10, green: 0.24, blue: 0.50), location: 0.45),
+                .init(color: Color(red: 0.14, green: 0.30, blue: 0.56), location: 0.75),
+                .init(color: Color(red: 0.18, green: 0.36, blue: 0.60), location: 1.0)
             ]
         case .cloudy:
             // Soft diffuse overcast: muted atmospheric slate-gray/blue-gray palette
@@ -233,9 +247,9 @@ private struct RealisticSkyCanvas: View {
             ]
         case .defaultTheme:
             return [
-                .init(color: Color(red: 0.12, green: 0.32, blue: 0.68), location: 0.0),
-                .init(color: Color(red: 0.22, green: 0.48, blue: 0.80), location: 0.50),
-                .init(color: Color(red: 0.38, green: 0.64, blue: 0.90), location: 1.0)
+                .init(color: Color(red: 0.08, green: 0.22, blue: 0.52), location: 0.0),
+                .init(color: Color(red: 0.12, green: 0.30, blue: 0.60), location: 0.50),
+                .init(color: Color(red: 0.18, green: 0.38, blue: 0.66), location: 1.0)
             ]
         }
     }

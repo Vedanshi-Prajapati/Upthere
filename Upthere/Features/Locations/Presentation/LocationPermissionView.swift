@@ -27,57 +27,50 @@ public struct LocationPermissionView: View {
                             )
                             .frame(width: 52, height: 52)
                         Image(systemName: "location.fill")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.title2.weight(.semibold))
                             .foregroundStyle(AppTheme.accent)
                     }
 
                     Text("See weather where\nyou are")
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppTheme.textPrimary)
                         .lineSpacing(2)
 
                     Text("Get hyperlocal conditions and predictive InsightEngine timing for your current location.")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                         .lineSpacing(3)
                 }
                 .padding(.bottom, 24)
 
                 // InsightEngine value preview card
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppTheme.accent)
-                        Text("Live InsightEngine Preview")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
-
-                    HStack(spacing: 12) {
-                        Image(systemName: "cloud.rain.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(Color(red: 0.45, green: 0.75, blue: 1.0))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Rain Window · 2:15 PM – 3:30 PM")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AppTheme.textPrimary)
-                            Text("Peak precipitation at 2:45 PM (80% probability)")
-                                .font(.system(size: 12))
+                WeatherCard(cornerRadius: AppTheme.radiusCard, padding: EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14)) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppTheme.accent)
+                            Text("Live InsightEngine Preview")
+                                .font(.caption.weight(.semibold))
                                 .foregroundStyle(AppTheme.textSecondary)
+                        }
+
+                        HStack(spacing: 12) {
+                            Image(systemName: "cloud.rain.fill")
+                                .font(.title2)
+                                .foregroundStyle(Color(red: 0.45, green: 0.75, blue: 1.0))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Rain Window · 2:15 PM – 3:30 PM")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                                Text("Peak precipitation at 2:45 PM (80% probability)")
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                            }
                         }
                     }
                 }
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(AppTheme.cardGlass)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(AppTheme.cardBorder, lineWidth: 0.8)
-                )
                 .padding(.bottom, 24)
 
                 // Concise benefits
@@ -93,7 +86,7 @@ public struct LocationPermissionView: View {
                 VStack(spacing: 12) {
                     Button(action: onAllow) {
                         Text("Allow location")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
@@ -105,7 +98,7 @@ public struct LocationPermissionView: View {
 
                     Button(action: onSearchInstead) {
                         Text("Search for a city instead")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
@@ -120,11 +113,11 @@ public struct LocationPermissionView: View {
     private func benefitRow(icon: String, text: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(AppTheme.accent)
                 .frame(width: 22)
             Text(text)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
         }
     }

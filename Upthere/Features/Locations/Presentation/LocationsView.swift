@@ -71,7 +71,7 @@ public struct LocationsView: View {
                     Section {
                         VStack(alignment: .center, spacing: 8) {
                             Text("Tap any city to switch to its live weather.")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundStyle(AppTheme.textSecondary)
 
                             Button {
@@ -81,9 +81,9 @@ public struct LocationsView: View {
                             } label: {
                                 HStack(spacing: 4) {
                                     Image(systemName: "apple.logo")
-                                        .font(.system(size: 11))
+                                        .font(.caption2)
                                     Text("Weather · Apple Weather")
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.caption.weight(.medium))
                                 }
                                 .foregroundStyle(AppTheme.textTertiary)
                             }
@@ -108,18 +108,18 @@ public struct LocationsView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     GlassEffectContainer(spacing: 2) {
                         EditButton()
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(AppFont.subheadlineSemibold)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
-                            .frame(height: 32)
+                            .frame(minHeight: 32)
 
                         Button {
                             showCitySearch = true
                         } label: {
                             Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(AppFont.subheadlineSemibold)
                                 .foregroundStyle(.white)
-                                .frame(width: 30, height: 32)
+                                .frame(minWidth: 30, minHeight: 32)
                         }
                         .accessibilityLabel("Add city")
                     }
@@ -267,52 +267,95 @@ private struct LocationRowView: View {
     let weatherSummary: (temperature: Double, symbolName: String)?
     var onSelect: (() -> Void)?
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         Button(action: { onSelect?() }) {
-            HStack(spacing: 12) {
-                // Left indicator: location arrow for GPS
-                if location.isCurrentLocation {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.accent)
-                        .frame(width: 18)
-                }
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            if location.isCurrentLocation {
+                                Image(systemName: "location.fill")
+                                    .font(AppFont.subheadlineSemibold)
+                                    .foregroundStyle(AppTheme.accent)
+                            }
+                            Text(location.cityName)
+                                .font(AppFont.headline)
+                                .foregroundStyle(.white)
+                            Spacer()
+                            if isSelected {
+                                Image(systemName: "checkmark")
+                                    .font(AppFont.bodySemibold)
+                                    .foregroundStyle(AppTheme.accent)
+                            }
+                        }
 
-                // City & Region
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(location.cityName)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    Text(subtitleText)
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(subtitleText)
+                            .font(AppFont.footnote)
+                            .foregroundStyle(AppTheme.textSecondary)
 
-                // Current temperature and weather symbol
-                if let summary = weatherSummary {
-                    HStack(spacing: 8) {
-                        Text(WeatherFormatter.shared.temp(summary.temperature))
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
+                        if let summary = weatherSummary {
+                            HStack(spacing: 8) {
+                                Text(WeatherFormatter.shared.temp(summary.temperature))
+                                    .font(AppFont.headline)
+                                    .foregroundStyle(.white)
 
-                        Image(systemName: summary.symbolName)
-                            .symbolRenderingMode(.multicolor)
-                            .symbolVariant(.fill)
-                            .foregroundStyle(.white)
-                            .font(.system(size: 22))
-                            .frame(width: 26, height: 26)
+                                Image(systemName: summary.symbolName)
+                                    .symbolRenderingMode(.multicolor)
+                                    .symbolVariant(.fill)
+                                    .foregroundStyle(.white)
+                                    .font(AppFont.title2)
+                            }
+                        }
                     }
-                }
+                } else {
+                    HStack(spacing: 12) {
+                        // Left indicator: location arrow for GPS
+                        if location.isCurrentLocation {
+                            Image(systemName: "location.fill")
+                                .font(AppFont.subheadlineSemibold)
+                                .foregroundStyle(AppTheme.accent)
+                                .frame(width: 18)
+                        }
 
-                // Selected city checkmark
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.accent)
-                        .frame(width: 20)
+                        // City & Region
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(location.cityName)
+                                .font(AppFont.headline)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            Text(subtitleText)
+                                .font(AppFont.footnote)
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // Current temperature and weather symbol
+                        if let summary = weatherSummary {
+                            HStack(spacing: 8) {
+                                Text(WeatherFormatter.shared.temp(summary.temperature))
+                                    .font(AppFont.headline)
+                                    .foregroundStyle(.white)
+
+                                Image(systemName: summary.symbolName)
+                                    .symbolRenderingMode(.multicolor)
+                                    .symbolVariant(.fill)
+                                    .foregroundStyle(.white)
+                                    .font(AppFont.title2)
+                                    .frame(width: 26, height: 26)
+                            }
+                        }
+
+                        // Selected city checkmark
+                        if isSelected {
+                            Image(systemName: "checkmark")
+                                .font(AppFont.bodySemibold)
+                                .foregroundStyle(AppTheme.accent)
+                                .frame(width: 20)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 10)
@@ -336,6 +379,11 @@ private struct LocationRowView: View {
     }
 }
 
-#Preview {
+#Preview("Locations") {
     LocationsView()
+}
+
+#Preview("Locations AX3") {
+    LocationsView()
+        .dynamicTypeSize(.accessibility3)
 }

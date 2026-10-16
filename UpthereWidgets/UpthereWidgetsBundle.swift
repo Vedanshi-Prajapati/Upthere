@@ -10,5 +10,7 @@ struct UpthereWidgetsBundle: WidgetBundle {
             UpthereQuickWeatherControl()
             UpthereAlertsControl()
         }
+
+        RainStartActivityWidget()
     }
 }

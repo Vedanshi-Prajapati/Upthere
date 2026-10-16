@@ -53,9 +53,6 @@ public final class SettingsViewModel {
     public var appearanceMode: AppearanceMode {
         didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
     }
-    public var textSize: TextSize {
-        didSet { UserDefaults.standard.set(textSize.rawValue, forKey: "settings.textSize") }
-    }
 
     // MARK: - About
     public let weatherDataProvider = "Apple WeatherKit"
@@ -89,12 +86,6 @@ public final class SettingsViewModel {
             self.appearanceMode = mode
         } else {
             self.appearanceMode = .system
-        }
-
-        if let rawText = UserDefaults.standard.string(forKey: "settings.textSize") {
-            self.textSize = TextSize(storedValue: rawText)
-        } else {
-            self.textSize = .default_
         }
 
         if UserDefaults.standard.object(forKey: "settings.weatherChangesEnabled") != nil {
@@ -190,43 +181,6 @@ public enum AppearanceMode: String, CaseIterable, Identifiable {
         case .system: return nil
         case .light:  return .light
         case .dark:   return .dark
-        }
-    }
-}
-
-public enum TextSize: String, CaseIterable, Identifiable {
-    case default_ = "Default"
-    case large = "Large"
-    case extraLarge = "Extra Large"
-    case accessibility = "Accessibility"
-
-    public var id: String { rawValue }
-
-    public init(storedValue: String) {
-        switch storedValue {
-        case "Default": self = .default_
-        case "Large": self = .large
-        case "Extra Large", "XL": self = .extraLarge
-        case "Accessibility", "AX": self = .accessibility
-        default: self = .default_
-        }
-    }
-
-    public var scaleFactor: CGFloat {
-        switch self {
-        case .default_: return 1.0
-        case .large:    return 1.15
-        case .extraLarge: return 1.30
-        case .accessibility: return 1.50
-        }
-    }
-
-    public var dynamicTypeSize: DynamicTypeSize {
-        switch self {
-        case .default_: return .large
-        case .large:    return .xLarge
-        case .extraLarge: return .xxLarge
-        case .accessibility: return .accessibility3
         }
     }
 }

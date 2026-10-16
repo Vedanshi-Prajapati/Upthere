@@ -26,7 +26,7 @@ public struct SettingsView: View {
                 WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: AppTheme.spacingXXLarge) {
                         // Header
                         header
 
@@ -42,16 +42,13 @@ public struct SettingsView: View {
                         // 4. Appearance
                         appearanceSection
 
-                        // 5. Text Size
-                        textSizeSection
-
-                        // 6. About
+                        // 5. About
                         aboutSection
 
-                        // 7. Legal attribution
+                        // 6. Legal attribution
                         legalFooter
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, AppTheme.spacingXLarge)
                     .padding(.bottom, AppTheme.tabBarClearance)
                 }
             }
@@ -75,18 +72,18 @@ public struct SettingsView: View {
 
     // MARK: - Header
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingXSmall) {
             Text("Settings")
-                .font(.system(size: 34, weight: .bold))
+                .font(.largeTitle.weight(.bold))
                 .foregroundStyle(AppTheme.textPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 8)
+        .padding(.top, AppTheme.spacingSmall)
     }
 
     // MARK: - 1. Weather Units
     private var weatherUnitsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Weather")
 
             groupedCard {
@@ -103,14 +100,14 @@ public struct SettingsView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "thermometer.medium", color: .orange)
                         Text("Temperature unit")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                         Spacer()
                         Text(viewModel.temperatureUnit.shortLabel)
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
                         chevron
                     }
@@ -132,14 +129,14 @@ public struct SettingsView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "wind", color: Color(red: 45/255, green: 175/255, blue: 195/255))
                         Text("Wind speed unit")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                         Spacer()
                         Text(viewModel.windSpeedUnit.rawValue)
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
                         chevron
                     }
@@ -161,14 +158,14 @@ public struct SettingsView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "drop.fill", color: Color(red: 0/255, green: 122/255, blue: 255/255))
                         Text("Precipitation unit")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                         Spacer()
                         Text(viewModel.precipitationUnit.rawValue)
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
                         chevron
                     }
@@ -180,15 +177,15 @@ public struct SettingsView: View {
 
     // MARK: - 2. Notifications
     private var notificationsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Notifications")
 
             groupedCard {
                 Toggle(isOn: $viewModel.weatherChangesEnabled) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "cloud.fill", color: Color(red: 50/255, green: 155/255, blue: 245/255))
                         Text("Weather changes")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
@@ -197,10 +194,10 @@ public struct SettingsView: View {
                 divider
 
                 Toggle(isOn: $viewModel.rainAlertsEnabled) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "umbrella.fill", color: Color(red: 88/255, green: 86/255, blue: 214/255))
                         Text("Rain alerts")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
@@ -209,10 +206,10 @@ public struct SettingsView: View {
                 divider
 
                 Toggle(isOn: $viewModel.severeAlertsEnabled) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "exclamationmark.triangle.fill", color: Color(red: 255/255, green: 59/255, blue: 48/255))
                         Text("Severe weather alerts")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
@@ -223,18 +220,18 @@ public struct SettingsView: View {
 
     // MARK: - 3. Location
     private var locationSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Location")
 
             groupedCard {
-                HStack(spacing: 12) {
+                HStack(spacing: AppTheme.spacingMedium) {
                     iconBadge(icon: "location.fill", color: Color(red: 0/255, green: 122/255, blue: 255/255))
                     Text("Current location")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundStyle(AppTheme.textPrimary)
                     Spacer()
                     Text(viewModel.currentLocationName)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
 
@@ -248,14 +245,14 @@ public struct SettingsView: View {
                         UIApplication.shared.open(url, options: [:], completionHandler: nil)
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "hand.raised.fill", color: Color(red: 52/255, green: 199/255, blue: 89/255))
                         Text("Location permissions")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                         Spacer()
                         Text(viewModel.locationPermission)
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(AppTheme.textSecondary)
                         chevron
                     }
@@ -267,7 +264,7 @@ public struct SettingsView: View {
 
     // MARK: - 4. Appearance
     private var appearanceSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Appearance")
 
             Picker("Appearance", selection: $viewModel.appearanceMode) {
@@ -276,44 +273,30 @@ public struct SettingsView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .glassEffect(cornerRadius: 12)
+            .glassEffect(cornerRadius: AppTheme.radiusMedium)
+
+            Text("Text size follows your iPhone’s Display & Brightness setting.")
+                .font(AppFont.footnote)
+                .foregroundStyle(AppTheme.textSecondary)
+                .padding(.top, 4)
+                .padding(.horizontal, 4)
         }
     }
 
-    // MARK: - 5. Text Size
-    private var textSizeSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Text Size")
-
-            Picker("Text Size", selection: $viewModel.textSize) {
-                ForEach(TextSize.allCases, id: \.self) { size in
-                    Text(size.rawValue).tag(size)
-                }
-            }
-            .pickerStyle(.segmented)
-            .glassEffect(cornerRadius: 12)
-
-            Text("Preview of Dynamic Type. Layouts reflow cleanly without truncation.")
-                .font(.system(size: 13))
-                .foregroundStyle(AppTheme.textTertiary)
-                .padding(.top, 2)
-        }
-    }
-
-    // MARK: - 6. About
+    // MARK: - 5. About
     private var aboutSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("About")
 
             groupedCard {
-                HStack(alignment: .center, spacing: 12) {
+                HStack(alignment: .center, spacing: AppTheme.spacingMedium) {
                     iconBadge(icon: "cloud.sun.fill", color: Color(red: 50/255, green: 155/255, blue: 245/255))
                     Text("Weather data provider")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundStyle(AppTheme.textPrimary)
                     Spacer(minLength: 8)
                     Text(viewModel.weatherDataProvider)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.trailing)
                 }
@@ -325,14 +308,14 @@ public struct SettingsView: View {
                         UIApplication.shared.open(url)
                     }
                 } label: {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "apple.logo", color: Color.white.opacity(0.3))
                         Text("Apple Weather attribution")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(AppTheme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(AppTheme.textTertiary)
                     }
                 }
@@ -340,61 +323,54 @@ public struct SettingsView: View {
 
                 divider
 
-                HStack(spacing: 12) {
+                HStack(spacing: AppTheme.spacingMedium) {
                     iconBadge(icon: "info.circle.fill", color: .gray)
                     Text("App version")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundStyle(AppTheme.textPrimary)
                     Spacer()
                     Text(viewModel.appVersion)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }
         }
     }
 
-    // MARK: - 7. Legal Footer
+    // MARK: - 6. Legal Footer
     private var legalFooter: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
+        VStack(spacing: AppTheme.spacingXSmall) {
+            HStack(spacing: AppTheme.spacingXSmall) {
                 Image(systemName: "apple.logo")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                 Text("Weather")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
             }
             .foregroundStyle(AppTheme.textSecondary)
 
             Link("Data Sources & Legal Notices", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(AppTheme.textTertiary)
                 .underline()
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        .padding(.top, AppTheme.spacingXXSmall)
     }
 
     // MARK: - Helper Views
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 14, weight: .semibold))
+            .font(.subheadline.weight(.semibold))
             .foregroundStyle(AppTheme.textSecondary)
-            .padding(.leading, 4)
+            .padding(.leading, AppTheme.spacingXXSmall)
     }
 
     private func groupedCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(spacing: 12) {
-            content()
+        WeatherCard(padding: AppTheme.spacingCardPadding) {
+            VStack(spacing: AppTheme.spacingMedium) {
+                content()
+            }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppTheme.cardGlass)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(AppTheme.cardBorder, lineWidth: 0.8)
-        )
     }
 
     private var divider: some View {
@@ -406,7 +382,7 @@ public struct SettingsView: View {
 
     private var chevron: some View {
         Image(systemName: "chevron.right")
-            .font(.system(size: 13, weight: .semibold))
+            .font(.footnote.weight(.semibold))
             .foregroundStyle(AppTheme.textTertiary)
     }
 
@@ -415,13 +391,18 @@ public struct SettingsView: View {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .fill(color)
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
         }
         .frame(width: 28, height: 28)
     }
 }
 
-#Preview {
+#Preview("Settings") {
     SettingsView()
+}
+
+#Preview("Settings AX3") {
+    SettingsView()
+        .dynamicTypeSize(.accessibility3)
 }

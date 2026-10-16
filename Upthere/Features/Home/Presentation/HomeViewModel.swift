@@ -151,6 +151,13 @@ public final class HomeViewModel {
             Task.detached(priority: .utility) {
                 await SpotlightService.shared.indexWeather(weather)
             }
+
+            Task { @MainActor in
+                await RainActivityManager.shared.updateOnForegroundRefresh(
+                    hourly: weather.hourlyForecast,
+                    city: weather.cityName
+                )
+            }
         } catch {
             guard !Task.isCancelled, self.latestRequestId == requestId else {
                 return
