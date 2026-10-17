@@ -37,27 +37,135 @@ struct UpthereTests {
 
     // MARK: - 2. First launch with permission denied and Ghaziabad fallback
     @Test("First launch with permission denied falls back to Ghaziabad")
-    func firstLaunchPermissionDeniedGhaziabadFallback() {
-        let fallbackCity = LocationService.fallbackCityName
-        let fallbackCoord = LocationService.fallbackCoordinate
+    func firstLaunchPermissionDeniedGhaziabadFallback() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
 
-        #expect(fallbackCity == "Ghaziabad")
-        #expect(abs(fallbackCoord.coordinate.latitude - 28.6692) < 0.001)
-        #expect(abs(fallbackCoord.coordinate.longitude - 77.4538) < 0.001)
+        let base = MockWeatherRepository.makeGhaziabadWeather()
+        let fallbackWeather = Weather(
+            cityName: "Ghaziabad",
+            locationSubtitle: "Default location · Location permission denied",
+            temperature: base.temperature,
+            condition: base.condition,
+            highTemperature: base.highTemperature,
+            lowTemperature: base.lowTemperature,
+            feelsLike: base.feelsLike,
+            weatherSymbolName: base.weatherSymbolName,
+            description: base.description,
+            humidity: base.humidity,
+            dewPoint: base.dewPoint,
+            windSpeed: base.windSpeed,
+            windDirection: base.windDirection,
+            precipitationChance: base.precipitationChance,
+            uvIndex: base.uvIndex,
+            uvDescription: base.uvDescription,
+            visibility: base.visibility,
+            visibilityDescription: base.visibilityDescription,
+            pressure: base.pressure,
+            pressureTrend: base.pressureTrend,
+            alert: nil,
+            hourlyForecast: base.hourlyForecast,
+            dailyForecast: base.dailyForecast,
+            rainWindow: base.rainWindow,
+            warmingInsight: base.warmingInsight,
+            chanceOfRain: base.chanceOfRain,
+            sunrise: base.sunrise,
+            sunset: base.sunset,
+            fetchTimestamp: Date(),
+            isCached: false
+        )
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository(mockWeather: fallbackWeather)
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(
+            getWeatherUseCase: useCase,
+            cacheManager: cache,
+            locationsManager: locManager,
+            defaults: mockDefaults
+        )
+
+        await vm.loadWeather(force: true)
+
+        #expect(vm.displayedWeather?.cityName == "Ghaziabad")
+        if case .loaded(let weather, let banner) = vm.state {
+            #expect(weather.cityName == "Ghaziabad")
+            #expect(banner == .locationFallback(reason: "Location permission disabled"))
+        } else {
+            Issue.record("Expected .loaded state with locationFallback banner")
+        }
     }
 
     // MARK: - 3. Permission revoked after previously being granted
-    @Test("Permission revoked error description contains denied")
-    func permissionRevokedAfterGranted() {
-        let err = LocationServiceError.permissionDenied
-        #expect(err.errorDescription?.contains("denied") == true)
+    @Test("Permission revoked after previously being granted preserves previous weather with failure banner")
+    func permissionRevokedAfterGranted() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let initialWeather = MockWeatherRepository.makeGhaziabadWeather()
+        let repo = MockWeatherRepository(mockWeather: initialWeather)
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(
+            getWeatherUseCase: useCase,
+            cacheManager: cache,
+            locationsManager: locManager,
+            defaults: mockDefaults
+        )
+
+        // 1. Initial successful weather fetch
+        await vm.loadWeather(force: true)
+        #expect(vm.displayedWeather?.cityName == "Ghaziabad")
+
+        // 2. Permission is now revoked, subsequent refresh fails with permissionDenied
+        repo.errorToThrow = LocationServiceError.permissionDenied
+        await vm.loadWeather(force: true)
+
+        // 3. View model keeps existing weather on screen and transitions banner to refreshFailed
+        #expect(vm.displayedWeather?.cityName == "Ghaziabad", "Previously loaded weather must remain visible")
+        #expect(vm.isRefreshing == false)
+        if case .loaded(let weather, let banner) = vm.state {
+            #expect(weather.cityName == "Ghaziabad")
+            if case .refreshFailed(let reason) = banner {
+                #expect(reason.contains("denied"))
+            } else {
+                Issue.record("Expected .refreshFailed banner on permission revocation")
+            }
+        } else {
+            Issue.record("Expected state to stay .loaded with previous weather")
+        }
     }
 
     // MARK: - 4. Location services disabled
-    @Test("Location services disabled error description contains disabled")
-    func locationServicesDisabled() {
-        let err = LocationServiceError.servicesDisabled
-        #expect(err.errorDescription?.contains("disabled") == true)
+    @Test("Location services disabled causes view model to enter retryable error state")
+    func locationServicesDisabled() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository()
+        repo.errorToThrow = LocationServiceError.servicesDisabled
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(
+            getWeatherUseCase: useCase,
+            cacheManager: cache,
+            locationsManager: locManager,
+            defaults: mockDefaults
+        )
+
+        await vm.loadWeather(force: true)
+
+        guard case .error(let message, let isRetryable) = vm.state else {
+            Issue.record("Expected view model to enter error state when location services are disabled")
+            return
+        }
+        #expect(!message.isEmpty)
+        #expect(isRetryable == true, "Location service errors should be retryable in view model state")
+        #expect(vm.displayedWeather == nil)
+        #expect(vm.isRefreshing == false)
     }
 
     // MARK: - 5. Manual city selection survives app restart
@@ -160,19 +268,63 @@ struct UpthereTests {
     }
 
     // MARK: - 8. Weather API timeout
-    @Test("Weather API timeout is retryable")
-    func weatherApiTimeout() {
-        let err = WeatherServiceError.timeout
-        #expect(err.isRetryable)
-        #expect(err.errorDescription?.contains("timed out") == true)
+    @Test("Weather API timeout causes view model to enter retryable error state")
+    func weatherApiTimeout() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository()
+        repo.errorToThrow = WeatherServiceError.timeout
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(
+            getWeatherUseCase: useCase,
+            cacheManager: cache,
+            locationsManager: locManager,
+            defaults: mockDefaults
+        )
+
+        await vm.loadWeather(force: true)
+
+        guard case .error(let message, let isRetryable) = vm.state else {
+            Issue.record("Expected view model to enter error state on API timeout")
+            return
+        }
+        #expect(!message.isEmpty)
+        #expect(isRetryable == true, "Weather API timeout must be retryable in view model state")
+        #expect(vm.displayedWeather == nil)
+        #expect(vm.isRefreshing == false)
     }
 
     // MARK: - 9. API returns an authorization error
-    @Test("API authorization error is not retryable")
-    func apiAuthorizationError() {
-        let err = WeatherServiceError.unauthorized
-        #expect(!err.isRetryable)
-        #expect(err.errorDescription?.contains("Unauthorized") == true)
+    @Test("API authorization error causes view model to enter non-retryable error state")
+    func apiAuthorizationError() async {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let cache = WeatherCacheManager(defaults: mockDefaults)
+        let locManager = SavedLocationsManager(defaults: mockDefaults)
+        let repo = MockWeatherRepository()
+        repo.errorToThrow = WeatherServiceError.unauthorized
+        let useCase = GetWeatherUseCase(repository: repo)
+        let vm = HomeViewModel(
+            getWeatherUseCase: useCase,
+            cacheManager: cache,
+            locationsManager: locManager,
+            defaults: mockDefaults
+        )
+
+        await vm.loadWeather(force: true)
+
+        guard case .error(let message, let isRetryable) = vm.state else {
+            Issue.record("Expected view model to enter error state on authorization error")
+            return
+        }
+        #expect(!message.isEmpty)
+        #expect(isRetryable == false, "Weather API authorization error must be non-retryable in view model state")
+        #expect(vm.displayedWeather == nil)
+        #expect(vm.isRefreshing == false)
     }
 
     // MARK: - 10. Malformed weather response

@@ -37,7 +37,7 @@ final class FakeLocationManager: LocationManagerProtocol {
 @Suite("LocationService Tests")
 struct LocationServiceTests {
 
-    @Test("A location request that never answers throws .timeout within about 4 s")
+    @Test("A location request that never answers throws .timeout within about 4 seconds")
     @MainActor
     func testRequestLocationNeverAnswersThrowsTimeout() async throws {
         let fakeManager = FakeLocationManager()
