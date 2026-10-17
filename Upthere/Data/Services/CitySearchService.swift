@@ -123,18 +123,17 @@ public final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSear
             throw CitySearchError.locationNotFound
         }
 
-        let coord = mapItem.placemark.coordinate
-        let cityName = mapItem.placemark.locality ?? result.title
+        let coord = mapItem.location.coordinate
+        let cityName = mapItem.addressRepresentations?.cityName ?? mapItem.name ?? result.title
 
-        var regionComponents: [String] = []
-        if let admin = mapItem.placemark.administrativeArea, !admin.isEmpty {
-            regionComponents.append(admin)
+        let regionName: String
+        if let reg = mapItem.addressRepresentations?.regionName, !reg.isEmpty {
+            regionName = reg
+        } else if !result.subtitle.isEmpty {
+            regionName = result.subtitle
+        } else {
+            regionName = ""
         }
-        if let country = mapItem.placemark.country, !country.isEmpty {
-            regionComponents.append(country)
-        }
-
-        let regionName = regionComponents.isEmpty ? result.subtitle : regionComponents.joined(separator: ", ")
 
         return ResolvedCityLocation(
             cityName: cityName,
