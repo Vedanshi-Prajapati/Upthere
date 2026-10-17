@@ -91,6 +91,7 @@ private struct WeatherScrollContent: View {
     var onNavigateToInsights: (() -> Void)?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -213,7 +214,7 @@ private struct WeatherScrollContent: View {
         }
         .padding(.bottom, AppTheme.spacingLarge)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(weather.condition), \(WeatherFormatter.shared.tempWithUnit(weather.temperature)), Feels like \(WeatherFormatter.shared.temp(weather.feelsLike)), High \(WeatherFormatter.shared.temp(weather.highTemperature)), Low \(WeatherFormatter.shared.temp(weather.lowTemperature))")
+        .accessibilityLabel("\(weather.condition), \(weatherFormatter.tempWithUnit(weather.temperature)), Feels like \(weatherFormatter.temp(weather.feelsLike)), High \(weatherFormatter.temp(weather.highTemperature)), Low \(weatherFormatter.temp(weather.lowTemperature))")
     }
 
     private var heroTextContent: some View {
@@ -224,9 +225,9 @@ private struct WeatherScrollContent: View {
                 .font(AppFont.title2Bold)
                 .foregroundStyle(AppTheme.textPrimary)
 
-            let feelsLike = WeatherFormatter.shared.temp(weather.feelsLike)
-            let high = WeatherFormatter.shared.temp(weather.highTemperature)
-            let low = WeatherFormatter.shared.temp(weather.lowTemperature)
+            let feelsLike = weatherFormatter.temp(weather.feelsLike)
+            let high = weatherFormatter.temp(weather.highTemperature)
+            let low = weatherFormatter.temp(weather.lowTemperature)
             Text("Feels like \(feelsLike) · H \(high) L \(low)")
                 .font(AppFont.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -298,10 +299,10 @@ private struct WeatherScrollContent: View {
 
     // MARK: Metrics Grid
     private var metricsGrid: some View {
-        let dew = WeatherFormatter.shared.temp(weather.dewPoint)
-        let wind = WeatherFormatter.shared.wind(weather.windSpeed)
-        let vis = WeatherFormatter.shared.visibility(weather.visibility)
-        let press = WeatherFormatter.shared.pressure(weather.pressure)
+        let dew = weatherFormatter.temp(weather.dewPoint)
+        let wind = weatherFormatter.wind(weather.windSpeed)
+        let vis = weatherFormatter.visibility(weather.visibility)
+        let press = weatherFormatter.pressure(weather.pressure)
 
         let rows: [(String, String, String, String, String, String)] = [
             ("Humidity", "\(weather.humidity)%", "Dew point \(dew)",

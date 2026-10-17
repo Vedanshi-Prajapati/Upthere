@@ -37,6 +37,8 @@ struct UpthereApp: App {
                 MainTabView(
                     homeViewModel: container.homeViewModel,
                     settingsViewModel: container.settingsViewModel,
+                    locationService: container.locationService,
+                    locationsManager: container.locationsManager,
                     initialTab: initialTab,
                     showPermission: showPermission
                 )
@@ -47,6 +49,8 @@ struct UpthereApp: App {
                         .transition(.opacity)
                 }
             }
+            .environment(\.weatherFormatter, container.weatherFormatter)
+            .environment(container.unitPreferences)
             .preferredColorScheme(selectedColorScheme)
             .animation(.easeInOut(duration: 0.5), value: showSplash)
             .onAppear {
@@ -59,7 +63,7 @@ struct UpthereApp: App {
                       let cityName = SpotlightService.shared.resolveCityName(from: identifier) else {
                     return
                 }
-                if let matched = SavedLocationsManager.shared.savedLocations.first(where: {
+                if let matched = container.locationsManager.savedLocations.first(where: {
                     $0.cityName.caseInsensitiveCompare(cityName) == .orderedSame
                 }) {
                     container.homeViewModel.selectLocation(matched)

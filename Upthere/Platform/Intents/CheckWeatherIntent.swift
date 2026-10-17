@@ -89,6 +89,7 @@ public struct CheckWeatherIntent: AppIntent {
 
 // MARK: - Rich Siri / Shortcuts Snippet Card
 private struct WeatherSnippetView: View {
+    @Environment(\.weatherFormatter) private var weatherFormatter
     let weather: Weather
 
     var body: some View {
@@ -121,14 +122,14 @@ private struct WeatherSnippetView: View {
                 }
 
                 HStack(alignment: .firstTextBaseline) {
-                    Text(WeatherFormatter.shared.temp(weather.temperature))
+                    Text(weatherFormatter.temp(weather.temperature))
                         .font(.largeTitle.weight(.thin))
                         .foregroundStyle(.white)
 
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 3) {
-                        Text("H \(WeatherFormatter.shared.temp(weather.highTemperature))  L \(WeatherFormatter.shared.temp(weather.lowTemperature))")
+                        Text("H \(weatherFormatter.temp(weather.highTemperature))  L \(weatherFormatter.temp(weather.lowTemperature))")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(Color.white.opacity(0.85))
 

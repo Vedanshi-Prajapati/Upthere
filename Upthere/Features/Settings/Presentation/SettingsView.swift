@@ -1,6 +1,8 @@
 import SwiftUI
 
 public struct SettingsView: View {
+    private static let legalAttributionURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html") ?? URL(fileURLWithPath: "/")
+
     @Bindable private var viewModel: SettingsViewModel
     private let locationService: LocationService
     @State private var showLocationPermission = false
@@ -14,8 +16,9 @@ public struct SettingsView: View {
         condition: String? = nil,
         symbolName: String? = nil
     ) {
-        self.viewModel = viewModel ?? SettingsViewModel()
-        self.locationService = locationService ?? .shared
+        let vm = viewModel ?? SettingsViewModel(locationService: locationService)
+        self.viewModel = vm
+        self.locationService = locationService ?? vm.locationService
         self.condition = condition
         self.symbolName = symbolName
     }
@@ -334,9 +337,7 @@ public struct SettingsView: View {
                 divider
 
                 Button {
-                    if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
-                        UIApplication.shared.open(url)
-                    }
+                    UIApplication.shared.open(Self.legalAttributionURL)
                 } label: {
                     HStack(spacing: AppTheme.spacingMedium) {
                         iconBadge(icon: "apple.logo", color: Color.white.opacity(0.3))
@@ -378,7 +379,7 @@ public struct SettingsView: View {
             }
             .foregroundStyle(AppTheme.textSecondary)
 
-            Link("Data Sources & Legal Notices", destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!)
+            Link("Data Sources & Legal Notices", destination: Self.legalAttributionURL)
                 .font(.caption)
                 .foregroundStyle(AppTheme.textTertiary)
                 .underline()

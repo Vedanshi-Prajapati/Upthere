@@ -4,6 +4,7 @@ public struct ForecastView: View {
     @State private var viewModel: HomeViewModel
     @State private var selectedTab: ForecastTab = .daily
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     public enum ForecastTab {
         case hourly, daily
@@ -157,18 +158,18 @@ public struct ForecastView: View {
                 }
                 .padding(.horizontal, 20)
 
-                let currentT = WeatherFormatter.shared.temp(weather.temperature)
-                let feelsT = WeatherFormatter.shared.temp(weather.feelsLike)
+                let currentT = weatherFormatter.temp(weather.temperature)
+                let feelsT = weatherFormatter.temp(weather.feelsLike)
                 let currentPrecipAmount = weather.hourlyForecast.first?.precipitationAmount ?? 0.0
-                let precipVal = WeatherFormatter.shared.precipitation(currentPrecipAmount)
+                let precipVal = weatherFormatter.precipitation(currentPrecipAmount)
 
                 let rows: [(String, String, String, String, String, String)] = [
                     ("Temperature", currentT, "Feels like \(feelsT)",
                      "Precipitation", "\(weather.precipitationChance)%", precipVal),
-                    ("Wind", WeatherFormatter.shared.wind(weather.windSpeed), weather.windDirection,
+                    ("Wind", weatherFormatter.wind(weather.windSpeed), weather.windDirection,
                      "UV Index", "\(weather.uvIndex)", weather.uvDescription),
-                    ("Humidity", "\(weather.humidity)%", "Dew point \(WeatherFormatter.shared.temp(weather.dewPoint))",
-                     "Visibility", WeatherFormatter.shared.visibility(weather.visibility), weather.visibilityDescription),
+                    ("Humidity", "\(weather.humidity)%", "Dew point \(weatherFormatter.temp(weather.dewPoint))",
+                     "Visibility", weatherFormatter.visibility(weather.visibility), weather.visibilityDescription),
                 ]
 
                 WeatherCard(padding: EdgeInsets()) {
@@ -321,6 +322,7 @@ private struct HourlyPrecipitationBarChart: View {
     let hourly: [HourlyWeather]
     let rainBlue: Color
 
+    @Environment(\.weatherFormatter) private var weatherFormatter
     @State private var selectedIndex: Int?
     @State private var isDragging = false
     @State private var appeared = false
@@ -347,7 +349,7 @@ private struct HourlyPrecipitationBarChart: View {
                 if let selectedIndex, items.indices.contains(selectedIndex) {
                     let item = items[selectedIndex]
                     let pct = Int(round(item.precipitationProbability * 100))
-                    let precipAmount = WeatherFormatter.shared.precipitation(item.precipitationAmount)
+                    let precipAmount = weatherFormatter.precipitation(item.precipitationAmount)
                     HStack(spacing: 6) {
                         Text(item.time)
                             .font(.footnote.weight(.semibold))
@@ -629,6 +631,7 @@ private struct RainWindowCard: View {
 private struct HourlyCard: View {
     let hourly: HourlyWeather
 
+    @Environment(\.weatherFormatter) private var weatherFormatter
     var isNow: Bool { hourly.time == "Now" }
 
     var body: some View {
@@ -649,7 +652,7 @@ private struct HourlyCard: View {
                     .font(AppFont.title2)
                     .padding(.vertical, 1)
 
-                Text(WeatherFormatter.shared.temp(hourly.temperature))
+                Text(weatherFormatter.temp(hourly.temperature))
                     .font(AppFont.headline)
                     .foregroundStyle(.white)
 
@@ -671,6 +674,7 @@ private struct DailyWeatherRow: View {
     let overallMin: Double
     let overallMax: Double
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     var body: some View {
         Group {
@@ -697,13 +701,13 @@ private struct DailyWeatherRow: View {
                     }
 
                     HStack(spacing: 8) {
-                        Text(WeatherFormatter.shared.temp(daily.lowTemperature))
+                        Text(weatherFormatter.temp(daily.lowTemperature))
                             .font(AppFont.body)
                             .foregroundStyle(.white)
 
                         tempBar
 
-                        Text(WeatherFormatter.shared.temp(daily.highTemperature))
+                        Text(weatherFormatter.temp(daily.highTemperature))
                             .font(AppFont.bodySemibold)
                             .foregroundStyle(.white)
                     }
@@ -734,14 +738,14 @@ private struct DailyWeatherRow: View {
                     }
                     .frame(minWidth: 32)
 
-                    Text(WeatherFormatter.shared.temp(daily.lowTemperature))
+                    Text(weatherFormatter.temp(daily.lowTemperature))
                         .font(AppFont.body)
                         .foregroundStyle(.white)
                         .frame(minWidth: 32, alignment: .trailing)
 
                     tempBar
 
-                    Text(WeatherFormatter.shared.temp(daily.highTemperature))
+                    Text(weatherFormatter.temp(daily.highTemperature))
                         .font(AppFont.bodySemibold)
                         .foregroundStyle(.white)
                         .frame(minWidth: 32, alignment: .trailing)

@@ -1,19 +1,26 @@
 import Foundation
 import Observation
 import WidgetKit
+import CoreLocation
+import SwiftUI
 
 @Observable
 @MainActor
 public final class SettingsViewModel {
+    public let unitPreferences: UnitPreferences
+
     // MARK: - Weather Units
     public var temperatureUnit: TemperatureUnit {
-        didSet { defaults.set(temperatureUnit.rawValue, forKey: "settings.temperatureUnit") }
+        get { unitPreferences.temperatureUnit }
+        set { unitPreferences.temperatureUnit = newValue }
     }
     public var windSpeedUnit: WindSpeedUnit {
-        didSet { defaults.set(windSpeedUnit.rawValue, forKey: "settings.windSpeedUnit") }
+        get { unitPreferences.windSpeedUnit }
+        set { unitPreferences.windSpeedUnit = newValue }
     }
     public var precipitationUnit: PrecipitationUnit {
-        didSet { defaults.set(precipitationUnit.rawValue, forKey: "settings.precipitationUnit") }
+        get { unitPreferences.precipitationUnit }
+        set { unitPreferences.precipitationUnit = newValue }
     }
 
     // MARK: - Notifications
@@ -26,9 +33,7 @@ public final class SettingsViewModel {
         didSet {
             defaults.set(severeAlertsEnabled, forKey: AppGroup.severeAlertsKey)
             WidgetCenter.shared.reloadAllTimelines()
-            if #available(iOS 18.0, *) {
-                ControlCenter.shared.reloadAllControls()
-            }
+            ControlCenter.shared.reloadAllControls()
         }
     }
 
@@ -82,7 +87,7 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Location
-    private let locationService: LocationService
+    public let locationService: LocationService
     private let defaults: UserDefaults
 
     public var currentLocationName: String {
@@ -112,38 +117,27 @@ public final class SettingsViewModel {
 
     // MARK: - About
     public let weatherDataProvider = "Apple WeatherKit"
-    public let appVersion = "1.0 (24)"
+    public var appVersion: String {
+        let shortVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let buildVersion = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(shortVersion) (\(buildVersion))"
+    }
+
+    private let bundle: Bundle
 
     public init(
+        unitPreferences: UnitPreferences? = nil,
         locationService: LocationService? = nil,
         defaults: UserDefaults = AppGroup.defaults,
-        notificationScheduler: (any NotificationSchedulerProtocol)? = nil
+        notificationScheduler: (any NotificationSchedulerProtocol)? = nil,
+        bundle: Bundle = .main
     ) {
-        self.locationService = locationService ?? .shared
+        self.unitPreferences = unitPreferences ?? UnitPreferences(defaults: defaults)
+        self.locationService = locationService ?? LocationService()
         self.defaults = defaults
         self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
+        self.bundle = bundle
         AppGroup.migrateSettingsIfNeeded(standard: .standard, group: defaults)
-
-        if let rawTemp = defaults.string(forKey: "settings.temperatureUnit"),
-           let unit = TemperatureUnit(rawValue: rawTemp) {
-            self.temperatureUnit = unit
-        } else {
-            self.temperatureUnit = .celsius
-        }
-
-        if let rawWind = defaults.string(forKey: "settings.windSpeedUnit"),
-           let unit = WindSpeedUnit(rawValue: rawWind) {
-            self.windSpeedUnit = unit
-        } else {
-            self.windSpeedUnit = .kmh
-        }
-
-        if let rawPrecip = defaults.string(forKey: "settings.precipitationUnit"),
-           let unit = PrecipitationUnit(rawValue: rawPrecip) {
-            self.precipitationUnit = unit
-        } else {
-            self.precipitationUnit = .mm
-        }
 
         if let rawApp = defaults.string(forKey: "settings.appearanceMode"),
            let mode = AppearanceMode(rawValue: rawApp) {
@@ -177,62 +171,7 @@ public final class SettingsViewModel {
     }
 }
 
-// MARK: - Enums
-
-import Foundation
-import Observation
-import SwiftUI
-
-public enum TemperatureUnit: String, CaseIterable, Identifiable {
-    case celsius = "Celsius (°C)"
-    case fahrenheit = "Fahrenheit (°F)"
-
-    public var id: String { rawValue }
-
-    public var shortLabel: String {
-        switch self {
-        case .celsius: return "°C"
-        case .fahrenheit: return "°F"
-        }
-    }
-
-    public func convert(_ celsius: Double) -> Double {
-        switch self {
-        case .celsius: return celsius
-        case .fahrenheit: return (celsius * 9 / 5) + 32
-        }
-    }
-}
-
-public enum WindSpeedUnit: String, CaseIterable, Identifiable {
-    case kmh = "km/h"
-    case mph = "mph"
-    case ms = "m/s"
-
-    public var id: String { rawValue }
-
-    public func convert(kmh: Double) -> Double {
-        switch self {
-        case .kmh: return kmh
-        case .mph: return kmh * 0.621371
-        case .ms: return kmh / 3.6
-        }
-    }
-}
-
-public enum PrecipitationUnit: String, CaseIterable, Identifiable {
-    case mm = "mm"
-    case inches = "in"
-
-    public var id: String { rawValue }
-
-    public func convert(mm: Double) -> Double {
-        switch self {
-        case .mm: return mm
-        case .inches: return mm * 0.0393701
-        }
-    }
-}
+// MARK: - AppearanceMode Enum
 
 public enum AppearanceMode: String, CaseIterable, Identifiable {
     case system = "System"

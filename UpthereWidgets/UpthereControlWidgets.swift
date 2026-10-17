@@ -4,7 +4,6 @@ import AppIntents
 
 // MARK: - Control Center Quick Weather Button (iOS 18+)
 
-@available(iOS 18.0, *)
 struct UpthereQuickWeatherControl: ControlWidget {
     static let kind: String = "com.vedanshi.upthere.control.quickweather"
 
@@ -21,7 +20,6 @@ struct UpthereQuickWeatherControl: ControlWidget {
 
 // MARK: - Control Center Severe Alerts Toggle (iOS 18+)
 
-@available(iOS 18.0, *)
 struct UpthereAlertsControl: ControlWidget {
     static let kind: String = "com.vedanshi.upthere.control.alerts"
 
@@ -42,7 +40,6 @@ struct UpthereAlertsControl: ControlWidget {
 
 // MARK: - Control Intents
 
-@available(iOS 18.0, *)
 struct LaunchUpthereControlIntent: AppIntent {
     static var title: LocalizedStringResource = "Open UpThere"
     static var description = IntentDescription("Launches UpThere directly from Control Center.")
@@ -55,7 +52,6 @@ struct LaunchUpthereControlIntent: AppIntent {
     }
 }
 
-@available(iOS 18.0, *)
 struct ToggleSevereAlertsControlIntent: SetValueIntent {
     static var title: LocalizedStringResource = "Toggle Severe Alerts"
     static var description = IntentDescription("Turn severe weather alerts on or off from Control Center.")

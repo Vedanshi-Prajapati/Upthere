@@ -147,6 +147,7 @@ public enum AppMetrics {
 }
 
 public struct ScaledHeroTemperature: View {
+    @Environment(\.weatherFormatter) private var weatherFormatter
     let temperature: Double
     @ScaledMetric(relativeTo: .largeTitle) private var fontSize: CGFloat = AppMetrics.baseHeroTemperatureSize
 
@@ -155,10 +156,10 @@ public struct ScaledHeroTemperature: View {
     }
 
     public var body: some View {
-        Text(WeatherFormatter.shared.temp(temperature))
+        Text(weatherFormatter.temp(temperature))
             .font(.system(size: fontSize, weight: .thin, design: .rounded))
             .tracking(-2)
-            .accessibilityLabel(Text("\(WeatherFormatter.shared.tempWithUnit(temperature))"))
+            .accessibilityLabel(Text("\(weatherFormatter.tempWithUnit(temperature))"))
     }
 }
 

@@ -3,6 +3,7 @@ import SwiftUI
 public struct InsightsView: View {
     @State private var viewModel: HomeViewModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     public init(viewModel: HomeViewModel) {
         self._viewModel = State(initialValue: viewModel)
@@ -303,7 +304,7 @@ public struct InsightsView: View {
                             Text("Now")
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
-                            Text(WeatherFormatter.shared.temp(trend.currentTemperature))
+                            Text(weatherFormatter.temp(trend.currentTemperature))
                                 .font(AppFont.title)
                                 .foregroundStyle(.white)
                         }
@@ -313,11 +314,11 @@ public struct InsightsView: View {
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
                             HStack(spacing: 4) {
-                                Text(WeatherFormatter.shared.temp(trend.minTemperature))
+                                Text(weatherFormatter.temp(trend.minTemperature))
                                 Image(systemName: "arrow.right")
                                     .font(AppFont.captionSemibold)
                                     .foregroundStyle(AppTheme.textTertiary)
-                                Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                                Text(weatherFormatter.temp(trend.maxTemperature))
                             }
                             .font(AppFont.headline)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -330,7 +331,7 @@ public struct InsightsView: View {
                             Text("Now")
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
-                            Text(WeatherFormatter.shared.temp(trend.currentTemperature))
+                            Text(weatherFormatter.temp(trend.currentTemperature))
                                 .font(AppFont.title)
                                 .foregroundStyle(.white)
                         }
@@ -340,11 +341,11 @@ public struct InsightsView: View {
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
                             HStack(spacing: 4) {
-                                Text(WeatherFormatter.shared.temp(trend.minTemperature))
+                                Text(weatherFormatter.temp(trend.minTemperature))
                                 Image(systemName: "arrow.right")
                                     .font(AppFont.captionSemibold)
                                     .foregroundStyle(AppTheme.textTertiary)
-                                Text(WeatherFormatter.shared.temp(trend.maxTemperature))
+                                Text(weatherFormatter.temp(trend.maxTemperature))
                             }
                             .font(AppFont.headline)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -369,8 +370,8 @@ public struct InsightsView: View {
     // MARK: - Strongest Winds Card
 
     private func strongestWindsCard(wind: InsightEngine.StrongestWindResult, hourly: [HourlyWeather]) -> some View {
-        let currentWindStr = WeatherFormatter.shared.wind(wind.currentWindSpeed)
-        let gustWindStr = WeatherFormatter.shared.wind(wind.peakGust)
+        let currentWindStr = weatherFormatter.wind(wind.currentWindSpeed)
+        let gustWindStr = weatherFormatter.wind(wind.peakGust)
         let peakTime = formatHour(wind.peakDate)
 
         let windDetail: String = {
@@ -630,12 +631,13 @@ private struct PrecipitationBarChart: View {
 
 private struct TemperatureBarChart: View {
     let hourly: [HourlyWeather]
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     private var chartSummary: String {
         guard !hourly.isEmpty else { return "No temperature data" }
         let temps = hourly.map(\.temperature)
-        let minT = WeatherFormatter.shared.temp(temps.min() ?? 0)
-        let maxT = WeatherFormatter.shared.temp(temps.max() ?? 0)
+        let minT = weatherFormatter.temp(temps.min() ?? 0)
+        let maxT = weatherFormatter.temp(temps.max() ?? 0)
         return "Temperature trend ranging from \(minT) to \(maxT)"
     }
 
@@ -667,11 +669,12 @@ private struct TemperatureBarChart: View {
 
 private struct WindLineChart: View {
     let hourly: [HourlyWeather]
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     private var chartSummary: String {
         guard !hourly.isEmpty else { return "No wind data" }
         let maxSpeed = hourly.map(\.windSpeed).max() ?? 0
-        return "Wind speed trend with peak sustained wind of \(WeatherFormatter.shared.wind(maxSpeed))"
+        return "Wind speed trend with peak sustained wind of \(weatherFormatter.wind(maxSpeed))"
     }
 
     var body: some View {

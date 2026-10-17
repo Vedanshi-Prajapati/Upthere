@@ -2,6 +2,7 @@ import Testing
 import Foundation
 import CoreLocation
 import AppIntents
+import SwiftUI
 @testable import Upthere
 
 @Suite("Upthere Edge Case Tests")
@@ -244,9 +245,10 @@ struct UpthereTests {
     // MARK: - 14. Missing temperature does not display as zero
     @Test("Missing or negative zero temperature formats safely")
     func missingTemperatureDoesNotDisplayZero() {
+        let formatter = WeatherFormatter()
         let negativeZero = -0.0001
-        let formattedNegZero = WeatherFormatter.shared.temp(negativeZero)
-        let validNegFive = WeatherFormatter.shared.temp(-5.0)
+        let formattedNegZero = formatter.temp(negativeZero)
+        let validNegFive = formatter.temp(-5.0)
 
         #expect(formattedNegZero == "0°")
         #expect(formattedNegZero != "-0°")
@@ -1062,6 +1064,17 @@ struct UpthereTests {
         #expect(mockDefaults.bool(forKey: AppGroup.severeAlertsKey) == true)
     }
 
+    @Test("SettingsViewModel formats version string from Bundle")
+    func settingsViewModelAppVersionFromBundle() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let vm = SettingsViewModel(defaults: mockDefaults)
+        let expectedShort = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let expectedBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        #expect(vm.appVersion == "\(expectedShort) (\(expectedBuild))")
+    }
+
     // MARK: - Local Notification Tests
 
     @Test("Severe weather alert scheduled once per alert id")
@@ -1479,6 +1492,45 @@ struct UpthereTests {
 
         let rainRequests = fakeScheduler.scheduledRequests.filter { $0.id == NotificationScheduler.rainAlertId }
         #expect(rainRequests.count == 1, "HomeViewModel should trigger rain notification scheduling after successful refresh")
+    }
+
+    // MARK: - 42. Observable UnitPreferences updates formatted output without recreating views
+    @Test("Changing the temperature unit updates formatted output without recreating views")
+    func changingTemperatureUnitUpdatesFormattedOutputWithoutRecreatingViews() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let prefs = UnitPreferences(defaults: mockDefaults)
+        prefs.temperatureUnit = .celsius
+        let formatter = WeatherFormatter(preferences: prefs)
+
+        struct WeatherDisplayView: View {
+            let formatter: WeatherFormatter
+            let tempValue: Double
+
+            var body: some View {
+                Text(formatter.temp(tempValue))
+            }
+        }
+
+        // Create the view instance once
+        let view = WeatherDisplayView(formatter: formatter, tempValue: 20.0)
+
+        // Celsius output
+        #expect(formatter.temp(20.0) == "20°")
+        #expect(view.formatter.temp(20.0) == "20°")
+
+        // Changing the temperature unit updates the formatted output dynamically without recreating the view
+        prefs.temperatureUnit = .fahrenheit
+
+        #expect(formatter.temp(20.0) == "68°")
+        #expect(view.formatter.temp(20.0) == "68°")
+
+        // Switching back
+        prefs.temperatureUnit = .celsius
+
+        #expect(formatter.temp(20.0) == "20°")
+        #expect(view.formatter.temp(20.0) == "20°")
     }
 }
 

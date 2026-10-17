@@ -1,7 +1,7 @@
 import Foundation
 
 public enum AppGroup: Sendable {
-    public static let identifier = "group.com.vedanshi.upthereapp"
+    nonisolated public static let identifier = "group.com.vedanshi.upthereapp"
 
     /// Shared UserDefaults suite for sharing state across the app, widget, and controls.
     nonisolated public static var defaults: UserDefaults {
@@ -22,11 +22,11 @@ public enum AppGroup: Sendable {
     }
 
     // MARK: - Setting Keys
-    public static let severeAlertsKey = "settings.severeAlertsEnabled"
-    public static let rainAlertsKey = "settings.rainAlertsEnabled"
+    nonisolated public static let severeAlertsKey = "settings.severeAlertsEnabled"
+    nonisolated public static let rainAlertsKey = "settings.rainAlertsEnabled"
 
     // MARK: - Migration Keys
-    public static let settingsKeys = [
+    nonisolated public static let settingsKeys = [
         "settings.temperatureUnit",
         "settings.windSpeedUnit",
         "settings.precipitationUnit",
@@ -35,7 +35,7 @@ public enum AppGroup: Sendable {
         "settings.severeAlertsEnabled"
     ]
 
-    public static let migrationKey = "upthere.settings.migrated_to_app_group"
+    nonisolated public static let migrationKey = "upthere.settings.migrated_to_app_group"
 
     /// Migrates existing values from standard UserDefaults into the App Group suite exactly once.
     /// Does not overwrite existing values in the group suite or subsequent modifications.

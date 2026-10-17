@@ -1,17 +1,22 @@
 import Foundation
-import Observation
+import SwiftUI
 
-@Observable
 @MainActor
-public final class WeatherFormatter {
-    public static let shared = WeatherFormatter()
+public struct WeatherFormatter: Sendable {
+    public let preferences: UnitPreferences
 
-    public init() {}
+    public init(preferences: UnitPreferences) {
+        self.preferences = preferences
+    }
+
+    public init() {
+        self.preferences = UnitPreferences()
+    }
 
     // MARK: - Temperature
 
     public func temp(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
-        let activeUnit = unit ?? currentTemperatureUnit
+        let activeUnit = unit ?? preferences.temperatureUnit
         let converted = activeUnit.convert(celsius)
         let rounded = round(converted)
         // Guard against negative zero (-0°)
@@ -20,7 +25,7 @@ public final class WeatherFormatter {
     }
 
     public func tempWithUnit(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
-        let activeUnit = unit ?? currentTemperatureUnit
+        let activeUnit = unit ?? preferences.temperatureUnit
         let converted = activeUnit.convert(celsius)
         let rounded = round(converted)
         let intVal = abs(rounded) < 0.001 ? 0 : Int(rounded)
@@ -28,14 +33,14 @@ public final class WeatherFormatter {
     }
 
     public func tempValue(_ celsius: Double, unit: TemperatureUnit? = nil) -> Double {
-        let activeUnit = unit ?? currentTemperatureUnit
+        let activeUnit = unit ?? preferences.temperatureUnit
         return activeUnit.convert(celsius)
     }
 
     // MARK: - Wind Speed
 
     public func wind(_ kmh: Double, unit: WindSpeedUnit? = nil) -> String {
-        let activeUnit = unit ?? currentWindUnit
+        let activeUnit = unit ?? preferences.windSpeedUnit
         let converted = activeUnit.convert(kmh: max(0, kmh))
         let rounded = Int(round(converted))
         return "\(rounded) \(activeUnit.rawValue)"
@@ -44,7 +49,7 @@ public final class WeatherFormatter {
     // MARK: - Precipitation
 
     public func precipitation(_ mm: Double, unit: PrecipitationUnit? = nil) -> String {
-        let activeUnit = unit ?? currentPrecipitationUnit
+        let activeUnit = unit ?? preferences.precipitationUnit
         let converted = activeUnit.convert(mm: max(0, mm))
         switch activeUnit {
         case .mm:
@@ -73,30 +78,21 @@ public final class WeatherFormatter {
             return "\(Int(round(valid))) km"
         }
     }
+}
 
-    // MARK: - Private Helpers
+// MARK: - SwiftUI Environment
 
-    private var currentTemperatureUnit: TemperatureUnit {
-        if let raw = AppGroup.defaults.string(forKey: "settings.temperatureUnit"),
-           let unit = TemperatureUnit(rawValue: raw) {
-            return unit
+private struct WeatherFormatterKey: EnvironmentKey {
+    static var defaultValue: WeatherFormatter {
+        MainActor.assumeIsolated {
+            WeatherFormatter()
         }
-        return .celsius
     }
+}
 
-    private var currentWindUnit: WindSpeedUnit {
-        if let raw = AppGroup.defaults.string(forKey: "settings.windSpeedUnit"),
-           let unit = WindSpeedUnit(rawValue: raw) {
-            return unit
-        }
-        return .kmh
-    }
-
-    private var currentPrecipitationUnit: PrecipitationUnit {
-        if let raw = AppGroup.defaults.string(forKey: "settings.precipitationUnit"),
-           let unit = PrecipitationUnit(rawValue: raw) {
-            return unit
-        }
-        return .mm
+extension EnvironmentValues {
+    public var weatherFormatter: WeatherFormatter {
+        get { self[WeatherFormatterKey.self] }
+        set { self[WeatherFormatterKey.self] = newValue }
     }
 }

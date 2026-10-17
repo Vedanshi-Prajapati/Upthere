@@ -22,6 +22,7 @@ struct TemperatureLineChart: View {
         return height - max(0, min(1, fraction)) * height
     }
 
+    @Environment(\.weatherFormatter) private var weatherFormatter
     @State private var selectedIndex: Int?
     @State private var isDragging = false
 
@@ -84,9 +85,9 @@ struct TemperatureLineChart: View {
 
     private var accessibilitySummary: String {
         guard !hourly.isEmpty else { return "Hourly forecast unavailable" }
-        let highStr = WeatherFormatter.shared.temp(high)
-        let lowStr = WeatherFormatter.shared.temp(low)
-        let currentStr = hourly.first.map { WeatherFormatter.shared.temp($0.temperature) } ?? ""
+        let highStr = weatherFormatter.temp(high)
+        let lowStr = weatherFormatter.temp(low)
+        let currentStr = hourly.first.map { weatherFormatter.temp($0.temperature) } ?? ""
         return "Current temperature \(currentStr), high of \(highStr), low of \(lowStr) across \(hourly.count) hours"
     }
 
@@ -120,7 +121,7 @@ struct TemperatureLineChart: View {
                 Text(item.time)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Color.white.opacity(0.8))
-                Text(WeatherFormatter.shared.temp(item.temperature))
+                Text(weatherFormatter.temp(item.temperature))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white)
             }
@@ -208,7 +209,7 @@ struct TemperatureLineChart: View {
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
-                Text("H \(WeatherFormatter.shared.temp(high))")
+                Text("H \(weatherFormatter.temp(high))")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.white)
                     .position(x: min(max(px, 24), w - 24), y: max(10, py - 14))
@@ -230,7 +231,7 @@ struct TemperatureLineChart: View {
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
                     .position(x: xPos(0, in: w), y: py)
-                Text("Now \(WeatherFormatter.shared.temp(first.temperature))")
+                Text("Now \(weatherFormatter.temp(first.temperature))")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.white)
                     .position(x: 34, y: nowLabelY)

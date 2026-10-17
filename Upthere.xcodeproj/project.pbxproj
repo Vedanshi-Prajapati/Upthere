@@ -11,6 +11,8 @@
 		ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4030729A6200BD49AF /* AppGroup.swift */; };
 		ECB9CC4530729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */; };
 		ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */; };
+		ECB9CC4830729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */; };
+		ECB9CC4930729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +31,7 @@
 		ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UpthereWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotStore.swift; sourceTree = "<group>"; };
+		ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainStartActivityAttributes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -94,6 +97,7 @@
 			children = (
 				ECB9CC4030729A6200BD49AF /* AppGroup.swift */,
 				ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */,
+				ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -225,6 +229,7 @@
 			files = (
 				ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */,
 				ECB9CC4530729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
+				ECB9CC4830729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */,
 			);
 		};
 		ECB9CC2230729A6200BD49AF /* Sources */ = {
@@ -237,6 +242,7 @@
 			files = (
 				ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */,
 				ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
+				ECB9CC4930729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -501,7 +507,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "UpThere Widgets";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vedanshi.upthereapp.UpthereWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -526,7 +532,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "UpThere Widgets";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.vedanshi.upthereapp.UpthereWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";

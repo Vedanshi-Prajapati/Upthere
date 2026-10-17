@@ -32,7 +32,7 @@ public final class HomeViewModel {
     public let locationService: LocationService
     private let getWeatherUseCase: any GetWeatherUseCaseProtocol
     private let cacheManager: WeatherCacheManager
-    private let locationsManager: SavedLocationsManager
+    public let locationsManager: SavedLocationsManager
     private let notificationScheduler: any NotificationSchedulerProtocol
     private let defaults: UserDefaults
     private var locationTask: Task<Void, Never>?
@@ -48,10 +48,10 @@ public final class HomeViewModel {
     ) {
         self.getWeatherUseCase = getWeatherUseCase
         self.cacheManager = cacheManager ?? .shared
-        let locManager = locationsManager ?? .shared
+        let locManager = locationsManager ?? SavedLocationsManager()
         self.locationsManager = locManager
         self.selectedLocation = locManager.selectedLocation
-        let locService = locationService ?? .shared
+        let locService = locationService ?? LocationService()
         self.locationService = locService
         self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
         self.defaults = defaults
@@ -84,9 +84,16 @@ public final class HomeViewModel {
         self.selectedLocation = locationsManager.selectedLocation
         self.currentLoadedWeather = nil
         activeTask?.cancel()
+
+        let requestId = UUID()
+        self.latestRequestId = requestId
+        self.isRefreshing = false
+        self.state = .loading(isSilent: false)
+
+        let target = locationsManager.selectedLocation
         let task = Task { @MainActor [weak self] () -> Void in
             guard let self = self else { return }
-            await self.loadWeather(force: true)
+            await self.performLoad(force: true, requestId: requestId, targetLocation: target)
         }
         self.activeTask = task
     }
@@ -126,12 +133,13 @@ public final class HomeViewModel {
         await task.value
     }
 
-    private func performLoad(force: Bool, requestId: UUID) async {
+    private func performLoad(force: Bool, requestId: UUID, targetLocation: SavedLocation? = nil) async {
         let previousWeather = self.currentLoadedWeather
 
         do {
             let weather: Weather
-            if let selected = selectedLocation, let lat = selected.latitude, let lon = selected.longitude {
+            let locationToLoad = targetLocation ?? selectedLocation
+            if let selected = locationToLoad, let lat = selected.latitude, let lon = selected.longitude {
                 let clLocation = CLLocation(latitude: lat, longitude: lon)
                 let subtitle = selected.regionName.isEmpty ? "Selected city" : selected.regionName
                 weather = try await getWeatherUseCase.execute(for: clLocation, cityName: selected.cityName, subtitle: subtitle)

@@ -7,11 +7,13 @@ public struct MainTabView: View {
     private let homeViewModel: HomeViewModel
     private let settingsViewModel: SettingsViewModel
     private let locationService: LocationService
+    private let locationsManager: SavedLocationsManager
 
     public init(
         homeViewModel: HomeViewModel,
         settingsViewModel: SettingsViewModel? = nil,
         locationService: LocationService? = nil,
+        locationsManager: SavedLocationsManager? = nil,
         initialTab: AppTab = .home,
         showPermission: Bool? = nil
     ) {
@@ -19,6 +21,7 @@ public struct MainTabView: View {
         let loc = locationService ?? homeViewModel.locationService
         self.locationService = loc
         self.settingsViewModel = settingsViewModel ?? SettingsViewModel(locationService: loc)
+        self.locationsManager = locationsManager ?? homeViewModel.locationsManager
         self._showPermission = State(initialValue: showPermission ?? (loc.authorizationStatus == .notDetermined))
         self._selectedTab = State(initialValue: initialTab)
     }
@@ -48,6 +51,7 @@ public struct MainTabView: View {
                 LocationsView(
                     condition: homeViewModel.displayedWeather?.condition,
                     symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
+                    locationsManager: locationsManager,
                     locationService: locationService,
                     onSelectLocation: { location in
                         homeViewModel.selectLocation(location)

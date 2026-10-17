@@ -2,9 +2,10 @@ import SwiftUI
 import CoreLocation
 
 public struct LocationsView: View {
+    @Environment(\.weatherFormatter) private var weatherFormatter
     @State private var searchText = ""
     @State private var showCitySearch = false
-    @ObservedObject private var locationsManager = SavedLocationsManager.shared
+    @ObservedObject private var locationsManager: SavedLocationsManager
     @State private var editMode: EditMode = .inactive
 
     @State private var weatherSummaries: [UUID: (temperature: Double, symbolName: String)] = [:]
@@ -20,6 +21,7 @@ public struct LocationsView: View {
     public init(
         condition: String? = nil,
         symbolName: String? = nil,
+        locationsManager: SavedLocationsManager? = nil,
         locationService: LocationService? = nil,
         weatherRepository: (any WeatherRepository)? = nil,
         cacheManager: WeatherCacheManager? = nil,
@@ -28,7 +30,8 @@ public struct LocationsView: View {
     ) {
         self.condition = condition
         self.symbolName = symbolName
-        let loc = locationService ?? .shared
+        self.locationsManager = locationsManager ?? SavedLocationsManager()
+        let loc = locationService ?? LocationService()
         self.locationService = loc
         self.weatherRepository = weatherRepository ?? WeatherKitWeatherRepository(locationService: loc)
         self.cacheManager = cacheManager ?? .shared
@@ -272,6 +275,7 @@ private struct LocationRowView: View {
     var onSelect: (() -> Void)?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.weatherFormatter) private var weatherFormatter
 
     var body: some View {
         Button(action: { onSelect?() }) {
@@ -301,7 +305,7 @@ private struct LocationRowView: View {
 
                         if let summary = weatherSummary {
                             HStack(spacing: 8) {
-                                Text(WeatherFormatter.shared.temp(summary.temperature))
+                                Text(weatherFormatter.temp(summary.temperature))
                                     .font(AppFont.headline)
                                     .foregroundStyle(.white)
 
@@ -339,7 +343,7 @@ private struct LocationRowView: View {
                         // Current temperature and weather symbol
                         if let summary = weatherSummary {
                             HStack(spacing: 8) {
-                                Text(WeatherFormatter.shared.temp(summary.temperature))
+                                Text(weatherFormatter.temp(summary.temperature))
                                     .font(AppFont.headline)
                                     .foregroundStyle(.white)
 
