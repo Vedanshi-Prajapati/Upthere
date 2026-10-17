@@ -125,8 +125,8 @@ private struct WeatherScrollContent: View {
             }
             .padding(.horizontal, AppTheme.spacingXLarge)
             .padding(.top, AppTheme.spacingSmall)
-            .padding(.bottom, AppTheme.tabBarClearance)
         }
+        .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
     }
 
     // MARK: Banner
@@ -443,8 +443,22 @@ private struct WeatherScrollContent: View {
                         Text("Precipitation probability")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(AppTheme.textPrimary)
-                        PrecipitationBarChart(hourly: weather.hourlyForecast)
-                            .frame(height: 64)
+
+                        let maxPrecip = weather.hourlyForecast.prefix(24).map(\.precipitationProbability).max() ?? 0
+                        if maxPrecip < 0.05 {
+                            HStack(spacing: AppTheme.spacingSmall) {
+                                Image(systemName: "sun.max.fill")
+                                    .foregroundStyle(AppTheme.alertAmber)
+                                Text("No rain expected in the next 24 hours")
+                                    .font(.footnote)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(height: 44)
+                        } else {
+                            PrecipitationBarChart(hourly: weather.hourlyForecast)
+                                .frame(height: 64)
+                        }
                     }
                 }
                 .padding(.bottom, AppTheme.spacingXLarge)
@@ -474,14 +488,21 @@ private struct WeatherScrollContent: View {
                         )
 
                         let warmingText: String = {
-                            if let trend = InsightEngine().temperatureTrend(from: weather.hourlyForecast) {
-                                let f = DateFormatter()
-                                f.locale = Locale(identifier: "en_US")
-                                f.dateFormat = "ha"
-                                let minH = f.string(from: trend.minDate).lowercased()
-                                let maxH = f.string(from: trend.maxDate).lowercased()
-                                let swing = Int(trend.temperatureSwing.rounded())
-                                return "+\(swing)° temperature change from \(minH) to \(maxH)"
+                            if let minHour = weather.hourlyForecast.min(by: { $0.temperature < $1.temperature }),
+                               let maxHour = weather.hourlyForecast.max(by: { $0.temperature < $1.temperature }),
+                               weather.hourlyForecast.count >= 2 {
+                                let earlier = minHour.date <= maxHour.date ? minHour : maxHour
+                                let later = minHour.date <= maxHour.date ? maxHour : minHour
+                                let diff = Int(round(later.temperature - earlier.temperature))
+                                if abs(diff) >= 1 {
+                                    let f = DateFormatter()
+                                    f.locale = Locale(identifier: "en_US")
+                                    f.dateFormat = "ha"
+                                    let startH = f.string(from: earlier.date).lowercased()
+                                    let endH = f.string(from: later.date).lowercased()
+                                    let sign = diff > 0 ? "+" : ""
+                                    return "\(sign)\(diff)° change from \(startH) to \(endH)"
+                                }
                             }
                             return weather.warmingInsight
                         }()

@@ -165,39 +165,89 @@ struct TemperatureLineChart: View {
         }
     }
 
-    private func areaFill(w: CGFloat, h: CGFloat) -> some View {
-        Path { p in
-            guard !hourly.isEmpty else { return }
-            p.move(to: CGPoint(x: xPos(0, in: w), y: h))
-            for (i, item) in hourly.enumerated() {
-                p.addLine(to: CGPoint(x: xPos(i, in: w), y: yPos(item.temperature, in: h)))
-            }
-            p.addLine(to: CGPoint(x: xPos(hourly.count - 1, in: w), y: h))
-            p.closeSubpath()
+    private func smoothPath(in width: CGFloat, height: CGFloat, isClosed: Bool = false) -> Path {
+        var path = Path()
+        guard !hourly.isEmpty else { return path }
+        let points: [CGPoint] = hourly.indices.map { i in
+            CGPoint(x: xPos(i, in: width), y: yPos(hourly[i].temperature, in: height))
         }
-        .fill(LinearGradient(
-            colors: [Color.white.opacity(0.18), Color.white.opacity(0.02)],
-            startPoint: .top,
-            endPoint: .bottom
-        ))
+        guard points.count > 1 else {
+            path.move(to: points[0])
+            return path
+        }
+
+        let n = points.count
+        var deltas: [CGFloat] = []
+        for i in 0..<(n - 1) {
+            let dx = points[i + 1].x - points[i].x
+            let dy = points[i + 1].y - points[i].y
+            deltas.append(dx == 0 ? 0 : dy / dx)
+        }
+
+        var m: [CGFloat] = Array(repeating: 0, count: n)
+        m[0] = deltas[0]
+        m[n - 1] = deltas[n - 2]
+
+        for i in 1..<(n - 1) {
+            if deltas[i - 1] * deltas[i] <= 0 {
+                m[i] = 0
+            } else {
+                m[i] = (deltas[i - 1] + deltas[i]) / 2.0
+            }
+        }
+
+        for i in 0..<(n - 1) {
+            if deltas[i] == 0 {
+                m[i] = 0
+                m[i + 1] = 0
+            } else {
+                let alpha = m[i] / deltas[i]
+                let beta = m[i + 1] / deltas[i]
+                let dist = alpha * alpha + beta * beta
+                if dist > 9.0 {
+                    let tau = 3.0 / sqrt(dist)
+                    m[i] = tau * alpha * deltas[i]
+                    m[i + 1] = tau * beta * deltas[i]
+                }
+            }
+        }
+
+        if isClosed {
+            path.move(to: CGPoint(x: points[0].x, y: height))
+            path.addLine(to: points[0])
+        } else {
+            path.move(to: points[0])
+        }
+
+        for i in 0..<(n - 1) {
+            let p0 = points[i]
+            let p1 = points[i + 1]
+            let dx = p1.x - p0.x
+            let c1 = CGPoint(x: p0.x + dx / 3.0, y: p0.y + m[i] * dx / 3.0)
+            let c2 = CGPoint(x: p1.x - dx / 3.0, y: p1.y - m[i + 1] * dx / 3.0)
+            path.addCurve(to: p1, control1: c1, control2: c2)
+        }
+
+        if isClosed {
+            path.addLine(to: CGPoint(x: points[n - 1].x, y: height))
+            path.closeSubpath()
+        }
+
+        return path
+    }
+
+    private func areaFill(w: CGFloat, h: CGFloat) -> some View {
+        smoothPath(in: w, height: h, isClosed: true)
+            .fill(LinearGradient(
+                colors: [Color.white.opacity(0.18), Color.white.opacity(0.02)],
+                startPoint: .top,
+                endPoint: .bottom
+            ))
     }
 
     private func temperatureLine(w: CGFloat, h: CGFloat) -> some View {
-        Path { p in
-            guard !hourly.isEmpty else { return }
-            p.move(to: CGPoint(x: xPos(0, in: w), y: yPos(hourly[0].temperature, in: h)))
-            for i in 1..<hourly.count {
-                let prevX = xPos(i - 1, in: w)
-                let currX = xPos(i, in: w)
-                let midX = (prevX + currX) / 2
-                p.addCurve(
-                    to: CGPoint(x: currX, y: yPos(hourly[i].temperature, in: h)),
-                    control1: CGPoint(x: midX, y: yPos(hourly[i - 1].temperature, in: h)),
-                    control2: CGPoint(x: midX, y: yPos(hourly[i].temperature, in: h))
-                )
-            }
-        }
-        .stroke(Color.white, lineWidth: 2.75)
+        smoothPath(in: w, height: h, isClosed: false)
+            .stroke(Color.white, lineWidth: 2.75)
     }
 
     private func peakDotAndLabel(w: CGFloat, h: CGFloat) -> some View {
@@ -205,14 +255,28 @@ struct TemperatureLineChart: View {
             if let peakIdx = hourly.indices.max(by: { hourly[$0].temperature < hourly[$1].temperature }) {
                 let px = xPos(peakIdx, in: w)
                 let py = yPos(hourly[peakIdx].temperature, in: h)
+                let highX = min(max(px, 24), w - 24)
+                let highY = max(10, py - 14)
+
+                let firstPy = hourly.first.map { yPos($0.temperature, in: h) } ?? py
+                let isNowNearPeak = abs(px - 34) < 65
+                let nowY = isNowNearPeak ? min(h - 10, firstPy + 15) : max(10, firstPy - 14)
+                let nowX: CGFloat = 34
+
+                let distance = hypot(highX - nowX, highY - nowY)
+                let isColliding = peakIdx == 0 || distance < 24 || abs(highX - nowX) < 24
+
                 Circle()
                     .fill(Color.white)
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
-                Text("H \(weatherFormatter.temp(high))")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.white)
-                    .position(x: min(max(px, 24), w - 24), y: max(10, py - 14))
+
+                if !isColliding {
+                    Text("H \(weatherFormatter.temp(high))")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.white)
+                        .position(x: highX, y: highY)
+                }
             }
         }
     }

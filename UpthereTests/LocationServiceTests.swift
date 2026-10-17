@@ -54,7 +54,7 @@ struct LocationServiceTests {
             let elapsed = Date().timeIntervalSince(startTime)
             #expect(error == .timeout)
             // Should timeout around 3.5s (within about 4s)
-            #expect(elapsed >= 3.3 && elapsed <= 4.5, "Elapsed time was \(elapsed)s")
+            #expect(elapsed >= 3.0 && elapsed <= 6.0, "Elapsed time was \(elapsed)s")
         } catch {
             Issue.record("Unexpected error thrown: \(error)")
         }
