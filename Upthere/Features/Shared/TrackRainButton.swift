@@ -5,6 +5,8 @@ public struct TrackRainButton: View {
     public let hourly: [HourlyWeather]
     @State private var isTracking: Bool = false
 
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     public init(cityName: String, hourly: [HourlyWeather]) {
         self.cityName = cityName
         self.hourly = hourly
@@ -12,6 +14,29 @@ public struct TrackRainButton: View {
     }
 
     public var body: some View {
+        Group {
+            if reduceTransparency {
+                if isTracking {
+                    trackButton.buttonStyle(.borderedProminent).tint(.cyan)
+                } else {
+                    trackButton.buttonStyle(.bordered).tint(.white)
+                }
+            } else {
+                if isTracking {
+                    trackButton.buttonStyle(.glassProminent)
+                } else {
+                    trackButton.buttonStyle(.glass)
+                }
+            }
+        }
+        .accessibilityLabel(isTracking ? "Tracking rain live activity active" : "Track rain in Live Activity")
+        .accessibilityHint("Starts a Lock Screen and Dynamic Island live activity for upcoming rain")
+        .onAppear {
+            isTracking = RainActivityManager.shared.hasActiveActivity
+        }
+    }
+
+    private var trackButton: some View {
         Button {
             Task {
                 if isTracking {
@@ -35,23 +60,8 @@ public struct TrackRainButton: View {
                 Text(isTracking ? "Tracking rain" : "Track rain")
                     .font(.subheadline.weight(.semibold))
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(isTracking ? Color.cyan.opacity(0.3) : AppTheme.accent)
-            )
-            .overlay(
-                Capsule()
-                    .stroke(isTracking ? Color.cyan.opacity(0.8) : Color.clear, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isTracking ? "Tracking rain live activity active" : "Track rain in Live Activity")
-        .accessibilityHint("Starts a Lock Screen and Dynamic Island live activity for upcoming rain")
-        .onAppear {
-            isTracking = RainActivityManager.shared.hasActiveActivity
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
         }
     }
 }

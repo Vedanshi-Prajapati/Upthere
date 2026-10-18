@@ -5,6 +5,7 @@ public struct ForecastView: View {
     @State private var selectedTab: ForecastTab = .daily
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.weatherFormatter) private var weatherFormatter
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public enum ForecastTab {
         case hourly, daily
@@ -78,9 +79,21 @@ public struct ForecastView: View {
     }
 
     private var picker: some View {
-        GlassEffectContainer(spacing: 2) {
-            pickerButton(title: "Hourly", tab: .hourly)
-            pickerButton(title: "Daily", tab: .daily)
+        Group {
+            if reduceTransparency {
+                HStack(spacing: 2) {
+                    pickerButton(title: "Hourly", tab: .hourly)
+                    pickerButton(title: "Daily", tab: .daily)
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(Color(white: 0.18), in: Capsule())
+            } else {
+                GlassEffectContainer(spacing: 2) {
+                    pickerButton(title: "Hourly", tab: .hourly)
+                    pickerButton(title: "Daily", tab: .daily)
+                }
+            }
         }
         .padding(.horizontal, 20)
     }

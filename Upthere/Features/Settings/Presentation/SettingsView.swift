@@ -6,6 +6,7 @@ public struct SettingsView: View {
     @Bindable private var viewModel: SettingsViewModel
     private let locationService: LocationService
     @State private var showLocationPermission = false
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public var condition: String?
     public var symbolName: String?
@@ -300,13 +301,25 @@ public struct SettingsView: View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Appearance")
 
-            Picker("Appearance", selection: $viewModel.appearanceMode) {
-                ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                    Text(mode.rawValue).tag(mode)
+            Group {
+                if reduceTransparency {
+                    Picker("Appearance", selection: $viewModel.appearanceMode) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .background(Color(white: 0.18), in: RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
+                } else {
+                    Picker("Appearance", selection: $viewModel.appearanceMode) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
                 }
             }
-            .pickerStyle(.segmented)
-            .glassEffect(cornerRadius: AppTheme.radiusMedium)
 
             Text("Text size follows your iPhone’s Display & Brightness setting.")
                 .font(AppFont.footnote)

@@ -3,6 +3,7 @@ import CoreLocation
 
 public struct LocationsView: View {
     @Environment(\.weatherFormatter) private var weatherFormatter
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var searchText = ""
     @State private var showCitySearch = false
     @ObservedObject private var locationsManager: SavedLocationsManager
@@ -112,22 +113,47 @@ public struct LocationsView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    GlassEffectContainer(spacing: 2) {
-                        EditButton()
-                            .font(AppFont.subheadlineSemibold)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .frame(minHeight: 32)
+                    Group {
+                        if reduceTransparency {
+                            HStack(spacing: 2) {
+                                EditButton()
+                                    .font(AppFont.subheadlineSemibold)
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8)
+                                    .frame(minHeight: 32)
 
-                        Button {
-                            showCitySearch = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(AppFont.subheadlineSemibold)
-                                .foregroundStyle(.white)
-                                .frame(minWidth: 30, minHeight: 32)
+                                Button {
+                                    showCitySearch = true
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .font(AppFont.subheadlineSemibold)
+                                        .foregroundStyle(.white)
+                                        .frame(minWidth: 30, minHeight: 32)
+                                }
+                                .accessibilityLabel("Add city")
+                            }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Color(white: 0.18), in: Capsule())
+                        } else {
+                            GlassEffectContainer(spacing: 2) {
+                                EditButton()
+                                    .font(AppFont.subheadlineSemibold)
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8)
+                                    .frame(minHeight: 32)
+
+                                Button {
+                                    showCitySearch = true
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .font(AppFont.subheadlineSemibold)
+                                        .foregroundStyle(.white)
+                                        .frame(minWidth: 30, minHeight: 32)
+                                }
+                                .accessibilityLabel("Add city")
+                            }
                         }
-                        .accessibilityLabel("Add city")
                     }
                     .buttonStyle(.plain)
                 }
