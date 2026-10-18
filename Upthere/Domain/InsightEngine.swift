@@ -1,6 +1,6 @@
 import Foundation
 
-public struct InsightEngine: Sendable {
+public nonisolated struct InsightEngine: Sendable {
     public init() {}
 
     // MARK: - 1. Rain Window

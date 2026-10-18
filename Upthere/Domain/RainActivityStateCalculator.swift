@@ -1,12 +1,12 @@
 import Foundation
 
-public enum RainStateCalculationStatus: Equatable, Sendable {
+public nonisolated enum RainStateCalculationStatus: Equatable, Sendable {
     case rainPending(minutesUntilRain: Int)
     case rainStarted
     case rainEnded
 }
 
-public struct RainStateCalculationResult: Equatable, Sendable {
+public nonisolated struct RainStateCalculationResult: Equatable, Sendable {
     public let status: RainStateCalculationStatus
     public let minutesUntilRain: Int
     public let intensity: String
@@ -41,7 +41,7 @@ public struct RainStateCalculationResult: Equatable, Sendable {
     }
 }
 
-public struct RainActivityStateCalculator: Sendable {
+public nonisolated struct RainActivityStateCalculator: Sendable {
     public init() {}
 
     /// Formats intensity string based on peak rain probability and precipitation volume.

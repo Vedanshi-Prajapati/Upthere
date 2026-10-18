@@ -3,9 +3,9 @@ import AppIntents
 
 /// AppIntent to deep link into UpThere and display a specific location
 public struct OpenLocationIntent: AppIntent, OpenIntent {
-    public static var title: LocalizedStringResource = "Open Location in UpThere"
-    public static var description = IntentDescription("Open UpThere directly to a specific city's forecast.")
-    public static var openAppWhenRun: Bool = true
+    public static let title: LocalizedStringResource = "Open Location in UpThere"
+    public static let description = IntentDescription("Open UpThere directly to a specific city's forecast.")
+    public static let openAppWhenRun: Bool = true
 
     @Parameter(title: "Target Location")
     public var target: LocationEntity

@@ -4,9 +4,9 @@ import WidgetKit
 
 /// AppIntent to toggle Severe Weather Alerts from Shortcuts or Control Center
 public struct ToggleSevereAlertsIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Toggle Severe Weather Alerts"
-    public static var description = IntentDescription("Turn severe weather alert notifications on or off in UpThere.")
-    public static var openAppWhenRun: Bool = false
+    public static let title: LocalizedStringResource = "Toggle Severe Weather Alerts"
+    public static let description = IntentDescription("Turn severe weather alert notifications on or off in UpThere.")
+    public static let openAppWhenRun: Bool = false
 
     public init() {}
 

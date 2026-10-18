@@ -1,5 +1,6 @@
 # UpThere
 
+[![CI](https://github.com/Vedanshi-Prajapati/Upthere/actions/workflows/ci.yml/badge.svg)](https://github.com/Vedanshi-Prajapati/Upthere/actions/workflows/ci.yml)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange?logo=swift&logoColor=white)](https://swift.org)
 [![Platform](https://img.shields.io/badge/iOS-26.0%2B-blue?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
 [![UI Framework](https://img.shields.io/badge/SwiftUI-purple?logo=swift&logoColor=white)](https://developer.apple.com/xcode/swiftui/)

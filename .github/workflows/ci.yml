@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          if [ -d "/Applications/Xcode_26.0.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode-26.app" ]; then
+            sudo xcode-select -s /Applications/Xcode-26.app/Contents/Developer
+          fi
+          xcodebuild -version
+
+      - name: Build Upthere Scheme
+        run: |
+          xcodebuild build \
+            -scheme Upthere \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run Tests on iPhone Simulator
+        run: |
+          xcodebuild test \
+            -scheme Upthere \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -only-testing:UpthereTests \
+            CODE_SIGNING_ALLOWED=NO

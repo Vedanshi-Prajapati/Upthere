@@ -5,9 +5,9 @@ import CoreLocation
 
 /// AppIntent allowing users and Siri to check current weather conditions and forecast in UpThere
 public struct CheckWeatherIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Check Weather"
-    public static var description = IntentDescription("Check current weather conditions, temperature, and rain chances in UpThere.")
-    public static var openAppWhenRun: Bool = false
+    public static let title: LocalizedStringResource = "Check Weather"
+    public static let description = IntentDescription("Check current weather conditions, temperature, and rain chances in UpThere.")
+    public static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Location", description: "City or location to check weather for")
     public var location: LocationEntity?

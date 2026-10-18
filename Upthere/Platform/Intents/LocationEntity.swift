@@ -4,8 +4,8 @@ import CoreLocation
 
 /// AppEntity representing a saved or current location for App Intents, Siri, and Shortcuts
 public struct LocationEntity: AppEntity, Identifiable, Sendable {
-    public static var defaultQuery = LocationEntityQuery()
-    public static var typeDisplayRepresentation: TypeDisplayRepresentation = "Location"
+    public static let defaultQuery = LocationEntityQuery()
+    public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Location"
 
     public let id: String
     public let name: String

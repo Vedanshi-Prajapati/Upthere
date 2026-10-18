@@ -29,7 +29,7 @@ struct SunRaysView: View {
 }
 
 // 2. Crescent Moon Shape
-struct CrescentMoonShape: Shape {
+nonisolated struct CrescentMoonShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
@@ -52,7 +52,7 @@ struct CrescentMoonShape: Shape {
 }
 
 // 3. Sparkle Star Shape
-struct SparkleStarShape: Shape {
+nonisolated struct SparkleStarShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let midX = rect.midX
@@ -71,7 +71,7 @@ struct SparkleStarShape: Shape {
 }
 
 // 4. Volumetric Cloud Compound Shape (Continuous organic silhouette without internal overlapping strokes)
-struct VolumetricCloudShape: Shape {
+nonisolated struct VolumetricCloudShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
@@ -140,7 +140,7 @@ struct RainDropStreak: View {
 }
 
 // 6. Lightning Bolt Shape
-struct LightningBoltShape: Shape {
+nonisolated struct LightningBoltShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
@@ -158,7 +158,7 @@ struct LightningBoltShape: Shape {
 }
 
 // 7. Snowflake Shape
-struct SnowflakeShape: Shape {
+nonisolated struct SnowflakeShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let midX = rect.midX
@@ -190,7 +190,7 @@ struct SnowflakeShape: Shape {
 }
 
 // 8. Wind Streamline Ribbon
-struct WindStreamlineShape: Shape {
+nonisolated struct WindStreamlineShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let w = rect.width
