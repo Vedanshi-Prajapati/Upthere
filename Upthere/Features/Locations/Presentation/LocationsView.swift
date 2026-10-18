@@ -81,21 +81,8 @@ public struct LocationsView: View {
                                 .font(.footnote)
                                 .foregroundStyle(AppTheme.textSecondary)
 
-                            Button {
-                                if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
-                                    UIApplication.shared.open(url)
-                                }
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "apple.logo")
-                                        .font(.caption2)
-                                    Text("Weather · Apple Weather")
-                                        .font(.caption.weight(.medium))
-                                }
-                                .foregroundStyle(AppTheme.textTertiary)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Apple Weather legal attribution")
+                            AttributionView()
+                                .padding(.top, 4)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)

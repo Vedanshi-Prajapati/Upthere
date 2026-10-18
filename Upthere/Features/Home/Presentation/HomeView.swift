@@ -122,6 +122,9 @@ private struct WeatherScrollContent: View {
                 divider
                 todaySection
                     .accessibilitySortPriority(3)
+                AttributionView()
+                    .padding(.top, AppTheme.spacingLarge)
+                    .accessibilitySortPriority(2)
             }
             .padding(.horizontal, AppTheme.spacingXLarge)
             .padding(.top, AppTheme.spacingSmall)

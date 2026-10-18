@@ -1,8 +1,6 @@
 import SwiftUI
 
 public struct SettingsView: View {
-    private static let legalAttributionURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html") ?? URL(fileURLWithPath: "/")
-
     @Bindable private var viewModel: SettingsViewModel
     private let locationService: LocationService
     @State private var showLocationPermission = false
@@ -48,9 +46,6 @@ public struct SettingsView: View {
 
                         // 5. About
                         aboutSection
-
-                        // 6. Legal attribution
-                        legalFooter
                     }
                     .padding(.horizontal, AppTheme.spacingXLarge)
                     .padding(.bottom, AppTheme.tabBarClearance)
@@ -349,21 +344,8 @@ public struct SettingsView: View {
 
                 divider
 
-                Button {
-                    UIApplication.shared.open(Self.legalAttributionURL)
-                } label: {
-                    HStack(spacing: AppTheme.spacingMedium) {
-                        iconBadge(icon: "apple.logo", color: Color.white.opacity(0.3))
-                        Text("Apple Weather attribution")
-                            .font(.body)
-                            .foregroundStyle(AppTheme.textPrimary)
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(AppTheme.textTertiary)
-                    }
-                }
-                .buttonStyle(.plain)
+                AttributionView()
+                    .padding(.vertical, 4)
 
                 divider
 
@@ -379,26 +361,6 @@ public struct SettingsView: View {
                 }
             }
         }
-    }
-
-    // MARK: - 6. Legal Footer
-    private var legalFooter: some View {
-        VStack(spacing: AppTheme.spacingXSmall) {
-            HStack(spacing: AppTheme.spacingXSmall) {
-                Image(systemName: "apple.logo")
-                    .font(.footnote.weight(.semibold))
-                Text("Weather")
-                    .font(.footnote.weight(.semibold))
-            }
-            .foregroundStyle(AppTheme.textSecondary)
-
-            Link("Data Sources & Legal Notices", destination: Self.legalAttributionURL)
-                .font(.caption)
-                .foregroundStyle(AppTheme.textTertiary)
-                .underline()
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, AppTheme.spacingXXSmall)
     }
 
     // MARK: - Helper Views

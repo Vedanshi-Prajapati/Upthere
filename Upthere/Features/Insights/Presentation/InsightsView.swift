@@ -23,6 +23,9 @@ public struct InsightsView: View {
                         alertSection(weather: weather)
                         insightsSection(weather: weather)
                         footer
+                        AttributionView()
+                            .padding(.top, 16)
+                            .padding(.horizontal, 20)
                     }
                     .padding(.bottom, AppTheme.tabBarClearance)
                 }

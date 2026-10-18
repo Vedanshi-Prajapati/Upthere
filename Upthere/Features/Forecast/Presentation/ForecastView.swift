@@ -56,6 +56,9 @@ public struct ForecastView: View {
                         PrecipitationSection(weather: weather, tab: .hourly)
                             .padding(.horizontal, 20)
                     }
+
+                    AttributionView()
+                        .padding(.top, 8)
                 }
                 .padding(.bottom, AppTheme.tabBarClearance)
             }
