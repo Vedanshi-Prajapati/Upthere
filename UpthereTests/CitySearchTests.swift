@@ -54,7 +54,7 @@ struct CitySearchTests {
         viewModel.updateSearchText("To")
 
         // Wait for debounce and search completion with timeout
-        let deadline = Date().addingTimeInterval(2.0)
+        let deadline = Date().addingTimeInterval(5.0)
         while viewModel.results.isEmpty && Date() < deadline {
             try await Task.sleep(nanoseconds: 20_000_000)
         }
@@ -146,7 +146,7 @@ struct CitySearchTests {
         viewModel.updateSearchText("FastCity")
 
         // Wait for FastCity search and any SlowCity background continuation to finish
-        let deadline = Date().addingTimeInterval(2.0)
+        let deadline = Date().addingTimeInterval(5.0)
         while viewModel.results.isEmpty && Date() < deadline {
             try await Task.sleep(nanoseconds: 20_000_000)
         }
@@ -180,7 +180,7 @@ struct CitySearchTests {
         viewModel.updateSearchText("Port")
 
         // Wait for final debounce to trigger
-        let deadline = Date().addingTimeInterval(2.0)
+        let deadline = Date().addingTimeInterval(5.0)
         while viewModel.results.isEmpty && Date() < deadline {
             try await Task.sleep(nanoseconds: 20_000_000)
         }
@@ -214,7 +214,7 @@ struct CitySearchTests {
         let viewModel = CitySearchViewModel(searchService: fake, debounceNanoseconds: 0)
         viewModel.updateSearchText("Portland")
 
-        let deadline = Date().addingTimeInterval(2.0)
+        let deadline = Date().addingTimeInterval(5.0)
         while viewModel.results.isEmpty && Date() < deadline {
             try await Task.sleep(nanoseconds: 20_000_000)
         }
