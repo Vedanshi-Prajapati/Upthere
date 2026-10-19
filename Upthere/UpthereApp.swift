@@ -24,11 +24,11 @@ struct UpthereApp: App {
     }
 
     private var disableSplash: Bool {
-        ProcessInfo.processInfo.arguments.contains("-disableSplash")
+        ProcessInfo.processInfo.arguments.contains("-disableSplash") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")
     }
 
     private var showPermission: Bool? {
-        ProcessInfo.processInfo.arguments.contains("-disablePermission") ? false : nil
+        (ProcessInfo.processInfo.arguments.contains("-disablePermission") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")) ? false : nil
     }
 
     var body: some Scene {

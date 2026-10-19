@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import WeatherKit
+import os
 
 @MainActor
 public final class WeatherKitWeatherRepository: WeatherRepository {
@@ -71,7 +72,10 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         )
 
         do {
+            let spID = AppSignposts.shared.weatherSignposter.makeSignpostID()
+            let spState = AppSignposts.shared.weatherSignposter.beginInterval("WeatherServiceNetworkCall", id: spID)
             let rawWeather = try await weatherService.weather(for: location)
+            AppSignposts.shared.weatherSignposter.endInterval("WeatherServiceNetworkCall", spState)
             let mapped = mapToDomain(
                 weather: rawWeather,
                 cityName: cityName,

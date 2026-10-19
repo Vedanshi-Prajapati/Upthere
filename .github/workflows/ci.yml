@@ -38,5 +38,4 @@ jobs:
           xcodebuild test \
             -scheme Upthere \
             -destination "platform=iOS Simulator,name=iPhone 16" \
-            -only-testing:UpthereTests \
             CODE_SIGNING_ALLOWED=NO

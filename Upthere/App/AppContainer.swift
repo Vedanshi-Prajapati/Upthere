@@ -29,7 +29,12 @@ public final class AppContainer {
         let locManager = locationsManager ?? SavedLocationsManager()
         self.locationsManager = locManager
 
-        let repository = weatherRepository ?? WeatherKitWeatherRepository(locationService: locService)
+        let repository: any WeatherRepository
+        if ProcessInfo.processInfo.arguments.contains("-useMockRepository") {
+            repository = MockWeatherRepository()
+        } else {
+            repository = weatherRepository ?? WeatherKitWeatherRepository(locationService: locService)
+        }
         self.weatherRepository = repository
         let useCase = GetWeatherUseCase(repository: repository)
         self.getWeatherUseCase = useCase

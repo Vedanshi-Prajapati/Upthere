@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 public nonisolated struct InsightEngine: Sendable {
     public init() {}
@@ -27,6 +28,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func rainWindow(from hourly: [HourlyWeather]) -> RainWindowResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("RainWindowComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("RainWindowComputation", spState) }
+
         guard !hourly.isEmpty else { return nil }
         let rainyHours = hourly.filter { $0.precipitationChance >= 0.30 }
         guard let firstRain = rainyHours.first,
@@ -72,6 +77,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func temperatureTrend(from hourly: [HourlyWeather]) -> TemperatureTrendResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("TemperatureTrendComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("TemperatureTrendComputation", spState) }
+
         guard hourly.count >= 2,
               let first = hourly.first,
               let minHour = hourly.min(by: { $0.temperature < $1.temperature }),
@@ -112,6 +121,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func strongestWind(from hourly: [HourlyWeather]) -> StrongestWindResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("StrongestWindComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("StrongestWindComputation", spState) }
+
         guard let first = hourly.first else { return nil }
         guard let maxGustHour = hourly.max(by: { $0.windGust < $1.windGust }) else { return nil }
         let peakGust = maxGustHour.windGust
@@ -164,6 +177,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func bestOutdoorWindow(from hourly: [HourlyWeather]) -> BestOutdoorWindowResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("BestOutdoorWindowComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("BestOutdoorWindowComputation", spState) }
+
         guard !hourly.isEmpty else { return nil }
 
         func hourScore(_ hour: HourlyWeather) -> Double {
@@ -249,6 +266,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func peakUV(from hourly: [HourlyWeather]) -> PeakUVResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("PeakUVComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("PeakUVComputation", spState) }
+
         guard !hourly.isEmpty else { return nil }
         guard let maxUVHour = hourly.max(by: { $0.uvIndex < $1.uvIndex }) else { return nil }
         let peakUV = maxUVHour.uvIndex
@@ -296,6 +317,10 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     public func cloudChange(from hourly: [HourlyWeather]) -> CloudChangeResult? {
+        let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
+        let spState = AppSignposts.shared.insightSignposter.beginInterval("CloudChangeComputation", id: spID)
+        defer { AppSignposts.shared.insightSignposter.endInterval("CloudChangeComputation", spState) }
+
         guard hourly.count >= 2 else { return nil }
 
         let clouds = hourly.map(\.cloudCover)

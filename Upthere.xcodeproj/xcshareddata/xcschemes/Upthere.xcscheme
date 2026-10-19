@@ -40,6 +40,16 @@
                ReferencedContainer = "container:Upthere.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "ECB9CC5730729A6200BD49AF"
+               BuildableName = "UpthereUITests.xctest"
+               BlueprintName = "UpthereUITests"
+               ReferencedContainer = "container:Upthere.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

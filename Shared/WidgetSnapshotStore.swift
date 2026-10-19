@@ -107,6 +107,9 @@ public final class WidgetSnapshotStore: Sendable {
         if let fileURLOverride {
             return fileURLOverride
         }
+        if let envPath = ProcessInfo.processInfo.environment["WIDGET_SNAPSHOT_PATH"], !envPath.isEmpty {
+            return URL(fileURLWithPath: envPath)
+        }
         guard let container = AppGroup.containerURL else {
             let temp = FileManager.default.temporaryDirectory
             return temp.appendingPathComponent(Self.defaultFilename)

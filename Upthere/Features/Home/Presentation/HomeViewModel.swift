@@ -2,6 +2,7 @@ import Foundation
 import CoreLocation
 import Observation
 import WidgetKit
+import os
 
 @Observable
 @MainActor
@@ -134,6 +135,13 @@ public final class HomeViewModel {
     }
 
     private func performLoad(force: Bool, requestId: UUID, targetLocation: SavedLocation? = nil) async {
+        let signpostID = AppSignposts.shared.weatherSignposter.makeSignpostID()
+        let signpostState = AppSignposts.shared.weatherSignposter.beginInterval("WeatherFetch", id: signpostID)
+        defer {
+            AppSignposts.shared.weatherSignposter.endInterval("WeatherFetch", signpostState)
+            AppSignposts.shared.recordWeatherFetch()
+        }
+
         let previousWeather = self.currentLoadedWeather
 
         do {
