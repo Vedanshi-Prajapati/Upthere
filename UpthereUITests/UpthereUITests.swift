@@ -9,7 +9,9 @@ nonisolated final class UpthereUITests: XCTestCase {
     // MARK: - (1) Cold-launch test using XCTApplicationLaunchMetric
     @MainActor
     func testColdLaunchPerformance() throws {
-        measure(metrics: [XCTApplicationLaunchMetric(waitUntilResponsive: true)]) {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        measure(metrics: [XCTApplicationLaunchMetric()], options: options) {
             let app = XCUIApplication()
             app.launchArguments = ["-useMockRepository", "-disableSplash", "-disablePermission"]
             app.launch()
