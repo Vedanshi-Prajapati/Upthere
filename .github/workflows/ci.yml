@@ -24,12 +24,13 @@ jobs:
             fi
           done
           xcodebuild -version
+          xcrun simctl list devices available
 
       - name: Build Upthere Scheme
         run: |
           xcodebuild build \
             -scheme Upthere \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "generic/platform=iOS Simulator" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run Tests on iPhone Simulator
