@@ -17,13 +17,12 @@ jobs:
 
       - name: Select Xcode 26
         run: |
-          if [ -d "/Applications/Xcode_26.0.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
-          elif [ -d "/Applications/Xcode_26.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
-          elif [ -d "/Applications/Xcode-26.app" ]; then
-            sudo xcode-select -s /Applications/Xcode-26.app/Contents/Developer
-          fi
+          for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
+            if [ -d "$app" ]; then
+              sudo xcode-select -s "$app/Contents/Developer"
+              break
+            fi
+          done
           xcodebuild -version
 
       - name: Build Upthere Scheme

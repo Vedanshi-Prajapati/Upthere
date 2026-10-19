@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 public struct SettingsView: View {
     @Bindable private var viewModel: SettingsViewModel

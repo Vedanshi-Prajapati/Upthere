@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 public struct MainTabView: View {
     @State private var selectedTab: AppTab
