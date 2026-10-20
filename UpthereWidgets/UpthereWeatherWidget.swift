@@ -189,13 +189,13 @@ struct UpthereWidgetEntryView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "cloud.sun.fill")
                         .font(.title2)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Text("UpThere")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Text("Open UpThere to load weather")
                         .font(.caption)
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -205,30 +205,30 @@ struct UpthereWidgetEntryView: View {
                     HStack {
                         Text(entry.cityName)
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .lineLimit(1)
                         Spacer()
                         Image(systemName: entry.symbolName)
                             .symbolRenderingMode(.multicolor)
                             .font(.title3)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
 
                     Spacer()
 
                     Text("\(entry.temperature)°")
                         .font(.system(.largeTitle, design: .rounded).weight(.light))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
 
                     Text("Open UpThere to load weather")
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(AppTheme.textSecondary)
                         .lineLimit(1)
 
                     if let updated = entry.updatedAtText {
                         Text(updated)
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                            .foregroundStyle(AppTheme.rainBlueLight)
                     }
                 }
                 .padding(4)
@@ -237,30 +237,30 @@ struct UpthereWidgetEntryView: View {
                     HStack {
                         Text(entry.cityName)
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .lineLimit(1)
                         Spacer()
                         Image(systemName: entry.symbolName)
                             .symbolRenderingMode(.multicolor)
                             .font(.title3)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
 
                     Spacer()
 
                     Text("\(entry.temperature)°")
                         .font(.system(.largeTitle, design: .rounded).weight(.light))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
 
                     Text(entry.condition)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.85))
+                        .foregroundStyle(AppTheme.textSecondary)
                         .lineLimit(1)
 
                     HStack {
                         Text("H \(entry.high)°  L \(entry.low)°")
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(Color.white.opacity(0.75))
+                            .foregroundStyle(AppTheme.textTertiary)
 
                         Spacer()
 
@@ -271,7 +271,7 @@ struct UpthereWidgetEntryView: View {
                                 Text("\(entry.rainChance)%")
                                     .font(.caption2.weight(.semibold))
                             }
-                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                            .foregroundStyle(AppTheme.rainBlueLight)
                         }
                     }
                 }
@@ -305,36 +305,36 @@ struct UpthereWidgetEntryView: View {
                         HStack(spacing: 6) {
                             Text(entry.cityName)
                                 .font(.headline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                                 .lineLimit(1)
                             Image(systemName: "location.fill")
                                 .font(.caption2)
-                                .foregroundStyle(Color.white.opacity(0.7))
+                                .foregroundStyle(AppTheme.textTertiary)
                         }
 
                         Text("\(entry.temperature)°")
                             .font(.system(.largeTitle, design: .rounded).weight(.light))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
 
                         Text(entry.isStale ? "Open UpThere to load weather" : entry.condition)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(Color.white.opacity(0.85))
+                            .foregroundStyle(AppTheme.textSecondary)
                             .lineLimit(1)
 
                         if let updated = entry.updatedAtText {
                             Text(updated)
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                .foregroundStyle(AppTheme.rainBlueLight)
                         } else {
                             Text("H \(entry.high)°  L \(entry.low)°")
                                 .font(.caption2.weight(.semibold))
-                                .foregroundStyle(Color.white.opacity(0.75))
+                                .foregroundStyle(AppTheme.textTertiary)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     Divider()
-                        .overlay(Color.white.opacity(0.18))
+                        .overlay(Color.white.opacity(0.24))
 
                     // Right pane: 4-hour timeline strip
                     VStack(alignment: .leading, spacing: 6) {
@@ -343,21 +343,21 @@ struct UpthereWidgetEntryView: View {
                                 VStack(spacing: 5) {
                                     Text(item.time)
                                         .font(.caption2.weight(.medium))
-                                        .foregroundStyle(Color.white.opacity(0.75))
+                                        .foregroundStyle(AppTheme.textTertiary)
 
                                     Image(systemName: item.symbol)
                                         .symbolRenderingMode(.multicolor)
                                         .font(.subheadline)
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(AppTheme.textPrimary)
 
                                     Text("\(item.temp)°")
                                         .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(AppTheme.textPrimary)
 
                                     if item.rainProb > 0 {
                                         Text("\(item.rainProb)%")
                                             .font(.caption2.bold())
-                                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                            .foregroundStyle(AppTheme.rainBlueLight)
                                     } else {
                                         Text(" ")
                                             .font(.caption2)
@@ -401,15 +401,15 @@ struct UpthereWidgetEntryView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(entry.cityName)
                                 .font(.title3.bold())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                             Text(entry.isStale ? "Open UpThere to load weather" : "\(entry.condition) · Feels like \(entry.feelsLike)°")
                                 .font(.caption.weight(.medium))
-                                .foregroundStyle(Color.white.opacity(0.8))
+                                .foregroundStyle(AppTheme.textSecondary)
                         }
                         Spacer()
                         Text("\(entry.temperature)°")
                             .font(.system(.largeTitle, design: .rounded).weight(.light))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
 
                     // Insight pill
@@ -419,12 +419,12 @@ struct UpthereWidgetEntryView: View {
                         Text(entry.rainInsight)
                             .font(.caption.weight(.semibold))
                     }
-                    .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                    .foregroundStyle(AppTheme.rainBlueLight)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
                     .background(
                         Capsule()
-                            .fill(Color.white.opacity(0.12))
+                            .fill(Color.white.opacity(0.16))
                     )
 
                     // Hourly timeline
@@ -433,21 +433,21 @@ struct UpthereWidgetEntryView: View {
                             VStack(spacing: 4) {
                                 Text(item.time)
                                     .font(.caption2.weight(.medium))
-                                    .foregroundStyle(Color.white.opacity(0.75))
+                                    .foregroundStyle(AppTheme.textTertiary)
 
                                 Image(systemName: item.symbol)
                                     .symbolRenderingMode(.multicolor)
                                     .font(.subheadline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
 
                                 Text("\(item.temp)°")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
 
                                 if item.rainProb > 0 {
                                     Text("\(item.rainProb)%")
                                         .font(.caption2.bold())
-                                        .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                        .foregroundStyle(AppTheme.rainBlueLight)
                                 } else {
                                     Text(" ")
                                         .font(.caption2)

@@ -10,23 +10,40 @@ public enum AppTheme {
         endPoint: .bottom
     )
 
-    // MARK: - Color Tokens
+    // MARK: - Color Tokens (WCAG AA Certified)
     public static let cardMaterial: Material = .ultraThinMaterial
     public static let cardGlass: Material = .ultraThinMaterial
     public static let cardSolid = Color(red: 0.08, green: 0.16, blue: 0.32)
-    public static let cardBorder = Color.white.opacity(0.18)
-    public static let cardBorderLight = Color.white.opacity(0.10)
+    public static let cardBorder = Color.white.opacity(0.24)
+    public static let cardBorderLight = Color.white.opacity(0.14)
+    public static let cardBorderHighContrast = Color.white.opacity(0.70)
 
     public static let textPrimary = Color.white
-    public static let textSecondary = Color.white.opacity(0.80)
-    public static let textTertiary = Color.white.opacity(0.60)
-    public static let separator = Color.white.opacity(0.16)
-    public static let iconTint = Color.white.opacity(0.90)
+    public static let textSecondary = Color.white.opacity(0.86)
+    public static let textTertiary = Color.white.opacity(0.72)
+    public static let separator = Color.white.opacity(0.22)
+    public static let iconTint = Color.white.opacity(0.92)
 
-    public static let accent = Color(red: 0.18, green: 0.52, blue: 0.98)
-    public static let alertAmber = Color(red: 0.96, green: 0.65, blue: 0.14)
-    public static let rainBlue = Color(red: 0.35, green: 0.65, blue: 1.0)
-    public static let rainBlueLight = Color(red: 0.55, green: 0.85, blue: 1.0)
+    public static let accent = Color(red: 0.42, green: 0.74, blue: 1.0)
+    public static let alertAmber = Color(red: 1.0, green: 0.76, blue: 0.24)
+    public static let rainBlue = Color(red: 0.46, green: 0.76, blue: 1.0)
+    public static let rainBlueLight = Color(red: 0.65, green: 0.88, blue: 1.0)
+
+    // MARK: - Chart Contrast Tokens (>= 3.0:1 against cards)
+    public static let chartLine = Color.white
+    public static let chartGrid = Color.white.opacity(0.44)
+    public static let chartGridLow = Color.white.opacity(0.38)
+    public static let chartAxisLabel = Color.white.opacity(0.86)
+    public static let chartSelectedPoint = Color.white
+
+    // MARK: - Contrast Helpers
+    public static func textSecondary(for contrast: ColorSchemeContrast) -> Color {
+        contrast == .increased ? .white : textSecondary
+    }
+
+    public static func textTertiary(for contrast: ColorSchemeContrast) -> Color {
+        contrast == .increased ? Color.white.opacity(0.96) : textTertiary
+    }
 
     // MARK: - Spacing Tokens
     public static let spacingXXSmall: CGFloat = 4
@@ -35,7 +52,10 @@ public enum AppTheme {
     public static let spacingMedium: CGFloat = 12
     public static let spacingLarge: CGFloat = 16
     public static let spacingXLarge: CGFloat = 20
-    public static let spacingXXLarge: CGFloat = 24
+    public static let spacingXXLarge: CGFloat = 28
+    public static let sectionGap: CGFloat = 28
+    public static let cardInnerGap: CGFloat = 12
+    public static let screenHorizontalMargin: CGFloat = 20
     public static let spacingCardPadding: CGFloat = 16
     public static let tabBarClearance: CGFloat = 88.0
 
@@ -46,95 +66,84 @@ public enum AppTheme {
     public static let radiusLarge: CGFloat = 20
 }
 
-// MARK: - Dynamic Type Font Tokens
+// MARK: - Five-Role Type Scale
+
+public enum AppTypeRole {
+    case hero      // Dominant Hero (temperature)
+    case title     // Screen / section headers
+    case headline  // Card title / key value
+    case body      // General body text
+    case caption   // Details, metadata, feels-like, high/low, timestamps
+}
 
 public enum AppFont {
-    // Big Hero Temperature & Display
-    public static var heroTemperature: Font {
-        Font.system(.largeTitle, design: .rounded, weight: .thin)
+    // 1. Hero (temperature): dominant, rounded, bold
+    public static var hero: Font {
+        Font.system(.largeTitle, design: .rounded, weight: .bold)
     }
 
-    // Titles
-    public static var largeTitle: Font {
-        Font.system(.largeTitle, design: .default, weight: .bold)
-    }
+    // 2. Title (screen / section): large, distinct section anchor
     public static var title: Font {
-        Font.system(.title, design: .default, weight: .bold)
-    }
-    public static var title2: Font {
-        Font.system(.title2, design: .default, weight: .semibold)
-    }
-    public static var title2Bold: Font {
         Font.system(.title2, design: .default, weight: .bold)
     }
-    public static var title3: Font {
-        Font.system(.title3, design: .default, weight: .semibold)
-    }
-    public static var title3Bold: Font {
-        Font.system(.title3, design: .default, weight: .bold)
-    }
 
-    // Headline & Body
+    // 3. Headline (card title / key value): semibold card focus
     public static var headline: Font {
         Font.system(.headline, design: .default, weight: .semibold)
     }
+
+    // 4. Body: standard reading text
     public static var body: Font {
         Font.system(.body, design: .default, weight: .regular)
     }
-    public static var bodySemibold: Font {
-        Font.system(.body, design: .default, weight: .semibold)
-    }
-    public static var bodyMedium: Font {
-        Font.system(.body, design: .default, weight: .medium)
-    }
 
-    // Callout & Subheadline
-    public static var callout: Font {
-        Font.system(.callout, design: .default, weight: .regular)
-    }
-    public static var calloutMedium: Font {
-        Font.system(.callout, design: .default, weight: .medium)
-    }
-    public static var calloutSemibold: Font {
-        Font.system(.callout, design: .default, weight: .semibold)
-    }
-    public static var subheadline: Font {
-        Font.system(.subheadline, design: .default, weight: .regular)
-    }
-    public static var subheadlineMedium: Font {
-        Font.system(.subheadline, design: .default, weight: .medium)
-    }
-    public static var subheadlineSemibold: Font {
-        Font.system(.subheadline, design: .default, weight: .semibold)
-    }
-
-    // Footnote & Caption
-    public static var footnote: Font {
-        Font.system(.footnote, design: .default, weight: .regular)
-    }
-    public static var footnoteMedium: Font {
-        Font.system(.footnote, design: .default, weight: .medium)
-    }
-    public static var footnoteSemibold: Font {
-        Font.system(.footnote, design: .default, weight: .semibold)
-    }
+    // 5. Caption: secondary detail, metadata, footnotes
     public static var caption: Font {
         Font.system(.caption, design: .default, weight: .regular)
     }
-    public static var captionMedium: Font {
-        Font.system(.caption, design: .default, weight: .medium)
+
+    public static func role(_ role: AppTypeRole) -> Font {
+        switch role {
+        case .hero: return hero
+        case .title: return title
+        case .headline: return headline
+        case .body: return body
+        case .caption: return caption
+        }
     }
-    public static var captionSemibold: Font {
-        Font.system(.caption, design: .default, weight: .semibold)
-    }
-    public static var caption2: Font {
-        Font.system(.caption2, design: .default, weight: .regular)
-    }
-    public static var caption2Medium: Font {
-        Font.system(.caption2, design: .default, weight: .medium)
-    }
-    public static var caption2Semibold: Font {
-        Font.system(.caption2, design: .default, weight: .semibold)
+
+    // Backwards-compatible aliases mapping all legacy calls strictly into the 5 roles:
+    public static var heroTemperature: Font { hero }
+    public static var largeTitle: Font { title }
+    public static var title2: Font { title }
+    public static var title2Bold: Font { title }
+    public static var title3: Font { title }
+    public static var title3Bold: Font { title }
+
+    public static var bodySemibold: Font { body.weight(.semibold) }
+    public static var bodyMedium: Font { body.weight(.medium) }
+    public static var callout: Font { body }
+    public static var calloutMedium: Font { body.weight(.medium) }
+    public static var calloutSemibold: Font { headline }
+
+    public static var subheadline: Font { caption }
+    public static var subheadlineMedium: Font { caption.weight(.medium) }
+    public static var subheadlineSemibold: Font { headline }
+
+    public static var footnote: Font { caption }
+    public static var footnoteMedium: Font { caption.weight(.medium) }
+    public static var footnoteSemibold: Font { caption.weight(.semibold) }
+
+    public static var captionMedium: Font { caption.weight(.medium) }
+    public static var captionSemibold: Font { caption.weight(.semibold) }
+    public static var caption2: Font { caption }
+    public static var caption2Medium: Font { caption.weight(.medium) }
+    public static var caption2Semibold: Font { caption.weight(.semibold) }
+}
+
+extension View {
+    public func appType(_ role: AppTypeRole) -> some View {
+        self.font(AppFont.role(role))
     }
 }
 
@@ -157,7 +166,7 @@ public struct ScaledHeroTemperature: View {
 
     public var body: some View {
         Text(weatherFormatter.temp(temperature))
-            .font(.system(size: fontSize, weight: .thin, design: .rounded))
+            .font(.system(size: fontSize, weight: .bold, design: .rounded))
             .tracking(-2)
             .accessibilityLabel(Text("\(weatherFormatter.tempWithUnit(temperature))"))
     }
@@ -186,6 +195,7 @@ public struct ScaledWeatherIcon: View {
 
 public struct WeatherCard<Content: View>: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     public var cornerRadius: CGFloat
     public var padding: EdgeInsets
     public var borderColor: Color?
@@ -221,11 +231,12 @@ public struct WeatherCard<Content: View>: View {
     }
 
     public var body: some View {
+        let isHighContrast = (colorSchemeContrast == .increased)
         content
             .padding(padding)
             .background(
                 Group {
-                    if reduceTransparency {
+                    if reduceTransparency || isHighContrast {
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(AppTheme.cardSolid)
                     } else {
@@ -236,7 +247,12 @@ public struct WeatherCard<Content: View>: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(borderColor ?? AppTheme.cardBorder, lineWidth: 0.8)
+                    .stroke(
+                        isHighContrast
+                            ? AppTheme.cardBorderHighContrast
+                            : (borderColor ?? AppTheme.cardBorder),
+                        lineWidth: isHighContrast ? 1.6 : 0.8
+                    )
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }

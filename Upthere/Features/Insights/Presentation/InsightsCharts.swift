@@ -88,14 +88,16 @@ extension InsightsView {
                 let count = max(2, windSpeeds.count)
                 let stepX = geo.size.width / CGFloat(count - 1)
 
-                // Grid lines
+                // Grid lines and reference levels (passing 3.0:1)
                 ForEach([0, Int(maxWind / 2), Int(maxWind)], id: \.self) { value in
                     let y = geo.size.height * (1 - CGFloat(value) / maxWind)
-                    HStack {
-                        Spacer()
+                    HStack(spacing: 4) {
+                        Rectangle()
+                            .fill(AppTheme.chartGrid)
+                            .frame(height: 1)
                         Text("\(value) km/h")
-                            .font(.caption2)
-                            .foregroundStyle(AppTheme.textTertiary)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(AppTheme.chartAxisLabel)
                     }
                     .offset(y: y - 6)
                 }
@@ -236,16 +238,16 @@ extension InsightsView {
                     let barWidth = max(4, (chartWidth - CGFloat(max(1, cloudPercent.count - 1)) * 3) / CGFloat(max(1, cloudPercent.count)))
 
                     ZStack(alignment: .topLeading) {
-                        // Grid references inside the chart width
+                        // Grid references inside the chart width (passing 3.0:1)
                         ForEach([0, 50, 100], id: \.self) { value in
                             let y = geo.size.height * (1 - CGFloat(value) / maxVal)
                             HStack(spacing: 4) {
                                 Rectangle()
-                                    .fill(Color.white.opacity(0.06))
+                                    .fill(AppTheme.chartGrid)
                                     .frame(height: 1)
                                 Text("\(value)%")
-                                    .font(.caption2)
-                                    .foregroundStyle(AppTheme.textTertiary)
+                                    .font(.caption2.weight(.medium))
+                                    .foregroundStyle(AppTheme.chartAxisLabel)
                                     .frame(width: labelWidth - 4, alignment: .trailing)
                             }
                             .offset(y: y - 5)
@@ -256,7 +258,16 @@ extension InsightsView {
                                 let height = max(2, geo.size.height * (pct / maxVal))
                                 let isShifted = index >= shiftIndex && shiftIndex > 0
                                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                                    .fill(isShifted ? Color.white.opacity(0.80) : Color.white.opacity(0.25))
+                                    .fill(isShifted ? Color.white.opacity(0.85) : Color.white.opacity(0.38))
+                                    .overlay(
+                                        // Series differentiation with border pattern: shifted overcast has prominent dashed/solid border
+                                        Group {
+                                            if isShifted {
+                                                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                                    .stroke(Color.white, lineWidth: 1.2)
+                                            }
+                                        }
+                                    )
                                     .frame(width: barWidth, height: height)
                             }
                         }

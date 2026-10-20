@@ -61,24 +61,24 @@ public struct RainStartActivityWidget: Widget {
                     HStack(spacing: 6) {
                         Image(systemName: "clock")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(AppTheme.textTertiary)
 
                         Text("Ending around ")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(AppTheme.textTertiary)
                         +
                         Text(context.state.endTime, style: .time)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
 
                         Spacer()
 
                         Image(systemName: "sparkles")
                             .font(.caption2)
-                            .foregroundStyle(Color(red: 0.35, green: 0.75, blue: 1.0))
+                            .foregroundStyle(AppTheme.rainBlueLight)
                         Text("InsightEngine")
                             .font(.caption2.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(AppTheme.textTertiary)
                     }
                     .padding(.horizontal, 4)
                     .padding(.top, 4)
@@ -160,15 +160,15 @@ private struct RainActivityLockScreenView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(AppTheme.textTertiary)
 
                         Text("Expected end around ")
                             .font(.caption)
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(AppTheme.textTertiary)
                         +
                         Text(context.state.endTime, style: .time)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
 

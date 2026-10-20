@@ -47,6 +47,7 @@ public struct WeatherBackgroundView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     public let type: WeatherVisualType
 
     public init(type: WeatherVisualType) {
@@ -84,15 +85,39 @@ public struct WeatherBackgroundView: View {
                 }
             }
 
-            // Layer 3: Extra contrast scrim for bright daytime skies
-            // Ensures secondary text has ≥4.5:1 contrast on daytime skies
-            if type == .sunny || type == .partlyCloudy || type == .defaultTheme {
+            // Layer 3: Extra contrast scrim for bright daytime skies (Snow, Fog, Clear Day)
+            // Ensures text tokens achieve >= 4.5:1 body / 3:1 large contrast on every sky
+            if type == .snowy || type == .cloudy {
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.42),  // Top — header protection
-                        Color.black.opacity(0.24),  // Upper-mid
-                        Color.black.opacity(0.14),  // Centre
-                        Color.black.opacity(0.38)   // Bottom — card / footer protection
+                        Color.black.opacity(0.55),  // Top — header & hero text protection on bright snow/fog
+                        Color.black.opacity(0.44),  // Upper-mid
+                        Color.black.opacity(0.35),  // Centre
+                        Color.black.opacity(0.50)   // Bottom — card & footer protection
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .allowsHitTesting(false)
+            } else if type == .sunny || type == .partlyCloudy || type == .defaultTheme {
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.44),  // Top — header protection
+                        Color.black.opacity(0.28),  // Upper-mid
+                        Color.black.opacity(0.18),  // Centre
+                        Color.black.opacity(0.40)   // Bottom — card / footer protection
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .allowsHitTesting(false)
+            } else if type == .rainy {
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.36),
+                        Color.black.opacity(0.22),
+                        Color.black.opacity(0.16),
+                        Color.black.opacity(0.35)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -109,14 +134,20 @@ public struct WeatherBackgroundView: View {
             // Layer 5: Strengthened contrast veil to guarantee ≥4.5:1 secondary text contrast on every sky
             LinearGradient(
                 colors: [
-                    Color.black.opacity(colorScheme == .dark ? 0.25 : 0.16),
-                    Color.black.opacity(0.06),
-                    Color.black.opacity(colorScheme == .dark ? 0.42 : 0.32)
+                    Color.black.opacity(colorScheme == .dark ? 0.28 : 0.20),
+                    Color.black.opacity(0.08),
+                    Color.black.opacity(colorScheme == .dark ? 0.44 : 0.36)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .allowsHitTesting(false)
+
+            // Layer 6: Increased contrast boost for system accessibility settings
+            if colorSchemeContrast == .increased {
+                Color.black.opacity(0.22)
+                    .allowsHitTesting(false)
+            }
         }
         .ignoresSafeArea()
     }

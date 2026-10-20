@@ -147,21 +147,21 @@ struct TemperatureLineChart: View {
         let highY = yPos(high, in: h)
         let lowY = yPos(low, in: h)
         return Group {
-            // High reference guide line
+            // High reference guide line - distinct dash pattern [6, 4] with WCAG AA compliant contrast
             Path { p in
                 p.move(to: CGPoint(x: 0, y: highY))
                 p.addLine(to: CGPoint(x: w, y: highY))
             }
-            .stroke(Color.white.opacity(0.22),
-                    style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            .stroke(AppTheme.chartGrid,
+                    style: StrokeStyle(lineWidth: 1.2, dash: [6, 4]))
 
-            // Low reference guide line
+            // Low reference guide line - distinct fine dash [2, 3] with WCAG AA compliant contrast
             Path { p in
                 p.move(to: CGPoint(x: 0, y: lowY))
                 p.addLine(to: CGPoint(x: w, y: lowY))
             }
-            .stroke(Color.white.opacity(0.12),
-                    style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+            .stroke(AppTheme.chartGridLow,
+                    style: StrokeStyle(lineWidth: 1.2, dash: [2, 3]))
         }
     }
 

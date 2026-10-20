@@ -220,6 +220,9 @@ private struct WeatherScrollContent: View {
         .accessibilityLabel("\(weather.condition), \(weatherFormatter.tempWithUnit(weather.temperature)), Feels like \(weatherFormatter.temp(weather.feelsLike)), High \(weatherFormatter.temp(weather.highTemperature)), Low \(weatherFormatter.temp(weather.lowTemperature))")
     }
 
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+
     private var heroTextContent: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingXXSmall) {
             ScaledHeroTemperature(weather.temperature)
@@ -235,6 +238,13 @@ private struct WeatherScrollContent: View {
                 .font(AppFont.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
+                .fill(Color.black.opacity(0.18))
+                .blur(radius: 6)
+        )
     }
 
     private var heroIllustration: some View {
@@ -268,9 +278,16 @@ private struct WeatherScrollContent: View {
                         .font(.headline)
                         .padding(.top, 2)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Official alert · \(alert.source)")
-                            .font(.footnote)
-                            .foregroundStyle(AppTheme.alertAmber)
+                        HStack(spacing: 4) {
+                            if differentiateWithoutColor {
+                                Text("[ALERT]")
+                                    .font(AppFont.captionSemibold)
+                                    .foregroundStyle(AppTheme.alertAmber)
+                            }
+                            Text("Official alert · \(alert.source)")
+                                .font(.footnote)
+                                .foregroundStyle(AppTheme.alertAmber)
+                        }
                         Text(alert.title)
                             .font(.headline)
                             .foregroundStyle(AppTheme.textPrimary)

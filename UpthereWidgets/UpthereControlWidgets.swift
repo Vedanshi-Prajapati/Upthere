@@ -41,9 +41,9 @@ struct UpthereAlertsControl: ControlWidget {
 // MARK: - Control Intents
 
 struct LaunchUpthereControlIntent: AppIntent {
-    static var title: LocalizedStringResource = "Open UpThere"
-    static var description = IntentDescription("Launches UpThere directly from Control Center.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Open UpThere"
+    static let description = IntentDescription("Launches UpThere directly from Control Center.")
+    static let openAppWhenRun: Bool = true
 
     init() {}
 
@@ -53,8 +53,8 @@ struct LaunchUpthereControlIntent: AppIntent {
 }
 
 struct ToggleSevereAlertsControlIntent: SetValueIntent {
-    static var title: LocalizedStringResource = "Toggle Severe Alerts"
-    static var description = IntentDescription("Turn severe weather alerts on or off from Control Center.")
+    static let title: LocalizedStringResource = "Toggle Severe Alerts"
+    static let description = IntentDescription("Turn severe weather alerts on or off from Control Center.")
 
     @Parameter(title: "Alerts Enabled")
     var value: Bool

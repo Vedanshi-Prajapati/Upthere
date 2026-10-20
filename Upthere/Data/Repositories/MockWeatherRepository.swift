@@ -161,4 +161,38 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
             sunset: "5:51 PM"
         )
     }
+
+    public static func makeWeather(condition: String, symbolName: String, temperature: Double = 24) -> Weather {
+        let base = makeGhaziabadWeather()
+        return Weather(
+            cityName: "Ghaziabad",
+            locationSubtitle: "Default location · Uttar Pradesh, India",
+            temperature: temperature,
+            condition: condition,
+            highTemperature: temperature + 6,
+            lowTemperature: temperature - 4,
+            feelsLike: temperature + 2,
+            weatherSymbolName: symbolName,
+            description: "\(condition) conditions across the area today.",
+            humidity: base.humidity,
+            dewPoint: base.dewPoint,
+            windSpeed: base.windSpeed,
+            windDirection: base.windDirection,
+            precipitationChance: base.precipitationChance,
+            uvIndex: base.uvIndex,
+            uvDescription: base.uvDescription,
+            visibility: base.visibility,
+            visibilityDescription: base.visibilityDescription,
+            pressure: base.pressure,
+            pressureTrend: base.pressureTrend,
+            alert: base.alert,
+            hourlyForecast: base.hourlyForecast,
+            dailyForecast: base.dailyForecast,
+            rainWindow: base.rainWindow,
+            warmingInsight: base.warmingInsight,
+            chanceOfRain: base.chanceOfRain,
+            sunrise: base.sunrise,
+            sunset: base.sunset
+        )
+    }
 }
