@@ -23,7 +23,9 @@ public struct MainTabView: View {
         self.locationService = loc
         self.settingsViewModel = settingsViewModel ?? SettingsViewModel(locationService: loc)
         self.locationsManager = locationsManager ?? homeViewModel.locationsManager
-        self._showPermission = State(initialValue: showPermission ?? (loc.authorizationStatus == .notDetermined))
+        let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        let initialPermission = isTesting ? false : (showPermission ?? (loc.authorizationStatus == .notDetermined))
+        self._showPermission = State(initialValue: initialPermission)
         self._selectedTab = State(initialValue: initialTab)
     }
 
@@ -77,7 +79,8 @@ public struct MainTabView: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .task {
-            if homeViewModel.displayedWeather == nil {
+            let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            if !isTesting && homeViewModel.displayedWeather == nil {
                 await homeViewModel.loadWeather()
             }
         }

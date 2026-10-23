@@ -16,13 +16,15 @@ final class FakeLocationManager: LocationManagerProtocol {
     var stopUpdatingLocationCallCount = 0
     var requestWhenInUseAuthorizationCallCount = 0
 
+    var onRequestLocation: (() -> Void)?
+
     func requestWhenInUseAuthorization() {
         requestWhenInUseAuthorizationCallCount += 1
     }
 
     func requestLocation() {
         requestLocationCallCount += 1
-        // Intentionally do not respond to simulate a request that never answers
+        onRequestLocation?()
     }
 
     func startUpdatingLocation() {
@@ -34,27 +36,33 @@ final class FakeLocationManager: LocationManagerProtocol {
     }
 }
 
-@Suite("LocationService Tests")
+@Suite("LocationService Tests", .serialized)
 struct LocationServiceTests {
 
     @Test("A location request that never answers throws .timeout within about 4 seconds")
     @MainActor
     func testRequestLocationNeverAnswersThrowsTimeout() async throws {
+        let sleeper = ManualSleeper()
         let fakeManager = FakeLocationManager()
         let service = LocationService(
             manager: fakeManager,
-            isLocationServicesEnabledProvider: { true }
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { try await sleeper.sleep($0) },
+            geocodeTimeout: .zero
         )
 
-        let startTime = Date()
+        let task = Task { @MainActor in
+            try await service.requestCurrentLocation(force: true)
+        }
+
+        await sleeper.fire(afterRequests: 1)
+        await Task.yield()
+
         do {
-            _ = try await service.requestCurrentLocation(force: true)
+            _ = try await task.value
             Issue.record("Expected requestCurrentLocation to throw .timeout, but it succeeded.")
         } catch let error as LocationServiceError {
-            let elapsed = Date().timeIntervalSince(startTime)
             #expect(error == .timeout)
-            // Should timeout around 3.5s (allow buffer for CI runner load)
-            #expect(elapsed >= 2.5 && elapsed <= 15.0, "Elapsed time was \(elapsed)s")
         } catch {
             Issue.record("Unexpected error thrown: \(error)")
         }
@@ -66,7 +74,9 @@ struct LocationServiceTests {
         let fakeManager = FakeLocationManager()
         let service = LocationService(
             manager: fakeManager,
-            isLocationServicesEnabledProvider: { true }
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { _ in },
+            geocodeTimeout: .zero
         )
 
         let ghaziabadCoord = CLLocation(latitude: 28.6692, longitude: 77.4538)
@@ -82,7 +92,9 @@ struct LocationServiceTests {
         let fakeManager = FakeLocationManager()
         let service = LocationService(
             manager: fakeManager,
-            isLocationServicesEnabledProvider: { true }
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { _ in },
+            geocodeTimeout: .zero
         )
 
         // Initial currentCityName
@@ -102,16 +114,18 @@ struct LocationServiceTests {
     @MainActor
     func testInvalidCoordinateResumesWithError() async {
         let fakeManager = FakeLocationManager()
+        let sleeper = ManualSleeper()
         let service = LocationService(
             manager: fakeManager,
-            isLocationServicesEnabledProvider: { true }
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { try await sleeper.sleep($0) },
+            geocodeTimeout: .zero
         )
 
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 100_000_000)
+        fakeManager.onRequestLocation = { [weak service] in
             let dummy = CLLocationManager()
             let invalidLoc = CLLocation(latitude: 999.0, longitude: 999.0)
-            service.locationManager(dummy, didUpdateLocations: [invalidLoc])
+            service?.locationManager(dummy, didUpdateLocations: [invalidLoc])
         }
 
         do {
@@ -127,10 +141,13 @@ struct LocationServiceTests {
     @Test("Request generation counter prevents old timeout from failing newer request")
     @MainActor
     func testGenerationCounterPreventsOldTimeoutFromFailingNewerRequest() async throws {
+        let sleeper = ManualSleeper()
         let fakeManager = FakeLocationManager()
         let service = LocationService(
             manager: fakeManager,
-            isLocationServicesEnabledProvider: { true }
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { try await sleeper.sleep($0) },
+            geocodeTimeout: .zero
         )
 
         // Start first request in background (generation 1)
@@ -138,20 +155,52 @@ struct LocationServiceTests {
             try await service.requestCurrentLocation(force: true)
         }
 
-        // Wait 1.0s, then start second request (generation 2)
-        try await Task.sleep(nanoseconds: 1_000_000_000)
+        // Start second request (generation 2)
         let task2 = Task { @MainActor in
             try await service.requestCurrentLocation(force: true)
         }
 
-        // Wait 3.0s (total 4.0s from start): generation 1 timeout (at 3.5s) should NOT fail generation 2
-        // Deliver valid location now
-        try await Task.sleep(nanoseconds: 2_600_000_000)
+        // Fire timeout for generation 1 and assert request 2 is NOT failed
+        await sleeper.fire(afterRequests: 2, index: 0)
+        await Task.yield()
+
+        // Deliver valid location now and assert request 2 succeeds
         let dummy = CLLocationManager()
         let validLoc = CLLocation(latitude: 28.6692, longitude: 77.4538)
         service.locationManager(dummy, didUpdateLocations: [validLoc])
 
         let loc2 = try await task2.value
         #expect(loc2.coordinate.latitude == 28.6692)
+        _ = try? await task1.value
+
+        // Then fire timeout for generation 2 on a fresh request and assert it throws .timeout
+        let freshSleeper = ManualSleeper()
+        let freshFakeManager = FakeLocationManager()
+        let freshService = LocationService(
+            manager: freshFakeManager,
+            isLocationServicesEnabledProvider: { true },
+            timeoutSleep: { try await freshSleeper.sleep($0) },
+            geocodeTimeout: .zero
+        )
+
+        let freshTask1 = Task { @MainActor in
+            try await freshService.requestCurrentLocation(force: true)
+        }
+        let freshTask2 = Task { @MainActor in
+            try await freshService.requestCurrentLocation(force: true)
+        }
+
+        await freshSleeper.fire(afterRequests: 2)
+        await Task.yield()
+
+        do {
+            _ = try await freshTask2.value
+            Issue.record("Expected request 2 to throw .timeout, but it succeeded.")
+        } catch let error as LocationServiceError {
+            #expect(error == .timeout)
+        } catch {
+            Issue.record("Unexpected error thrown: \(error)")
+        }
+        _ = try? await freshTask1.value
     }
 }

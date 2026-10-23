@@ -14,6 +14,10 @@ struct UpthereApp: App {
         container.settingsViewModel.appearanceMode.colorScheme
     }
 
+    private var isTesting: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
     private var initialTab: AppTab {
         if let idx = ProcessInfo.processInfo.arguments.firstIndex(of: "-initialTab"),
            idx + 1 < ProcessInfo.processInfo.arguments.count,
@@ -24,52 +28,57 @@ struct UpthereApp: App {
     }
 
     private var disableSplash: Bool {
-        ProcessInfo.processInfo.arguments.contains("-disableSplash") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")
+        isTesting || ProcessInfo.processInfo.arguments.contains("-disableSplash") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")
     }
 
     private var showPermission: Bool? {
-        (ProcessInfo.processInfo.arguments.contains("-disablePermission") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")) ? false : nil
+        if isTesting { return false }
+        return (ProcessInfo.processInfo.arguments.contains("-disablePermission") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")) ? false : nil
     }
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                MainTabView(
-                    homeViewModel: container.homeViewModel,
-                    settingsViewModel: container.settingsViewModel,
-                    locationService: container.locationService,
-                    locationsManager: container.locationsManager,
-                    initialTab: initialTab,
-                    showPermission: showPermission
-                )
-                    .opacity((showSplash && !disableSplash) ? 0 : 1)
+            if isTesting {
+                Color.clear
+            } else {
+                ZStack {
+                    MainTabView(
+                        homeViewModel: container.homeViewModel,
+                        settingsViewModel: container.settingsViewModel,
+                        locationService: container.locationService,
+                        locationsManager: container.locationsManager,
+                        initialTab: initialTab,
+                        showPermission: showPermission
+                    )
+                        .opacity((showSplash && !disableSplash) ? 0 : 1)
 
-                if showSplash && !disableSplash {
-                    SplashView()
-                        .transition(.opacity)
+                    if showSplash && !disableSplash {
+                        SplashView()
+                            .transition(.opacity)
+                    }
                 }
-            }
-            .environment(\.weatherFormatter, container.weatherFormatter)
-            .environment(container.unitPreferences)
-            .preferredColorScheme(selectedColorScheme)
-            .animation(.easeInOut(duration: 0.5), value: showSplash)
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
-                    showSplash = false
+                .environment(\.weatherFormatter, container.weatherFormatter)
+                .environment(container.unitPreferences)
+                .preferredColorScheme(selectedColorScheme)
+                .animation(.easeInOut(duration: 0.5), value: showSplash)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                        showSplash = false
+                    }
                 }
-            }
-            .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
-                guard let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
-                      let cityName = SpotlightService.shared.resolveCityName(from: identifier) else {
-                    return
-                }
-                if let matched = container.locationsManager.savedLocations.first(where: {
-                    $0.cityName.caseInsensitiveCompare(cityName) == .orderedSame
-                }) {
-                    container.homeViewModel.selectLocation(matched)
-                } else {
-                    let newLoc = SavedLocation(cityName: cityName, regionName: "", condition: "--")
-                    container.homeViewModel.selectLocation(newLoc)
+                .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
+                    guard let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                          let cityName = SpotlightService.shared.resolveCityName(from: identifier) else {
+                        return
+                    }
+                    if let matched = container.locationsManager.savedLocations.first(where: {
+                        $0.cityName.caseInsensitiveCompare(cityName) == .orderedSame
+                    }) {
+                        container.homeViewModel.selectLocation(matched)
+                    } else {
+                        let newLoc = SavedLocation(cityName: cityName, regionName: "", condition: "--")
+                        container.homeViewModel.selectLocation(newLoc)
+                    }
                 }
             }
         }

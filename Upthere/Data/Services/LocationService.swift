@@ -80,6 +80,9 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
 
     private let clManager: any LocationManagerProtocol
     private let isLocationServicesEnabledProvider: (@Sendable () -> Bool)?
+    private let timeoutSleep: @Sendable (Duration) async throws -> Void
+    private let requestTimeout: Duration
+    private let geocodeTimeout: Duration
     private var locationContinuations: [CheckedContinuation<CLLocation, Error>] = []
     private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
     private var requestGeneration: Int = 0
@@ -91,10 +94,16 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
 
     public init(
         manager: any LocationManagerProtocol,
-        isLocationServicesEnabledProvider: (@Sendable () -> Bool)? = nil
+        isLocationServicesEnabledProvider: (@Sendable () -> Bool)? = nil,
+        timeoutSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        requestTimeout: Duration = .seconds(3.5),
+        geocodeTimeout: Duration = .seconds(2.5)
     ) {
         self.clManager = manager
         self.isLocationServicesEnabledProvider = isLocationServicesEnabledProvider
+        self.timeoutSleep = timeoutSleep
+        self.requestTimeout = requestTimeout
+        self.geocodeTimeout = geocodeTimeout
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
         self.isLocationServicesEnabled = true
@@ -172,9 +181,9 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         requestGeneration += 1
         let generation = requestGeneration
 
-        // 3.5-second timeout task tied to this request generation
-        Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 3_500_000_000)
+        // Request timeout task tied to this request generation
+        Task { [weak self, timeoutSleep, requestTimeout] in
+            try? await timeoutSleep(requestTimeout)
             guard let self = self else { return }
             self.handleTimeout(for: generation)
         }
@@ -231,27 +240,32 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
             return (cached.cityName, isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle())
         }
 
-        // Reverse geocode with 2.5-second timeout
-        let geocodedCity: String? = await withTaskGroup(of: String?.self) { group in
-            group.addTask {
-                do {
-                    guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
-                    let mapItems = try await request.mapItems
-                    if let first = mapItems.first {
-                        return first.addressRepresentations?.cityName ?? first.name
+        // Reverse geocode with timeout
+        let geocodedCity: String?
+        if geocodeTimeout <= .zero {
+            geocodedCity = nil
+        } else {
+            geocodedCity = await withTaskGroup(of: String?.self) { group in
+                group.addTask {
+                    do {
+                        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+                        let mapItems = try await request.mapItems
+                        if let first = mapItems.first {
+                            return first.addressRepresentations?.cityName ?? first.name
+                        }
+                    } catch {
+                        // Apple's reverse geocoding failed or timed out
                     }
-                } catch {
-                    // Apple's reverse geocoding failed or timed out
+                    return nil
                 }
-                return nil
+                group.addTask { [timeoutSleep, geocodeTimeout] in
+                    try? await timeoutSleep(geocodeTimeout)
+                    return nil
+                }
+                let first = await group.next() ?? nil
+                group.cancelAll()
+                return first
             }
-            group.addTask {
-                try? await Task.sleep(nanoseconds: 2_500_000_000)
-                return nil
-            }
-            let first = await group.next() ?? nil
-            group.cancelAll()
-            return first
         }
 
         let resolvedCity: String

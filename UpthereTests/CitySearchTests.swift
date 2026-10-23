@@ -121,11 +121,18 @@ struct CitySearchTests {
     @MainActor
     func staleSearchResultsDropped() async throws {
         let fake = FakeCitySearchService()
+        final class SearchTracker: @unchecked Sendable {
+            var slowSearchStarted = false
+            var slowSearchFinished = false
+        }
+        let tracker = SearchTracker()
 
         fake.completionsHandler = { query in
             if query == "SlowCity" {
-                // Simulate slow network search
-                try await Task.sleep(nanoseconds: 200_000_000)
+                tracker.slowSearchStarted = true
+                // Simulate slow network search (shrunk from 200ms)
+                try await Task.sleep(nanoseconds: 30_000_000)
+                tracker.slowSearchFinished = true
                 return [CitySearchResult(id: "slow", title: "SlowCity", subtitle: "SlowRegion")]
             } else if query == "FastCity" {
                 return [CitySearchResult(id: "fast", title: "FastCity", subtitle: "FastRegion")]
@@ -133,26 +140,26 @@ struct CitySearchTests {
             return []
         }
 
-        // 20ms debounce for rapid testing
-        let viewModel = CitySearchViewModel(searchService: fake, debounceNanoseconds: 20_000_000)
+        // 10ms debounce for rapid testing
+        let viewModel = CitySearchViewModel(searchService: fake, debounceNanoseconds: 10_000_000)
 
         // Start slow search
         viewModel.updateSearchText("SlowCity")
 
         // Wait just enough for debounce to fire and SlowCity search to begin executing
-        try await Task.sleep(nanoseconds: 40_000_000)
+        let startDeadline = Date().addingTimeInterval(2.0)
+        while !tracker.slowSearchStarted && Date() < startDeadline {
+            try await Task.sleep(nanoseconds: 2_000_000)
+        }
 
         // Before slow search completes, start FastCity search
         viewModel.updateSearchText("FastCity")
 
-        // Wait for FastCity search and any SlowCity background continuation to finish
+        // Wait for FastCity search and slow search background continuation to finish
         let deadline = Date().addingTimeInterval(5.0)
-        while viewModel.results.isEmpty && Date() < deadline {
-            try await Task.sleep(nanoseconds: 20_000_000)
+        while (viewModel.results.isEmpty || !tracker.slowSearchFinished) && Date() < deadline {
+            try await Task.sleep(nanoseconds: 2_000_000)
         }
-
-        // Wait an additional buffer to allow the slow search to complete its delayed sleep
-        try await Task.sleep(nanoseconds: 250_000_000)
 
         // SlowCity results must have been dropped, only FastCity results present
         #expect(viewModel.results.count == 1)

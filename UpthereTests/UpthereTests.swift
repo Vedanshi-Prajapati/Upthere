@@ -389,7 +389,10 @@ struct UpthereTests {
         vm.selectLocation(cityA)
         vm.selectLocation(cityB)
 
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        let deadline = Date().addingTimeInterval(1.0)
+        while vm.selectedLocation?.cityName != "Paris" && Date() < deadline {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
 
         #expect(vm.selectedLocation?.cityName == "Paris")
     }
@@ -659,7 +662,7 @@ struct UpthereTests {
         let vm = HomeViewModel(getWeatherUseCase: useCase, locationsManager: locManager)
 
         // Set slow response on repository
-        repo.delayNanoseconds = 300_000_000 // 300ms
+        repo.delayNanoseconds = 30_000_000 // 30ms
 
         let cityA = SavedLocation(cityName: "CityA", regionName: "RegionA", condition: "Cloudy", isCurrentLocation: false, latitude: 10, longitude: 20)
         let cityB = SavedLocation(cityName: "CityB", regionName: "RegionB", condition: "Sunny", isCurrentLocation: false, latitude: 30, longitude: 40)
@@ -668,14 +671,18 @@ struct UpthereTests {
 
         // Start request A
         vm.selectLocation(cityA)
-        try? await Task.sleep(nanoseconds: 30_000_000)
+        try? await Task.sleep(nanoseconds: 5_000_000)
 
         // Immediately start request B with no delay
         repo.delayNanoseconds = 0
         vm.selectLocation(cityB)
 
-        // Wait for everything to settle
-        try? await Task.sleep(nanoseconds: 400_000_000)
+        // Wait for both fetches to complete instead of an arbitrary 400ms sleep
+        let deadline = Date().addingTimeInterval(1.0)
+        while repo.fetchCallCount < 2 && Date() < deadline {
+            try? await Task.sleep(nanoseconds: 2_000_000)
+        }
+        await Task.yield()
 
         #expect(vm.displayedWeather?.cityName == "CityB", "Stale response from request A must be dropped and CityB preserved")
     }

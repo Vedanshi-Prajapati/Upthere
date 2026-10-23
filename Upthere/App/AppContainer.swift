@@ -30,7 +30,8 @@ public final class AppContainer {
         self.locationsManager = locManager
 
         let repository: any WeatherRepository
-        if ProcessInfo.processInfo.arguments.contains("-useMockRepository") {
+        let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if isTesting || ProcessInfo.processInfo.arguments.contains("-useMockRepository") {
             if let condIdx = ProcessInfo.processInfo.arguments.firstIndex(of: "-mockCondition"),
                condIdx + 1 < ProcessInfo.processInfo.arguments.count {
                 let condName = ProcessInfo.processInfo.arguments[condIdx + 1]
