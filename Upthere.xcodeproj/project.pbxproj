@@ -13,6 +13,8 @@
 		ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */; };
 		ECB9CC4830729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */; };
 		ECB9CC4930729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */; };
+		ECB9CC6130729A6200BD49AF /* WeatherDomainMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC6030729A6200BD49AF /* WeatherDomainMapping.swift */; };
+		ECB9CC6230729A6200BD49AF /* WeatherDomainMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB9CC6030729A6200BD49AF /* WeatherDomainMapping.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +42,7 @@
 		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotStore.swift; sourceTree = "<group>"; };
 		ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainStartActivityAttributes.swift; sourceTree = "<group>"; };
+		ECB9CC6030729A6200BD49AF /* WeatherDomainMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDomainMapping.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -118,6 +121,7 @@
 				ECB9CC4030729A6200BD49AF /* AppGroup.swift */,
 				ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */,
 				ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */,
+				ECB9CC6030729A6200BD49AF /* WeatherDomainMapping.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -281,6 +285,7 @@
 				ECB9CC4130729A6200BD49AF /* AppGroup.swift in Sources */,
 				ECB9CC4530729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
 				ECB9CC4830729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */,
+				ECB9CC6130729A6200BD49AF /* WeatherDomainMapping.swift in Sources */,
 			);
 		};
 		ECB9CC2230729A6200BD49AF /* Sources */ = {
@@ -294,6 +299,7 @@
 				ECB9CC4230729A6200BD49AF /* AppGroup.swift in Sources */,
 				ECB9CC4630729A6200BD49AF /* WidgetSnapshotStore.swift in Sources */,
 				ECB9CC4930729A6200BD49AF /* RainStartActivityAttributes.swift in Sources */,
+				ECB9CC6230729A6200BD49AF /* WeatherDomainMapping.swift in Sources */,
 			);
 		};
 		ECB9CC5230729A6200BD49AF /* Sources */ = {

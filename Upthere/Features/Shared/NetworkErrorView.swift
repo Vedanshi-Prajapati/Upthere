@@ -31,6 +31,7 @@ public struct NetworkErrorView: View {
                 Text("Weather unavailable")
                     .font(.title.weight(.bold))
                     .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("We couldn't retrieve the latest forecast.\nCheck your connection and try again.")
                     .font(.subheadline)

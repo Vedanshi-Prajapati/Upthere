@@ -1,35 +1,12 @@
 import WidgetKit
 import SwiftUI
 
+import CoreLocation
+
 // MARK: - Models
 
 typealias WidgetHourlyItem = WidgetHourlySnapshot
 typealias WidgetDailyItem = WidgetDailySnapshot
-
-// MARK: - Timeline Provider
-
-struct WeatherWidgetTimelineProvider: TimelineProvider {
-    func placeholder(in context: Context) -> WeatherWidgetEntry {
-        .preview
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (WeatherWidgetEntry) -> Void) {
-        if context.isPreview {
-            completion(.preview)
-        } else {
-            let snapshot = WidgetSnapshotStore.shared.load()
-            completion(WeatherWidgetEntry(from: snapshot))
-        }
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherWidgetEntry>) -> Void) {
-        let snapshot = WidgetSnapshotStore.shared.load()
-        let entry = WeatherWidgetEntry(from: snapshot)
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
-    }
-}
 
 // MARK: - Main Widget
 
@@ -128,7 +105,7 @@ struct UpthereWidgetEntryView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("UpThere")
                             .font(.headline)
-                        Text("Open UpThere to load weather")
+                        Text("Open UpThere to set your location")
                             .font(.caption2)
                             .lineLimit(2)
                     }
@@ -172,7 +149,7 @@ struct UpthereWidgetEntryView: View {
 
     private var inlineAccessoryView: some View {
         if entry.isEmpty {
-            return Text("Open UpThere to load weather")
+            return Text("Open UpThere to set your location")
         } else if entry.isStale {
             let updateSuffix = entry.updatedAtText.map { " · \($0)" } ?? ""
             return Text("\(entry.cityName): Open UpThere\(updateSuffix)")
@@ -193,7 +170,7 @@ struct UpthereWidgetEntryView: View {
                     Text("UpThere")
                         .font(.headline)
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text("Open UpThere to load weather")
+                    Text("Open UpThere to set your location")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
@@ -274,6 +251,16 @@ struct UpthereWidgetEntryView: View {
                             .foregroundStyle(AppTheme.rainBlueLight)
                         }
                     }
+
+                    // Apple Weather Attribution
+                    HStack(spacing: 3) {
+                        Spacer()
+                        Image(systemName: "apple.logo")
+                            .font(.system(size: 8))
+                        Text("Weather")
+                            .font(.system(size: 8, weight: .medium))
+                    }
+                    .foregroundStyle(AppTheme.textTertiary)
                 }
                 .padding(4)
             }
@@ -292,7 +279,7 @@ struct UpthereWidgetEntryView: View {
                     Text("UpThere Weather")
                         .font(.headline)
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text("Open UpThere to load weather")
+                    Text("Open UpThere to set your location")
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -366,6 +353,20 @@ struct UpthereWidgetEntryView: View {
                                 .frame(maxWidth: .infinity)
                             }
                         }
+
+                        // Apple Weather Attribution
+                        HStack {
+                            Spacer()
+                            Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "apple.logo")
+                                        .font(.caption2)
+                                    Text("Weather")
+                                        .font(.caption2.weight(.medium))
+                                }
+                                .foregroundStyle(AppTheme.textTertiary)
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -387,7 +388,7 @@ struct UpthereWidgetEntryView: View {
                     Text("UpThere Weather")
                         .font(.title2.bold())
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text("Open UpThere to load weather")
+                    Text("Open UpThere to set your location")
                         .font(.headline)
                         .foregroundStyle(AppTheme.textSecondary)
                     Spacer()
@@ -500,6 +501,22 @@ struct UpthereWidgetEntryView: View {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color.white.opacity(0.08))
                     )
+
+                    // Apple Weather Attribution
+                    HStack {
+                        Spacer()
+                        Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "apple.logo")
+                                    .font(.caption2)
+                                Text("Weather")
+                                    .font(.caption2.weight(.medium))
+                                Text("• Data Sources")
+                                    .font(.caption2)
+                            }
+                            .foregroundStyle(AppTheme.textTertiary)
+                        }
+                    }
                 }
                 .padding(4)
             }

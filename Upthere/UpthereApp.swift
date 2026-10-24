@@ -3,6 +3,7 @@ import CoreSpotlight
 
 @main
 struct UpthereApp: App {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var container = AppContainer()
     @State private var showSplash = true
 
@@ -60,7 +61,7 @@ struct UpthereApp: App {
                 .environment(\.weatherFormatter, container.weatherFormatter)
                 .environment(container.unitPreferences)
                 .preferredColorScheme(selectedColorScheme)
-                .animation(.easeInOut(duration: 0.5), value: showSplash)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: showSplash)
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                         showSplash = false

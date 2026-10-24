@@ -142,4 +142,51 @@ nonisolated final class UpthereUITests: XCTestCase {
         XCTAssertGreaterThan(targetElement.frame.width, 0, "Hero text width should be greater than zero")
         XCTAssertGreaterThan(targetElement.frame.height, 0, "Hero text height should be greater than zero")
     }
+
+    // MARK: - (5) UI performance tests using XCTCPUMetric for 10 seconds of idle Home in clear and rain states
+    @MainActor
+    func testIdleHomeClearCPUPerformance() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-mockCondition", "clear",
+            "-disableSplash",
+            "-disablePermission",
+            "-initialTab", "home"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        let metric = XCTCPUMetric(application: app)
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        measure(metrics: [metric], options: options) {
+            Thread.sleep(forTimeInterval: 10.0)
+        }
+    }
+
+    @MainActor
+    func testIdleHomeRainCPUPerformance() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-mockCondition", "rain",
+            "-disableSplash",
+            "-disablePermission",
+            "-initialTab", "home"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        let metric = XCTCPUMetric(application: app)
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        measure(metrics: [metric], options: options) {
+            Thread.sleep(forTimeInterval: 10.0)
+        }
+    }
 }

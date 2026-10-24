@@ -41,7 +41,7 @@ struct PartlyCloudyDayIllustration: View {
                         )
                     )
                     .frame(width: size * 0.44, height: size * 0.44)
-                    .shadow(color: Color(red: 1.0, green: 0.6, blue: 0.15).opacity(0.6), radius: size * 0.08)
+                    .shadow(color: Color(red: 1.0, green: 0.6, blue: 0.15).opacity(0.6), radius: size * 0.03)
             }
             .scaleEffect(1.0 + sunPulse)
             .offset(x: size * 0.18, y: -size * 0.16)
@@ -77,7 +77,7 @@ struct PartlyCloudyDayIllustration: View {
                         )
                     )
                     .frame(width: size * 0.82, height: size * 0.52)
-                    .shadow(color: Color.black.opacity(0.20), radius: size * 0.06, x: 0, y: size * 0.04)
+                    .shadow(color: Color.black.opacity(0.20), radius: size * 0.02, x: 0, y: size * 0.02)
 
                 VolumetricCloudShape()
                     .stroke(
@@ -130,7 +130,7 @@ struct PartlyCloudyNightIllustration: View {
                     )
                 )
                 .frame(width: size * 0.48, height: size * 0.48)
-                .shadow(color: Color(red: 0.65, green: 0.78, blue: 1.0).opacity(0.55), radius: size * 0.06)
+                .shadow(color: Color(red: 0.65, green: 0.78, blue: 1.0).opacity(0.55), radius: size * 0.02)
                 .offset(x: size * 0.16, y: -size * 0.16 + moonFloat)
 
             // Front nocturnal cloud
@@ -148,7 +148,7 @@ struct PartlyCloudyNightIllustration: View {
                         )
                     )
                     .frame(width: size * 0.82, height: size * 0.52)
-                    .shadow(color: Color.black.opacity(0.35), radius: size * 0.07, x: 0, y: size * 0.04)
+                    .shadow(color: Color.black.opacity(0.35), radius: size * 0.02, x: 0, y: size * 0.02)
 
                 VolumetricCloudShape()
                     .stroke(
@@ -211,7 +211,7 @@ struct CloudyIllustration: View {
                         )
                     )
                     .frame(width: size * 0.86, height: size * 0.54)
-                    .shadow(color: Color.black.opacity(0.24), radius: size * 0.06, x: 0, y: size * 0.04)
+                    .shadow(color: Color.black.opacity(0.24), radius: size * 0.02, x: 0, y: size * 0.04)
 
                 VolumetricCloudShape()
                     .stroke(

@@ -5,6 +5,8 @@ import SwiftUI
 public struct HomeView: View {
     @State private var viewModel: HomeViewModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isHomeTabSelected) private var isHomeTabSelected
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hasAppeared = false
     public var onNavigateToInsights: (() -> Void)?
 
@@ -13,7 +15,38 @@ public struct HomeView: View {
         self.onNavigateToInsights = onNavigateToInsights
     }
 
+    private var animationManager = WeatherAnimationManager.shared
+
+    private var isAnimationPaused: Bool {
+        animationManager.shouldPause(
+            scenePhase: scenePhase,
+            isHomeTab: isHomeTabSelected,
+            reduceMotion: reduceMotion
+        )
+    }
+
     public var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: isAnimationPaused)) { timeline in
+            let clockTime = isAnimationPaused ? 0.0 : timeline.date.timeIntervalSinceReferenceDate
+            homeContent
+                .environment(\.weatherClockTime, clockTime)
+                .environment(\.weatherParticleScale, animationManager.particleScale)
+                .environment(\.isWeatherAnimationPaused, isAnimationPaused)
+        }
+        .task {
+            if !hasAppeared {
+                hasAppeared = true
+                await viewModel.loadWeather()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                handleAppBecameActive()
+            }
+        }
+    }
+
+    private var homeContent: some View {
         ZStack {
             WeatherBackgroundView(
                 condition: viewModel.displayedWeather?.condition,
@@ -41,17 +74,6 @@ public struct HomeView: View {
                 case .loaded:
                     LoadingSkeletonView()
                 }
-            }
-        }
-        .task {
-            if !hasAppeared {
-                hasAppeared = true
-                await viewModel.loadWeather()
-            }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                handleAppBecameActive()
             }
         }
     }
@@ -264,7 +286,6 @@ private struct WeatherScrollContent: View {
             size: 76,
             animated: true
         )
-        .shadow(color: Color.black.opacity(0.10), radius: 8, x: 0, y: 4)
     }
 
     // MARK: Description

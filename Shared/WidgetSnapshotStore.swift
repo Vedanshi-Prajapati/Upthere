@@ -7,13 +7,15 @@ public struct WidgetHourlySnapshot: Codable, Sendable, Identifiable, Equatable {
     public let temp: Int
     public let symbol: String
     public let rainProb: Int
+    public let date: Date?
 
-    public init(id: String, time: String, temp: Int, symbol: String, rainProb: Int) {
+    public init(id: String, time: String, temp: Int, symbol: String, rainProb: Int, date: Date? = nil) {
         self.id = id
         self.time = time
         self.temp = temp
         self.symbol = symbol
         self.rainProb = rainProb
+        self.date = date
     }
 }
 
@@ -37,6 +39,8 @@ public struct WidgetDailySnapshot: Codable, Sendable, Identifiable, Equatable {
 
 public struct WidgetSnapshot: Codable, Sendable, Equatable {
     public let city: String
+    public let latitude: Double?
+    public let longitude: Double?
     public let temp: Int
     public let feelsLike: Int
     public let high: Int
@@ -51,6 +55,8 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
 
     public init(
         city: String,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
         temp: Int,
         feelsLike: Int,
         high: Int,
@@ -64,6 +70,8 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
         updatedAt: Date = Date()
     ) {
         self.city = city
+        self.latitude = latitude
+        self.longitude = longitude
         self.temp = temp
         self.feelsLike = feelsLike
         self.high = high
@@ -186,7 +194,27 @@ public struct WeatherWidgetEntry: TimelineEntry, Sendable {
         self.updatedAtText = updatedAtText
     }
 
-    public init(from snapshot: WidgetSnapshot?, date: Date = Date()) {
+    public static var empty: WeatherWidgetEntry {
+        WeatherWidgetEntry(
+            date: Date(),
+            cityName: "UpThere",
+            condition: "Open UpThere to set your location",
+            temperature: 0,
+            feelsLike: 0,
+            high: 0,
+            low: 0,
+            rainChance: 0,
+            symbolName: "cloud.fill",
+            rainInsight: "Open UpThere to set your location",
+            hourly: [],
+            daily: [],
+            isStale: true,
+            isEmpty: true,
+            updatedAtText: nil
+        )
+    }
+
+    public init(from snapshot: WidgetSnapshot?, date: Date = Date(), isStale: Bool? = nil) {
         self.date = date
         guard let snapshot else {
             self.cityName = "UpThere"
@@ -206,7 +234,7 @@ public struct WeatherWidgetEntry: TimelineEntry, Sendable {
             return
         }
 
-        let isStale = snapshot.isStale(asOf: date)
+        let computedStale = isStale ?? snapshot.isStale(asOf: date)
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US")
         formatter.dateFormat = "h:mm a"
@@ -214,19 +242,19 @@ public struct WeatherWidgetEntry: TimelineEntry, Sendable {
         let staleText = "Updated \(formattedTime)"
 
         self.cityName = snapshot.city
-        self.condition = isStale ? "Open UpThere to load weather" : snapshot.condition
+        self.condition = computedStale ? "Open UpThere to load weather" : snapshot.condition
         self.temperature = snapshot.temp
         self.feelsLike = snapshot.feelsLike
         self.high = snapshot.high
         self.low = snapshot.low
         self.rainChance = snapshot.rainChance
         self.symbolName = snapshot.symbolName
-        self.rainInsight = isStale ? staleText : snapshot.rainInsight
+        self.rainInsight = computedStale ? staleText : snapshot.rainInsight
         self.hourly = snapshot.hourly
         self.daily = snapshot.daily
-        self.isStale = isStale
+        self.isStale = computedStale
         self.isEmpty = false
-        self.updatedAtText = isStale ? staleText : nil
+        self.updatedAtText = computedStale ? staleText : nil
     }
 
     public static var preview: WeatherWidgetEntry {

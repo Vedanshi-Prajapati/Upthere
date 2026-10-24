@@ -59,7 +59,7 @@ struct RainyIllustration: View {
                         )
                     )
                     .frame(width: size * 0.84, height: size * 0.52)
-                    .shadow(color: Color(red: 0.1, green: 0.2, blue: 0.35).opacity(0.38), radius: size * 0.06, x: 0, y: size * 0.04)
+                    .shadow(color: Color(red: 0.1, green: 0.2, blue: 0.35).opacity(0.38), radius: size * 0.02, x: 0, y: size * 0.04)
 
                 VolumetricCloudShape()
                     .stroke(
@@ -137,7 +137,7 @@ struct ThunderstormIllustration: View {
                         )
                     )
                     .frame(width: size * 0.28, height: size * 0.44)
-                    .shadow(color: Color(red: 1.0, green: 0.85, blue: 0.2), radius: size * 0.05)
+                    .shadow(color: Color(red: 1.0, green: 0.85, blue: 0.2), radius: size * 0.02)
             }
             .offset(x: size * 0.06, y: size * 0.22)
             .scaleEffect(0.95 + flashPulse * 0.10)
@@ -166,7 +166,7 @@ struct ThunderstormIllustration: View {
                         )
                     )
                     .frame(width: size * 0.86, height: size * 0.54)
-                    .shadow(color: Color.black.opacity(0.45), radius: size * 0.08, x: 0, y: size * 0.04)
+                    .shadow(color: Color.black.opacity(0.45), radius: size * 0.025, x: 0, y: size * 0.04)
 
                 VolumetricCloudShape()
                     .stroke(
@@ -205,14 +205,14 @@ struct SnowyIllustration: View {
                 SnowflakeShape()
                     .fill(Color.white)
                     .frame(width: size * 0.16, height: size * 0.16)
-                    .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.8), radius: size * 0.03)
+                    .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.8), radius: size * 0.02)
                     .rotationEffect(.degrees(rot))
                     .offset(x: -size * 0.22 + sway, y: size * 0.24)
 
                 SnowflakeShape()
                     .fill(Color(red: 0.88, green: 0.95, blue: 1.0))
                     .frame(width: size * 0.18, height: size * 0.18)
-                    .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.8), radius: size * 0.03)
+                    .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.8), radius: size * 0.02)
                     .rotationEffect(.degrees(-rot * 0.8))
                     .offset(x: 0 - sway * 0.8, y: size * 0.28)
 
@@ -238,7 +238,7 @@ struct SnowyIllustration: View {
                         )
                     )
                     .frame(width: size * 0.84, height: size * 0.52)
-                    .shadow(color: Color(red: 0.4, green: 0.6, blue: 0.8).opacity(0.25), radius: size * 0.06, x: 0, y: size * 0.04)
+                    .shadow(color: Color(red: 0.4, green: 0.6, blue: 0.8).opacity(0.25), radius: size * 0.02, x: 0, y: size * 0.04)
 
                 VolumetricCloudShape()
                     .stroke(

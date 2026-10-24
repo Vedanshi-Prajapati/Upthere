@@ -48,7 +48,7 @@ struct ClearDayIllustration: View {
                         )
                     )
                     .frame(width: size * 0.54, height: size * 0.54)
-                    .shadow(color: Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.65), radius: size * 0.10, x: 0, y: size * 0.04)
+                    .shadow(color: Color(red: 1.0, green: 0.6, blue: 0.1).opacity(0.65), radius: size * 0.03, x: 0, y: size * 0.04)
 
                 // 3D Glass specular gloss arc
                 Circle()
@@ -112,7 +112,7 @@ struct ClearNightIllustration: View {
                     )
                 )
                 .frame(width: size * 0.22, height: size * 0.22)
-                .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.85), radius: size * 0.05)
+                .shadow(color: Color(red: 0.7, green: 0.85, blue: 1.0).opacity(0.85), radius: size * 0.02)
                 .position(x: size * 0.82, y: size * 0.24)
                 .scaleEffect(0.65 + s1Pulse * 0.5)
                 .opacity(0.40 + s1Pulse * 0.60)
@@ -121,7 +121,7 @@ struct ClearNightIllustration: View {
             SparkleStarShape()
                 .fill(Color.white)
                 .frame(width: size * 0.15, height: size * 0.15)
-                .shadow(color: Color.white.opacity(0.75), radius: size * 0.035)
+                .shadow(color: Color.white.opacity(0.75), radius: size * 0.015)
                 .position(x: size * 0.90, y: size * 0.56)
                 .scaleEffect(0.60 + s2Pulse * 0.5)
                 .opacity(0.35 + s2Pulse * 0.65)
@@ -149,7 +149,7 @@ struct ClearNightIllustration: View {
                         )
                     )
                     .frame(width: size * 0.64, height: size * 0.64)
-                    .shadow(color: Color(red: 0.65, green: 0.80, blue: 1.0).opacity(0.55), radius: size * 0.09, x: -size * 0.01, y: size * 0.02)
+                    .shadow(color: Color(red: 0.65, green: 0.80, blue: 1.0).opacity(0.55), radius: size * 0.03, x: -size * 0.01, y: size * 0.02)
 
                 // Outer crescent specular edge
                 CrescentMoonShape()

@@ -24,6 +24,7 @@ public struct PermissionDeniedView: View {
                 Text("Location unavailable")
                     .font(.title.weight(.bold))
                     .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("You can still search for a location manually,\nor turn on access in Settings › Privacy ›\nLocation Services.")
                     .font(.subheadline)

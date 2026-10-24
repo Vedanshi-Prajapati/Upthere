@@ -29,11 +29,13 @@ public struct MainTabView: View {
         self._selectedTab = State(initialValue: initialTab)
     }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     public var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Home", systemImage: "house", value: .home) {
                 HomeView(viewModel: homeViewModel, onNavigateToInsights: {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                         selectedTab = .insights
                     }
                 })
@@ -58,7 +60,7 @@ public struct MainTabView: View {
                     locationService: locationService,
                     onSelectLocation: { location in
                         homeViewModel.selectLocation(location)
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
                             selectedTab = .home
                         }
                     }
@@ -76,6 +78,7 @@ public struct MainTabView: View {
                 .dynamicTypeSize(.xSmall ... .accessibility5)
             }
         }
+        .environment(\.isHomeTabSelected, selectedTab == .home)
         .tabBarMinimizeBehavior(.onScrollDown)
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .task {

@@ -86,19 +86,15 @@ public struct WeatherIllustrationView: View {
         self.animated = animated
     }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.weatherClockTime) private var clockTime
+    @Environment(\.isWeatherAnimationPaused) private var isPaused
+
     public var body: some View {
-        Group {
-            if animated {
-                TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
-                    illustrationContent(time: context.date.timeIntervalSinceReferenceDate)
-                }
-            } else {
-                illustrationContent(time: 0)
-            }
-        }
-        .frame(width: size, height: size)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabelText)
+        let t = (animated && !reduceMotion && !isPaused) ? clockTime : 0.0
+        illustrationContent(time: t)
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 
     @ViewBuilder

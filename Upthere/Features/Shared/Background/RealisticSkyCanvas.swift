@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 // MARK: - 1. Realistic Sky Canvas (Natural color temperature & atmospheric perspective)
 
@@ -6,25 +7,23 @@ struct RealisticSkyCanvas: View {
     let type: WeatherVisualType
     var reduceMotion: Bool = false
 
+    @Environment(\.weatherClockTime) private var clockTime
+    @Environment(\.isWeatherAnimationPaused) private var isPaused
+
     var body: some View {
-        Group {
-            if reduceMotion {
-                // Static sky without TimelineView animation when reduce motion is enabled
-                skyBody(lightShift: 0.0)
-            } else {
-                TimelineView(.animation(minimumInterval: 1.0 / 15.0)) { timeline in
-                    let t = timeline.date.timeIntervalSinceReferenceDate
-                    let lightShift = 0.03 * sin(t * (2.0 * .pi / 24.0))
-                    skyBody(lightShift: lightShift)
-                }
-            }
-        }
-        .animation(.easeInOut(duration: 1.4), value: type)
-        .allowsHitTesting(false)
+        let lightShift: Double = (reduceMotion || isPaused) ? 0.0 : 0.03 * sin(clockTime * (2.0 * .pi / 24.0))
+
+        skyBody(lightShift: lightShift)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 1.4), value: type)
+            .allowsHitTesting(false)
     }
 
     private func skyBody(lightShift: Double) -> some View {
-        GeometryReader { proxy in
+        let signpostID = WeatherSignpost.signposter.makeSignpostID()
+        let state = WeatherSignpost.signposter.beginInterval("RealisticSkyCanvasDraw", id: signpostID)
+        defer { WeatherSignpost.signposter.endInterval("RealisticSkyCanvasDraw", state) }
+
+        return GeometryReader { proxy in
             let w = proxy.size.width
             let h = proxy.size.height
 

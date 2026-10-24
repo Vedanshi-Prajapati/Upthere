@@ -4,6 +4,7 @@ import SwiftUI
 /// Shows a list of options with a checkmark on the currently selected one.
 public struct UnitPickerView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let title: String
     let options: [String]
@@ -38,7 +39,7 @@ public struct UnitPickerView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(options.enumerated()), id: \.element) { index, option in
                             Button {
-                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                withAnimation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.8)) {
                                     selected = option
                                     onSelect(option)
                                 }

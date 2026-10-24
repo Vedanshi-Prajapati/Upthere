@@ -58,13 +58,15 @@ public struct WeatherBackgroundView: View {
         self.type = WeatherVisualType.from(condition: condition, symbolName: symbolName)
     }
 
+    @Environment(\.isWeatherAnimationPaused) private var isPaused
+
     public var body: some View {
         ZStack {
             // Layer 1: Photorealistic sky canvas with natural atmospheric gradient & subtle lighting
             RealisticSkyCanvas(type: type, reduceMotion: reduceMotion)
 
-            // Layer 2: Subtle atmospheric motion layer (stopped if reduceMotion is active)
-            if !reduceMotion {
+            // Layer 2: Subtle atmospheric motion layer (stopped if reduceMotion is active or paused)
+            if !reduceMotion && !isPaused {
                 switch type {
                 case .sunny:
                     SunnyAtmosphere()
@@ -85,32 +87,49 @@ public struct WeatherBackgroundView: View {
                 }
             }
 
+            // Static background layers (Layers 3, 4, 5, 6) wrapped in .drawingGroup() to avoid re-blurring
+            StaticScrimLayer(
+                type: type,
+                colorScheme: colorScheme,
+                colorSchemeContrast: colorSchemeContrast
+            )
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Static Scrim Layer
+private struct StaticScrimLayer: View {
+    let type: WeatherVisualType
+    let colorScheme: ColorScheme
+    let colorSchemeContrast: ColorSchemeContrast
+
+    var body: some View {
+        ZStack {
             // Layer 3: Extra contrast scrim for bright daytime skies (Snow, Fog, Clear Day)
-            // Ensures text tokens achieve >= 4.5:1 body / 3:1 large contrast on every sky
             if type == .snowy || type == .cloudy {
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.55),  // Top — header & hero text protection on bright snow/fog
-                        Color.black.opacity(0.44),  // Upper-mid
-                        Color.black.opacity(0.35),  // Centre
-                        Color.black.opacity(0.50)   // Bottom — card & footer protection
+                        Color.black.opacity(0.55),
+                        Color.black.opacity(0.44),
+                        Color.black.opacity(0.35),
+                        Color.black.opacity(0.50)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .allowsHitTesting(false)
             } else if type == .sunny || type == .partlyCloudy || type == .defaultTheme {
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.44),  // Top — header protection
-                        Color.black.opacity(0.28),  // Upper-mid
-                        Color.black.opacity(0.18),  // Centre
-                        Color.black.opacity(0.40)   // Bottom — card / footer protection
+                        Color.black.opacity(0.44),
+                        Color.black.opacity(0.28),
+                        Color.black.opacity(0.18),
+                        Color.black.opacity(0.40)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .allowsHitTesting(false)
             } else if type == .rainy {
                 LinearGradient(
                     colors: [
@@ -122,16 +141,14 @@ public struct WeatherBackgroundView: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .allowsHitTesting(false)
             }
 
             // Layer 4: Dark-mode tint
             if colorScheme == .dark {
                 Color.black.opacity(0.32)
-                    .allowsHitTesting(false)
             }
 
-            // Layer 5: Strengthened contrast veil to guarantee ≥4.5:1 secondary text contrast on every sky
+            // Layer 5: Strengthened contrast veil
             LinearGradient(
                 colors: [
                     Color.black.opacity(colorScheme == .dark ? 0.28 : 0.20),
@@ -141,14 +158,13 @@ public struct WeatherBackgroundView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .allowsHitTesting(false)
 
             // Layer 6: Increased contrast boost for system accessibility settings
             if colorSchemeContrast == .increased {
                 Color.black.opacity(0.22)
-                    .allowsHitTesting(false)
             }
         }
-        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .drawingGroup()
     }
 }

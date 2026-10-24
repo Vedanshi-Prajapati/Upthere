@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 // MARK: - Seeded Pseudo-Random Helper
 // Deterministic hash for procedural generation — no randomness at runtime, fully reproducible.
@@ -86,79 +87,85 @@ func drawCloudCluster(
 struct RealisticCloudAtmosphere: View {
     let isOvercast: Bool
 
+    @Environment(\.weatherClockTime) private var clockTime
+    @Environment(\.weatherParticleScale) private var particleScale
+    @Environment(\.isWeatherAnimationPaused) private var isPaused
+
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
+        Canvas { context, size in
+            let signpostID = WeatherSignpost.signposter.makeSignpostID()
+            let state = WeatherSignpost.signposter.beginInterval("RealisticCloudAtmosphereDraw", id: signpostID)
+            defer { WeatherSignpost.signposter.endInterval("RealisticCloudAtmosphereDraw", state) }
 
-            Canvas { context, size in
-                let cloudCount = isOvercast ? 6 : 4
-                let baseSpeed: Double = isOvercast ? 1.8 : 1.2
+            let t = isPaused ? 0.0 : clockTime
+            let baseCount = isOvercast ? 4 : 3
+            let cloudCount = max(2, Int(Double(baseCount) * particleScale))
+            let baseSpeed: Double = isOvercast ? 1.8 : 1.2
 
-                // Draw clouds back-to-front for natural layering
-                for i in 0..<cloudCount {
-                    let ci = Double(i)
-                    let seed = ci * 47.3 + 123.4
+            // Draw clouds back-to-front for natural layering
+            for i in 0..<cloudCount {
+                let ci = Double(i)
+                let seed = ci * 47.3 + 123.4
 
-                    // Cloud dimensions — wider than tall, with procedural variation
-                    let widthFactor = 0.5 + seededRandom(seed + 1) * 0.4
-                    let cloudWidth = size.width * widthFactor
-                    let cloudHeight: CGFloat = 100 + CGFloat(seededRandom(seed + 2)) * 80
+                // Cloud dimensions — wider than tall, with procedural variation
+                let widthFactor = 0.5 + seededRandom(seed + 1) * 0.4
+                let cloudWidth = size.width * widthFactor
+                let cloudHeight: CGFloat = 100 + CGFloat(seededRandom(seed + 2)) * 80
 
-                    // Horizontal drift
-                    let speed = baseSpeed + ci * 0.25 + seededRandom(seed + 3) * 0.6
-                    let cycleDist = size.width + cloudWidth * 1.5
-                    let xCenter = (CGFloat(t * speed) + CGFloat(seed * 55))
-                        .truncatingRemainder(dividingBy: cycleDist) - cloudWidth * 0.25
+                // Horizontal drift
+                let speed = baseSpeed + ci * 0.25 + seededRandom(seed + 3) * 0.6
+                let cycleDist = size.width + cloudWidth * 1.5
+                let xCenter = (CGFloat(t * speed) + CGFloat(seed * 55))
+                    .truncatingRemainder(dividingBy: cycleDist) - cloudWidth * 0.25
 
-                    // Vertical positioning — spread across the upper portion of the screen
-                    let yBase = size.height * (0.02 + seededRandom(seed + 4) * 0.55)
-                    // Slight vertical drift for organic feel
-                    let yDrift = sin(t * 0.08 + ci * 2.0) * 6.0
-                    let yCenter = yBase + yDrift
+                // Vertical positioning — spread across the upper portion of the screen
+                let yBase = size.height * (0.02 + seededRandom(seed + 4) * 0.55)
+                // Slight vertical drift for organic feel
+                let yDrift = sin(t * 0.08 + ci * 2.0) * 6.0
+                let yCenter = yBase + yDrift
 
-                    // Opacity — overcast is denser
-                    let shift = 0.015 * sin(t * 0.12 + ci * 1.5)
-                    let baseOpacity = isOvercast
-                        ? (0.12 + seededRandom(seed + 5) * 0.08 + shift)
-                        : (0.06 + seededRandom(seed + 5) * 0.06 + shift)
+                // Opacity — overcast is denser
+                let shift = 0.015 * sin(t * 0.12 + ci * 1.5)
+                let baseOpacity = isOvercast
+                    ? (0.12 + seededRandom(seed + 5) * 0.08 + shift)
+                    : (0.06 + seededRandom(seed + 5) * 0.06 + shift)
 
-                    let cloudColor = isOvercast
-                        ? Color(red: 0.85 + seededRandom(seed + 6) * 0.08,
-                                green: 0.89 + seededRandom(seed + 7) * 0.06,
-                                blue: 0.94 + seededRandom(seed + 8) * 0.04)
-                        : Color(red: 0.95 + seededRandom(seed + 6) * 0.05,
-                                green: 0.96 + seededRandom(seed + 7) * 0.04,
-                                blue: 0.98)
+                let cloudColor = isOvercast
+                    ? Color(red: 0.85 + seededRandom(seed + 6) * 0.08,
+                            green: 0.89 + seededRandom(seed + 7) * 0.06,
+                            blue: 0.94 + seededRandom(seed + 8) * 0.04)
+                    : Color(red: 0.95 + seededRandom(seed + 6) * 0.05,
+                            green: 0.96 + seededRandom(seed + 7) * 0.04,
+                            blue: 0.98)
 
-                    drawCloudCluster(
-                        in: &context,
-                        center: CGPoint(x: xCenter, y: yCenter),
-                        baseWidth: cloudWidth,
-                        baseHeight: cloudHeight,
-                        cloudColor: cloudColor,
-                        overallOpacity: baseOpacity,
-                        seed: seed,
-                        time: t
+                drawCloudCluster(
+                    in: &context,
+                    center: CGPoint(x: xCenter, y: yCenter),
+                    baseWidth: cloudWidth,
+                    baseHeight: cloudHeight,
+                    cloudColor: cloudColor,
+                    overallOpacity: baseOpacity,
+                    seed: seed,
+                    time: t
+                )
+            }
+
+            // For overcast: add a thin uniform haze layer across the top
+            if isOvercast {
+                context.opacity = 0.06 + 0.02 * sin(t * 0.1)
+                let hazeRect = CGRect(x: -20, y: -10, width: size.width + 40, height: size.height * 0.4)
+                context.fill(
+                    Path(ellipseIn: hazeRect),
+                    with: .radialGradient(
+                        Gradient(colors: [
+                            Color(red: 0.90, green: 0.93, blue: 0.96).opacity(0.5),
+                            Color.clear
+                        ]),
+                        center: CGPoint(x: hazeRect.midX, y: hazeRect.minY),
+                        startRadius: 0,
+                        endRadius: size.width * 0.6
                     )
-                }
-
-                // For overcast: add a thin uniform haze layer across the top
-                if isOvercast {
-                    context.opacity = 0.06 + 0.02 * sin(t * 0.1)
-                    let hazeRect = CGRect(x: -20, y: -10, width: size.width + 40, height: size.height * 0.4)
-                    context.fill(
-                        Path(ellipseIn: hazeRect),
-                        with: .radialGradient(
-                            Gradient(colors: [
-                                Color(red: 0.90, green: 0.93, blue: 0.96).opacity(0.5),
-                                Color.clear
-                            ]),
-                            center: CGPoint(x: hazeRect.midX, y: hazeRect.minY),
-                            startRadius: 0,
-                            endRadius: size.width * 0.6
-                        )
-                    )
-                }
+                )
             }
         }
         .allowsHitTesting(false)

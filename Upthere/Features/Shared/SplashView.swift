@@ -47,6 +47,7 @@ public struct SplashView: View {
                 Text("UpThere")
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("Weather, understood.")
                     .font(.subheadline)
