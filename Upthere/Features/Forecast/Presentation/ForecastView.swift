@@ -6,6 +6,7 @@ public struct ForecastView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.weatherFormatter) private var weatherFormatter
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public enum ForecastTab {
         case hourly, daily
@@ -70,7 +71,8 @@ public struct ForecastView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Forecast")
                 .font(.largeTitle.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
             Text(weather.cityName)
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -93,8 +95,10 @@ public struct ForecastView: View {
                 .background(Color(white: 0.18), in: Capsule())
             } else {
                 GlassEffectContainer(spacing: 2) {
-                    pickerButton(title: "Hourly", tab: .hourly)
-                    pickerButton(title: "Daily", tab: .daily)
+                    HStack(spacing: 2) {
+                        pickerButton(title: "Hourly", tab: .hourly)
+                        pickerButton(title: "Daily", tab: .daily)
+                    }
                 }
             }
         }
@@ -103,7 +107,7 @@ public struct ForecastView: View {
 
     private func pickerButton(title: String, tab: ForecastTab) -> some View {
         Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7)) {
                 selectedTab = tab
             }
         } label: {
@@ -166,7 +170,8 @@ public struct ForecastView: View {
                 HStack {
                     Text("Now")
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Text(weather.condition)
                         .font(.subheadline)

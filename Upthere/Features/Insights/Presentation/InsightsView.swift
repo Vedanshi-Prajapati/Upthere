@@ -62,7 +62,8 @@ public struct InsightsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Insights")
                 .font(.largeTitle.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
             Text("What the forecast actually means.")
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -81,7 +82,8 @@ public struct InsightsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Weather alerts")
                         .font(AppFont.title3Bold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                     Text("Official source")
                         .font(AppFont.subheadlineMedium)
                         .foregroundStyle(AppTheme.textSecondary)
@@ -91,7 +93,8 @@ public struct InsightsView: View {
                 HStack {
                     Text("Weather alerts")
                         .font(AppFont.title3Bold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     Text("Official source")
                         .font(AppFont.subheadlineMedium)
@@ -120,7 +123,8 @@ public struct InsightsView: View {
                         // Title
                         Text(alert.title)
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
 
                         // Description
                         if let details = alert.details, !details.isEmpty {
@@ -145,7 +149,7 @@ public struct InsightsView: View {
                         HStack {
                             Text("Read official attribution")
                                 .font(.subheadline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption.weight(.semibold))
@@ -168,7 +172,8 @@ public struct InsightsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("No active weather alerts")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
+                                .accessibilityAddTraits(.isHeader)
                             Text("No severe weather warnings are currently in effect for this region.")
                                 .font(.footnote)
                                 .foregroundStyle(AppTheme.textSecondary)
@@ -211,7 +216,8 @@ public struct InsightsView: View {
         return VStack(alignment: .leading, spacing: 16) {
             Text("UpThere insights")
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
                 .padding(.horizontal, 20)
 
             if let rain = rainWindow {

@@ -52,7 +52,8 @@ struct PrecipitationSection: View {
                     .foregroundStyle(rainBlue)
                 Text("Precipitation")
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Text(headerTrailingText)
                     .font(.subheadline.weight(.medium))
@@ -117,14 +118,14 @@ struct RainWindowCard: View {
                     Image(systemName: "cloud.rain.fill")
                         .symbolRenderingMode(.multicolor)
                         .symbolVariant(.fill)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .font(.title3)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(rain.title)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Text(rain.timeRange)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(rainBlue)

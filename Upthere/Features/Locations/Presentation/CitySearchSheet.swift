@@ -53,7 +53,7 @@ public struct CitySearchSheet: View {
                 TextField("", text: $searchText, prompt:
                     Text("Search for a city").foregroundColor(AppTheme.textSecondary)
                 )
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
                 .font(.body)
                 .submitLabel(.search)
                 .textInputAutocapitalization(.words)
@@ -105,7 +105,8 @@ public struct CitySearchSheet: View {
                         .padding(.bottom, 4)
                     Text("Search for a City")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                     Text("Search by city name, state, or country.")
                         .font(.footnote)
                         .foregroundStyle(AppTheme.textSecondary)
@@ -131,6 +132,7 @@ public struct CitySearchSheet: View {
                     Text("No matching cities found")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(AppTheme.textSecondary)
+                        .accessibilityAddTraits(.isHeader)
                     Text("Try searching by city name, state, or country.")
                         .font(.footnote)
                         .foregroundStyle(AppTheme.textTertiary)
@@ -151,7 +153,7 @@ public struct CitySearchSheet: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(result.title)
                                             .font(.body.weight(.medium))
-                                            .foregroundStyle(.white)
+                                            .foregroundStyle(AppTheme.textPrimary)
                                         if !result.subtitle.isEmpty {
                                             Text(result.subtitle)
                                                 .font(.footnote)

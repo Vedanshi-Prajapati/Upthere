@@ -7,6 +7,7 @@ struct HourlyPrecipitationBarChart: View {
     let rainBlue: Color
 
     @Environment(\.weatherFormatter) private var weatherFormatter
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedIndex: Int?
     @State private var isDragging = false
     @State private var appeared = false
@@ -37,7 +38,7 @@ struct HourlyPrecipitationBarChart: View {
                     HStack(spacing: 6) {
                         Text(item.time)
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                         Text("•")
                             .foregroundStyle(AppTheme.textTertiary)
                         Text("\(pct)% chance")
@@ -128,7 +129,7 @@ struct HourlyPrecipitationBarChart: View {
                             isDragging = true
                         }
                         .onEnded { _ in
-                            withAnimation(.easeOut(duration: 0.3)) {
+                            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) {
                                 isDragging = false
                                 selectedIndex = nil
                             }
@@ -137,7 +138,7 @@ struct HourlyPrecipitationBarChart: View {
             }
             .frame(height: 85)
             .onAppear {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7)) {
                     appeared = true
                 }
             }
@@ -154,25 +155,30 @@ struct HourlyPrecipitationBarChart: View {
         HStack {
             if let first = items.first {
                 Text(first.time)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if items.count > 6 {
                 let q1 = items[items.count / 4]
                 Text(q1.time)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
             if items.count > 2 {
                 let mid = items[items.count / 2]
                 Text(mid.time)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
             if items.count > 6 {
                 let q3 = items[3 * items.count / 4]
                 Text(q3.time)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
             if let last = items.last, items.count > 1 {
                 Text(last.time)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
@@ -213,7 +219,7 @@ extension ForecastView {
                 }
             }
             .frame(height: 120)
-            .accessibilityElement(children: .contain)
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel("Precipitation forecast by day")
             .accessibilityValue(chartSummary)
         }
@@ -224,6 +230,7 @@ extension ForecastView {
         let barWidth: CGFloat
         let rainBlue: Color
 
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @State private var appeared = false
 
         private var pct: Double { day.precipitationProbability }           // 0–1
@@ -253,7 +260,7 @@ extension ForecastView {
                                 )
                             )
                             .frame(height: appeared ? max(4, pct * geo.size.height) : 4)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(day.dayName.hashValue % 5) * 0.05), value: appeared)
+                            .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.7).delay(Double(day.dayName.hashValue % 5) * 0.05), value: appeared)
                     }
                 }
 

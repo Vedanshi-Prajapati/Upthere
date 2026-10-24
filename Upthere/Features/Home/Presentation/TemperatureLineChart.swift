@@ -12,17 +12,22 @@ struct TemperatureLineChart: View {
     private var maxT: Double { (temps.max() ?? high) + 1 }
     private var tempRange: Double { max(1.0, maxT - minT) }
 
+    private let plotTopPadding: CGFloat = 20
+    private let plotBottomPadding: CGFloat = 8
+
     private func xPos(_ index: Int, in width: CGFloat) -> CGFloat {
         guard hourly.count > 1 else { return width / 2 }
         return CGFloat(index) / CGFloat(hourly.count - 1) * width
     }
 
     private func yPos(_ temp: Double, in height: CGFloat) -> CGFloat {
+        let availableHeight = height - plotTopPadding - plotBottomPadding
         let fraction = CGFloat((temp - minT) / tempRange)
-        return height - max(0, min(1, fraction)) * height
+        return (height - plotBottomPadding) - max(0, min(1, fraction)) * availableHeight
     }
 
     @Environment(\.weatherFormatter) private var weatherFormatter
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedIndex: Int?
     @State private var isDragging = false
 
@@ -66,7 +71,7 @@ struct TemperatureLineChart: View {
                                 isDragging = true
                             }
                             .onEnded { _ in
-                                withAnimation(.easeOut(duration: 0.3)) {
+                                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) {
                                     isDragging = false
                                     selectedIndex = nil
                                 }
@@ -84,11 +89,20 @@ struct TemperatureLineChart: View {
     }
 
     private var accessibilitySummary: String {
-        guard !hourly.isEmpty else { return "Hourly forecast unavailable" }
-        let highStr = weatherFormatter.temp(high)
-        let lowStr = weatherFormatter.temp(low)
-        let currentStr = hourly.first.map { weatherFormatter.temp($0.temperature) } ?? ""
-        return "Current temperature \(currentStr), high of \(highStr), low of \(lowStr) across \(hourly.count) hours"
+        guard let first = hourly.first else { return "Hourly forecast unavailable" }
+        let nowTemp = weatherFormatter.temp(first.temperature)
+        let peak = hourly.max(by: { $0.temperature < $1.temperature }) ?? first
+        let trough = hourly.min(by: { $0.temperature < $1.temperature }) ?? first
+
+        if peak.temperature > first.temperature + 1.0 {
+            let peakTemp = weatherFormatter.temp(peak.temperature)
+            return "Temperature rises from \(nowTemp) now to \(peakTemp) at \(peak.time)"
+        } else if trough.temperature < first.temperature - 1.0 {
+            let troughTemp = weatherFormatter.temp(trough.temperature)
+            return "Temperature falls from \(nowTemp) now to \(troughTemp) at \(trough.time)"
+        } else {
+            return "Temperature steady around \(nowTemp) now, high of \(weatherFormatter.temp(high)), low of \(weatherFormatter.temp(low))"
+        }
     }
 
     private func scrubberOverlay(index: Int, w: CGFloat, h: CGFloat) -> some View {
@@ -120,10 +134,10 @@ struct TemperatureLineChart: View {
             HStack(spacing: 4) {
                 Text(item.time)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.white.opacity(0.8))
+                    .foregroundStyle(AppTheme.textSecondary)
                 Text(weatherFormatter.temp(item.temperature))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
@@ -247,7 +261,7 @@ struct TemperatureLineChart: View {
 
     private func temperatureLine(w: CGFloat, h: CGFloat) -> some View {
         smoothPath(in: w, height: h, isClosed: false)
-            .stroke(Color.white, lineWidth: 2.75)
+            .stroke(AppTheme.chartLine, lineWidth: 2.75)
     }
 
     private func peakDotAndLabel(w: CGFloat, h: CGFloat) -> some View {
@@ -255,27 +269,21 @@ struct TemperatureLineChart: View {
             if let peakIdx = hourly.indices.max(by: { hourly[$0].temperature < hourly[$1].temperature }) {
                 let px = xPos(peakIdx, in: w)
                 let py = yPos(hourly[peakIdx].temperature, in: h)
-                let highX = min(max(px, 24), w - 24)
-                let highY = max(10, py - 14)
-
-                let firstPy = hourly.first.map { yPos($0.temperature, in: h) } ?? py
-                let isNowNearPeak = abs(px - 34) < 65
-                let nowY = isNowNearPeak ? min(h - 10, firstPy + 15) : max(10, firstPy - 14)
+                let highX = min(max(px, 30), w - 30)
                 let nowX: CGFloat = 34
 
-                let distance = hypot(highX - nowX, highY - nowY)
-                let isColliding = peakIdx == 0 || distance < 24 || abs(highX - nowX) < 24
+                let isColliding = peakIdx == 0 || abs(highX - nowX) < 48
 
                 Circle()
-                    .fill(Color.white)
+                    .fill(AppTheme.chartSelectedPoint)
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
 
                 if !isColliding {
                     Text("H \(weatherFormatter.temp(high))")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.white)
-                        .position(x: highX, y: highY)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .position(x: highX, y: 8)
                 }
             }
         }
@@ -285,20 +293,17 @@ struct TemperatureLineChart: View {
         Group {
             if let first = hourly.first {
                 let py = yPos(first.temperature, in: h)
-                let peakIdx = hourly.indices.max(by: { hourly[$0].temperature < hourly[$1].temperature }) ?? 0
-                let px = xPos(peakIdx, in: w)
-                // If peak is within 65px horizontally of Now, drop Now label below the line to avoid collision
-                let isCollidingWithPeak = abs(px - 34) < 65
-                let nowLabelY = isCollidingWithPeak ? min(h - 10, py + 15) : max(10, py - 14)
+                let px = xPos(0, in: w)
 
                 Circle()
-                    .fill(Color.white)
+                    .fill(AppTheme.chartSelectedPoint)
                     .frame(width: 7, height: 7)
-                    .position(x: xPos(0, in: w), y: py)
+                    .position(x: px, y: py)
+
                 Text("Now \(weatherFormatter.temp(first.temperature))")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.white)
-                    .position(x: 34, y: nowLabelY)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .position(x: 34, y: 8)
             }
         }
     }
@@ -308,7 +313,7 @@ struct TemperatureLineChart: View {
             ForEach(sampledLabels, id: \.self) { label in
                 Text(label)
                     .font(.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
+                    .foregroundStyle(AppTheme.chartAxisLabel)
                     .frame(maxWidth: .infinity)
             }
         }

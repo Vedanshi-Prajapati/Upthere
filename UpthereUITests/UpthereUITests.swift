@@ -105,4 +105,41 @@ nonisolated final class UpthereUITests: XCTestCase {
         // Clean up
         try? FileManager.default.removeItem(at: tempSnapshotURL)
     }
+
+    // MARK: - (4) Hero text frame non-empty in light appearance
+    @MainActor
+    func testHeroTextFrameNonEmptyInLightAppearance() throws {
+        XCUIDevice.shared.appearance = .light
+
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-disableSplash",
+            "-disablePermission",
+            "-initialTab", "home",
+            "-AppleInterfaceStyle", "Light"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        let heroTemp = app.staticTexts["hero_temperature"]
+        let heroText = app.otherElements["hero_text_content"]
+        let heroSection = app.otherElements["hero_section"]
+
+        let targetElement: XCUIElement
+        if heroTemp.waitForExistence(timeout: 2) {
+            targetElement = heroTemp
+        } else if heroText.waitForExistence(timeout: 1) {
+            targetElement = heroText
+        } else {
+            XCTAssertTrue(heroSection.waitForExistence(timeout: 4), "Hero section must exist")
+            targetElement = heroSection
+        }
+
+        XCTAssertFalse(targetElement.frame.isEmpty, "Hero text frame should not be empty")
+        XCTAssertGreaterThan(targetElement.frame.width, 0, "Hero text width should be greater than zero")
+        XCTAssertGreaterThan(targetElement.frame.height, 0, "Hero text height should be greater than zero")
+    }
 }

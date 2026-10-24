@@ -13,7 +13,8 @@ extension InsightsView {
 
                 Text(formatTimeRange(start: rain.startDate, end: rain.endDate))
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 let peakProb = Int((rain.peakProbability * 100).rounded())
                 let peakTime = formatHour(rain.peakDate)
@@ -32,7 +33,7 @@ extension InsightsView {
                     let precipProb = Int(((hourly.first?.precipitationChance ?? 0.0) * 100).rounded())
                     Text("\(precipProb)%")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Spacer()
                     Text("100%")
                         .font(.caption)
@@ -74,7 +75,7 @@ extension InsightsView {
                                 .foregroundStyle(AppTheme.textTertiary)
                             Text(weatherFormatter.temp(trend.currentTemperature))
                                 .font(AppFont.title)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -101,7 +102,7 @@ extension InsightsView {
                                 .foregroundStyle(AppTheme.textTertiary)
                             Text(weatherFormatter.temp(trend.currentTemperature))
                                 .font(AppFont.title)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -157,7 +158,8 @@ extension InsightsView {
 
                 Text("Current & Gusts")
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(windDetail)
                     .font(.subheadline)
@@ -170,7 +172,7 @@ extension InsightsView {
                         .foregroundStyle(AppTheme.textTertiary)
                     Text(currentWindStr)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
                 .padding(.top, 4)
 
@@ -204,7 +206,8 @@ extension InsightsView {
 
                 Text(formatTimeRange(start: outdoor.startDate, end: outdoor.endDate))
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(detail)
                     .font(.subheadline)
@@ -238,7 +241,8 @@ extension InsightsView {
 
                 Text(timeRange)
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text("UV Index: \(uv.peakUVIndex) · \(uvCategoryStr)")
                     .font(.subheadline)
@@ -250,7 +254,7 @@ extension InsightsView {
                         .foregroundStyle(AppTheme.textTertiary)
                     Text("\(currentUV)")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
                 .padding(.top, 4)
 

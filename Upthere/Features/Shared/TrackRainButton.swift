@@ -56,9 +56,11 @@ public struct TrackRainButton: View {
             HStack(spacing: 6) {
                 Image(systemName: isTracking ? "checkmark.circle.fill" : "cloud.rain.fill")
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
 
                 Text(isTracking ? "Tracking rain" : "Track rain")
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 4)

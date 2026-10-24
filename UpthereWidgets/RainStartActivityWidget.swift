@@ -21,7 +21,7 @@ public struct RainStartActivityWidget: Widget {
 
                         Text(context.attributes.city)
                             .font(.headline.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .lineLimit(1)
                     }
                     .padding(.leading, 4)
@@ -47,7 +47,7 @@ public struct RainStartActivityWidget: Widget {
                                     .foregroundStyle(Color(red: 0.35, green: 0.75, blue: 1.0))
                                 Text("min until rain")
                                     .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
                             }
                         } else {
                             Text("Rain in progress")
@@ -99,7 +99,7 @@ public struct RainStartActivityWidget: Widget {
                 if context.state.minutesUntilRain > 0 {
                     Text(context.state.endTime, style: .time)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(AppTheme.textSecondary)
                 } else {
                     Text("Rain")
                         .font(.caption2.weight(.bold))
@@ -130,7 +130,7 @@ private struct RainActivityLockScreenView: View {
 
                     Text(context.attributes.city)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
 
                 Spacer()
@@ -150,7 +150,7 @@ private struct RainActivityLockScreenView: View {
                     if context.state.minutesUntilRain > 0 {
                         Text("Rain starts in \(context.state.minutesUntilRain) min")
                             .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     } else {
                         Text("Rain in progress")
                             .font(.title2.weight(.bold))

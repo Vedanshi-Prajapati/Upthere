@@ -33,7 +33,7 @@ public struct SplashView: View {
                     // Stylized weather icon
                     Image(systemName: "antenna.radiowaves.left.and.right")
                         .font(.title.weight(.medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .overlay(
                             Circle()
                                 .fill(AppTheme.alertAmber)
@@ -46,7 +46,7 @@ public struct SplashView: View {
 
                 Text("UpThere")
                     .font(.largeTitle.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
 
                 Text("Weather, understood.")
                     .font(.subheadline)

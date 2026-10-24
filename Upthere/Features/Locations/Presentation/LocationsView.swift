@@ -105,7 +105,7 @@ public struct LocationsView: View {
                             HStack(spacing: 2) {
                                 EditButton()
                                     .font(AppFont.subheadlineSemibold)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
                                     .padding(.horizontal, 8)
                                     .frame(minHeight: 32)
 
@@ -114,7 +114,7 @@ public struct LocationsView: View {
                                 } label: {
                                     Image(systemName: "plus")
                                         .font(AppFont.subheadlineSemibold)
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(AppTheme.textPrimary)
                                         .frame(minWidth: 30, minHeight: 32)
                                 }
                                 .accessibilityLabel("Add city")
@@ -124,21 +124,23 @@ public struct LocationsView: View {
                             .background(Color(white: 0.18), in: Capsule())
                         } else {
                             GlassEffectContainer(spacing: 2) {
-                                EditButton()
-                                    .font(AppFont.subheadlineSemibold)
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .frame(minHeight: 32)
-
-                                Button {
-                                    showCitySearch = true
-                                } label: {
-                                    Image(systemName: "plus")
+                                HStack(spacing: 2) {
+                                    EditButton()
                                         .font(AppFont.subheadlineSemibold)
-                                        .foregroundStyle(.white)
-                                        .frame(minWidth: 30, minHeight: 32)
+                                        .foregroundStyle(AppTheme.textPrimary)
+                                        .padding(.horizontal, 8)
+                                        .frame(minHeight: 32)
+
+                                    Button {
+                                        showCitySearch = true
+                                    } label: {
+                                        Image(systemName: "plus")
+                                            .font(AppFont.subheadlineSemibold)
+                                            .foregroundStyle(AppTheme.textPrimary)
+                                            .frame(minWidth: 30, minHeight: 32)
+                                    }
+                                    .accessibilityLabel("Add city")
                                 }
-                                .accessibilityLabel("Add city")
                             }
                         }
                     }
@@ -303,7 +305,7 @@ private struct LocationRowView: View {
                             }
                             Text(location.cityName)
                                 .font(AppFont.headline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                             Spacer()
                             if isSelected {
                                 Image(systemName: "checkmark")
@@ -320,12 +322,12 @@ private struct LocationRowView: View {
                             HStack(spacing: 8) {
                                 Text(weatherFormatter.temp(summary.temperature))
                                     .font(AppFont.headline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
 
                                 Image(systemName: summary.symbolName)
                                     .symbolRenderingMode(.multicolor)
                                     .symbolVariant(.fill)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
                                     .font(AppFont.title2)
                             }
                         }
@@ -344,7 +346,7 @@ private struct LocationRowView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(location.cityName)
                                 .font(AppFont.headline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.textPrimary)
                                 .lineLimit(1)
                             Text(subtitleText)
                                 .font(AppFont.footnote)
@@ -358,12 +360,12 @@ private struct LocationRowView: View {
                             HStack(spacing: 8) {
                                 Text(weatherFormatter.temp(summary.temperature))
                                     .font(AppFont.headline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
 
                                 Image(systemName: summary.symbolName)
                                     .symbolRenderingMode(.multicolor)
                                     .symbolVariant(.fill)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(AppTheme.textPrimary)
                                     .font(AppFont.title2)
                                     .frame(width: 26, height: 26)
                             }

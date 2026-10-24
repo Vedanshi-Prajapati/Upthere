@@ -26,10 +26,11 @@ extension InsightsView {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.footnote)
-                    .foregroundStyle(Color.white.opacity(0.75))
+                    .foregroundStyle(AppTheme.textTertiary)
                 Text(label)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppTheme.textSecondary)
+                    .accessibilityAddTraits(.isHeader)
             }
             .padding(.bottom, 2)
         }
@@ -85,7 +86,8 @@ extension InsightsView {
 
                 Text(heading)
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(description)
                     .font(.subheadline)

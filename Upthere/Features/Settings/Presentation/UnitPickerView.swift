@@ -46,12 +46,12 @@ public struct UnitPickerView: View {
                                 HStack {
                                     Text(option)
                                         .font(.body)
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(AppTheme.textPrimary)
                                     Spacer()
                                     if selected == option {
                                         Image(systemName: "checkmark")
                                             .font(.body.weight(.semibold))
-                                            .foregroundStyle(.white)
+                                            .foregroundStyle(AppTheme.textPrimary)
                                             .transition(.scale.combined(with: .opacity))
                                     }
                                 }
@@ -85,7 +85,7 @@ public struct UnitPickerView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(
                             Circle()

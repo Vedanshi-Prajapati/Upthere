@@ -79,6 +79,7 @@ public struct SettingsView: View {
             Text("Settings")
                 .font(.largeTitle.weight(.bold))
                 .foregroundStyle(AppTheme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, AppTheme.spacingSmall)
@@ -370,6 +371,7 @@ public struct SettingsView: View {
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(AppTheme.textSecondary)
             .padding(.leading, AppTheme.spacingXXSmall)
+            .accessibilityAddTraits(.isHeader)
     }
 
     private func groupedCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -399,7 +401,7 @@ public struct SettingsView: View {
                 .fill(color)
             Image(systemName: icon)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.textPrimary)
         }
         .frame(width: 28, height: 28)
     }

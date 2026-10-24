@@ -140,25 +140,31 @@ private struct WeatherScrollContent: View {
             case .cached(let time):
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                 Text("Showing cached forecast from \(time)")
                     .font(.footnote)
+                    .foregroundStyle(AppTheme.textSecondary)
             case .offline(let time):
                 Image(systemName: "wifi.slash")
                     .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                 Text("Offline · Saved forecast from \(time)")
                     .font(.footnote)
+                    .foregroundStyle(AppTheme.textSecondary)
             case .refreshFailed(let reason):
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppTheme.alertAmber)
                 Text("Could not refresh: \(reason)")
                     .font(AppFont.footnote)
+                    .foregroundStyle(AppTheme.textPrimary)
             case .locationFallback(let reason):
                 Image(systemName: "location.slash.fill")
                     .font(AppFont.footnoteSemibold)
-                    .foregroundStyle(Color(red: 0.6, green: 0.8, blue: 1.0))
+                    .foregroundStyle(AppTheme.accent)
                 Text("Using default location (Ghaziabad) · \(reason)")
                     .font(AppFont.footnote)
+                    .foregroundStyle(AppTheme.textPrimary)
             }
             Spacer()
         }
@@ -186,6 +192,7 @@ private struct WeatherScrollContent: View {
                     Text(weather.cityName)
                         .font(.headline)
                         .foregroundStyle(AppTheme.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                 }
                 Text(weather.locationSubtitle)
                     .font(.footnote)
@@ -216,8 +223,9 @@ private struct WeatherScrollContent: View {
             }
         }
         .padding(.bottom, AppTheme.spacingLarge)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("\(weather.condition), \(weatherFormatter.tempWithUnit(weather.temperature)), Feels like \(weatherFormatter.temp(weather.feelsLike)), High \(weatherFormatter.temp(weather.highTemperature)), Low \(weatherFormatter.temp(weather.lowTemperature))")
+        .accessibilityIdentifier("hero_section")
     }
 
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
@@ -226,6 +234,7 @@ private struct WeatherScrollContent: View {
     private var heroTextContent: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingXXSmall) {
             ScaledHeroTemperature(weather.temperature)
+                .accessibilityIdentifier("hero_temperature")
 
             Text(weather.condition)
                 .font(AppFont.title2Bold)
@@ -238,6 +247,7 @@ private struct WeatherScrollContent: View {
                 .font(AppFont.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
         }
+        .accessibilityIdentifier("hero_text_content")
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(
@@ -291,6 +301,7 @@ private struct WeatherScrollContent: View {
                         Text(alert.title)
                             .font(.headline)
                             .foregroundStyle(AppTheme.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
                         Text(alert.validUntil)
                             .font(.footnote)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -406,6 +417,7 @@ private struct WeatherScrollContent: View {
                                 Text("UpThere insight")
                                     .font(.footnote.weight(.medium))
                                     .foregroundStyle(AppTheme.textSecondary)
+                                    .accessibilityAddTraits(.isHeader)
                             }
                             Text(rain.title)
                                 .font(.headline)
@@ -437,12 +449,13 @@ private struct WeatherScrollContent: View {
                     Image(systemName: "checkmark.circle.fill")
                         .symbolRenderingMode(.multicolor)
                         .symbolVariant(.fill)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .font(.title3)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("No rain expected today")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(AppTheme.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
                         Text("Enjoy the dry weather.")
                             .font(.footnote)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -463,6 +476,7 @@ private struct WeatherScrollContent: View {
                         Text("Precipitation probability")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(AppTheme.textPrimary)
+                            .accessibilityAddTraits(.isHeader)
 
                         let maxPrecip = weather.hourlyForecast.prefix(24).map(\.precipitationProbability).max() ?? 0
                         if maxPrecip < 0.05 {
@@ -496,6 +510,7 @@ private struct WeatherScrollContent: View {
                             Text("How will temperature change?")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(AppTheme.textPrimary)
+                                .accessibilityAddTraits(.isHeader)
                             Text("Drag across the chart to see each hour.")
                                 .font(.footnote)
                                 .foregroundStyle(AppTheme.textSecondary)
@@ -544,6 +559,7 @@ private struct WeatherScrollContent: View {
             Text("Today")
                 .font(AppFont.headline)
                 .foregroundStyle(AppTheme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
 
             WeatherCard(padding: EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)) {
                 if dynamicTypeSize.isAccessibilitySize {
@@ -657,12 +673,20 @@ private struct PrecipitationBarChart: View {
             // Dynamic time labels for key slots
             if let first = hourly.first, let last = hourly.last {
                 HStack {
-                    Text(first.time).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(first.time)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     if hourly.count > 4 {
-                        Text(hourly[hourly.count / 3].time).frame(maxWidth: .infinity, alignment: .center)
-                        Text(hourly[2 * hourly.count / 3].time).frame(maxWidth: .infinity, alignment: .center)
+                        Text(hourly[hourly.count / 3].time)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        Text(hourly[2 * hourly.count / 3].time)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    Text(last.time).frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(last.time)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .font(.caption2)
                 .foregroundStyle(AppTheme.textSecondary)

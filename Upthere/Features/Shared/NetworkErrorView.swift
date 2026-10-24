@@ -25,12 +25,12 @@ public struct NetworkErrorView: View {
                 // Wifi-off icon
                 Image(systemName: "wifi.slash")
                     .font(.largeTitle)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(AppTheme.textTertiary)
                     .padding(.bottom, 4)
 
                 Text("Weather unavailable")
                     .font(.title.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
 
                 Text("We couldn't retrieve the latest forecast.\nCheck your connection and try again.")
                     .font(.subheadline)
@@ -42,7 +42,7 @@ public struct NetworkErrorView: View {
                 Button(action: onRetry) {
                     Text("Try again")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .frame(maxWidth: 240)
                         .frame(height: 54)
                         .background(

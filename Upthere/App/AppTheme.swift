@@ -168,6 +168,7 @@ public struct ScaledHeroTemperature: View {
         Text(weatherFormatter.temp(temperature))
             .font(.system(size: fontSize, weight: .bold, design: .rounded))
             .tracking(-2)
+            .foregroundStyle(AppTheme.textPrimary)
             .accessibilityLabel(Text("\(weatherFormatter.tempWithUnit(temperature))"))
     }
 }

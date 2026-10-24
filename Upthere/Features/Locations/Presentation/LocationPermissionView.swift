@@ -35,6 +35,7 @@ public struct LocationPermissionView: View {
                         .font(.largeTitle.weight(.bold))
                         .foregroundStyle(AppTheme.textPrimary)
                         .lineSpacing(2)
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Get hyperlocal conditions and predictive InsightEngine timing for your current location.")
                         .font(.subheadline)
@@ -87,7 +88,7 @@ public struct LocationPermissionView: View {
                     Button(action: onAllow) {
                         Text("Allow location")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
                             .background(

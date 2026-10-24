@@ -17,23 +17,23 @@ struct HourlyCard: View {
             VStack(spacing: 6) {
                 Text(hourly.time)
                     .font(AppFont.footnoteMedium)
-                    .foregroundStyle(isNow ? .white : AppTheme.textSecondary)
+                    .foregroundStyle(isNow ? AppTheme.textPrimary : AppTheme.textSecondary)
 
                 Image(systemName: hourly.symbolName)
                     .symbolRenderingMode(.multicolor)
                     .symbolVariant(.fill)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
                     .font(AppFont.title2)
                     .padding(.vertical, 1)
 
                 Text(weatherFormatter.temp(hourly.temperature))
                     .font(AppFont.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.textPrimary)
 
                 Text("\(Int(hourly.precipitationProbability * 100))%")
                     .font(AppFont.caption)
                     .foregroundStyle(hourly.precipitationProbability >= 0.3
-                        ? Color(red: 0.55, green: 0.85, blue: 1.0)
+                        ? AppTheme.rainBlueLight
                         : AppTheme.textTertiary)
             }
         }
@@ -57,7 +57,7 @@ struct DailyWeatherRow: View {
                     HStack(spacing: 8) {
                         Text(daily.dayName)
                             .font(AppFont.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                         Text(daily.date)
                             .font(AppFont.footnote)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -65,25 +65,25 @@ struct DailyWeatherRow: View {
                         Image(systemName: daily.symbolName)
                             .symbolRenderingMode(.multicolor)
                             .symbolVariant(.fill)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .font(AppFont.title3)
                         if daily.precipitationProbability > 0 {
                             Text("\(Int(daily.precipitationProbability * 100))%")
                                 .font(AppFont.caption2Semibold)
-                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                .foregroundStyle(AppTheme.rainBlueLight)
                         }
                     }
 
                     HStack(spacing: 8) {
                         Text(weatherFormatter.temp(daily.lowTemperature))
                             .font(AppFont.body)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textSecondary)
 
                         tempBar
 
                         Text(weatherFormatter.temp(daily.highTemperature))
                             .font(AppFont.bodySemibold)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
             } else {
@@ -91,7 +91,7 @@ struct DailyWeatherRow: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(daily.dayName)
                             .font(AppFont.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                         Text(daily.date)
                             .font(AppFont.footnote)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -102,26 +102,26 @@ struct DailyWeatherRow: View {
                         Image(systemName: daily.symbolName)
                             .symbolRenderingMode(.multicolor)
                             .symbolVariant(.fill)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .font(AppFont.title3)
                         if daily.precipitationProbability > 0 {
                             Text("\(Int(daily.precipitationProbability * 100))%")
                                 .font(AppFont.caption2Semibold)
-                                .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
+                                .foregroundStyle(AppTheme.rainBlueLight)
                         }
                     }
                     .frame(minWidth: 32)
 
                     Text(weatherFormatter.temp(daily.lowTemperature))
                         .font(AppFont.body)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textSecondary)
                         .frame(minWidth: 32, alignment: .trailing)
 
                     tempBar
 
                     Text(weatherFormatter.temp(daily.highTemperature))
                         .font(AppFont.bodySemibold)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppTheme.textPrimary)
                         .frame(minWidth: 32, alignment: .trailing)
                 }
             }
