@@ -20,21 +20,34 @@ struct UpthereApp: App {
     }
 
     private var initialTab: AppTab {
+        #if DEBUG
         if let idx = ProcessInfo.processInfo.arguments.firstIndex(of: "-initialTab"),
            idx + 1 < ProcessInfo.processInfo.arguments.count,
            let tab = AppTab(rawValue: ProcessInfo.processInfo.arguments[idx + 1].lowercased()) {
             return tab
         }
+        #endif
         return .home
     }
 
     private var disableSplash: Bool {
-        isTesting || ProcessInfo.processInfo.arguments.contains("-disableSplash") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")
+        if isTesting { return true }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-disableSplash") || ProcessInfo.processInfo.arguments.contains("-useMockRepository") {
+            return true
+        }
+        #endif
+        return false
     }
 
     private var showPermission: Bool? {
         if isTesting { return false }
-        return (ProcessInfo.processInfo.arguments.contains("-disablePermission") || ProcessInfo.processInfo.arguments.contains("-useMockRepository")) ? false : nil
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-disablePermission") || ProcessInfo.processInfo.arguments.contains("-useMockRepository") {
+            return false
+        }
+        #endif
+        return nil
     }
 
     var body: some Scene {
