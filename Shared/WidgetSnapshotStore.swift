@@ -218,14 +218,14 @@ public struct WeatherWidgetEntry: TimelineEntry, Sendable {
         self.date = date
         guard let snapshot else {
             self.cityName = "UpThere"
-            self.condition = "Open UpThere to load weather"
+            self.condition = "Open UpThere to set your location"
             self.temperature = 0
             self.feelsLike = 0
             self.high = 0
             self.low = 0
             self.rainChance = 0
             self.symbolName = "cloud.fill"
-            self.rainInsight = "Open UpThere to load weather"
+            self.rainInsight = "Open UpThere to set your location"
             self.hourly = []
             self.daily = []
             self.isStale = true

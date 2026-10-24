@@ -3,6 +3,7 @@ import Foundation
 import CoreLocation
 import AppIntents
 import SwiftUI
+import WidgetKit
 @testable import Upthere
 
 @Suite("Upthere Edge Case Tests")
@@ -1022,7 +1023,7 @@ struct UpthereTests {
         let entry = WeatherWidgetEntry(from: nil)
         #expect(entry.isEmpty == true)
         #expect(entry.isStale == true)
-        #expect(entry.condition == "Open UpThere to load weather")
+        #expect(entry.condition == "Open UpThere to set your location")
         #expect(entry.updatedAtText == nil)
     }
 
@@ -1052,6 +1053,151 @@ struct UpthereTests {
         #expect(entry.updatedAtText?.hasPrefix("Updated ") == true)
         #expect(entry.cityName == "London")
         #expect(entry.temperature == 15)
+    }
+
+    // MARK: - Timeline Provider & WidgetWeatherFetching Tests
+
+    @Test("Timeline provider: fresh fetch writes new snapshot and returns entries for next few hours")
+    func timelineFreshFetchWritesSnapshot() async throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test_provider_fresh_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = WidgetSnapshotStore(fileURL: tempURL)
+        let initialSnapshot = WidgetSnapshot(
+            city: "San Francisco",
+            latitude: 37.7749,
+            longitude: -122.4194,
+            temp: 15,
+            feelsLike: 15,
+            high: 18,
+            low: 12,
+            condition: "Cloudy",
+            symbolName: "cloud.fill",
+            rainChance: 0,
+            rainInsight: "No rain expected",
+            hourly: [],
+            daily: [],
+            updatedAt: Date().addingTimeInterval(-3600)
+        )
+        try store.save(initialSnapshot)
+
+        let now = Date()
+        let freshHourly: [HourlyWeather] = [
+            HourlyWeather(date: now, temperature: 22, precipitationChance: 0.0, symbolName: "sun.max.fill"),
+            HourlyWeather(date: now.addingTimeInterval(3600), temperature: 24, precipitationChance: 0.1, symbolName: "sun.max.fill"),
+            HourlyWeather(date: now.addingTimeInterval(7200), temperature: 23, precipitationChance: 0.2, symbolName: "cloud.sun.fill")
+        ]
+        let freshWeather = Weather(
+            cityName: "San Francisco",
+            latitude: 37.7749,
+            longitude: -122.4194,
+            temperature: 22,
+            condition: "Clear",
+            highTemperature: 25,
+            lowTemperature: 14,
+            weatherSymbolName: "sun.max.fill",
+            hourlyForecast: freshHourly
+        )
+
+        final class FakeFetcher: WidgetWeatherFetching, @unchecked Sendable {
+            let weather: Weather
+            init(weather: Weather) { self.weather = weather }
+            func fetchWeather(for location: CLLocation, cityName: String) async throws -> Weather {
+                weather
+            }
+        }
+
+        let fakeFetcher = FakeFetcher(weather: freshWeather)
+        let provider = WeatherWidgetTimelineProvider(weatherFetcher: fakeFetcher, snapshotStore: store)
+
+        let timeline = await provider.loadTimeline()
+
+        // 1. Fresh fetch writes the snapshot
+        let saved = store.load()
+        #expect(saved != nil)
+        #expect(saved?.temp == 22)
+        #expect(saved?.condition == "Clear")
+        #expect(saved?.city == "San Francisco")
+        #expect(saved?.latitude == 37.7749)
+        #expect(saved?.longitude == -122.4194)
+
+        // 2. Returns entries for the next few hours
+        #expect(timeline.entries.count >= 2)
+        #expect(timeline.entries[0].temperature == 22)
+        #expect(timeline.entries[0].isStale == false)
+        #expect(timeline.entries[0].isEmpty == false)
+    }
+
+    @Test("Timeline provider: fetch failure falls back to saved snapshot and displays Updated timestamp")
+    func timelineFailureFallsBackToStaleSnapshot() async throws {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test_provider_stale_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = WidgetSnapshotStore(fileURL: tempURL)
+        let savedDate = Date().addingTimeInterval(-1800)
+        let savedSnapshot = WidgetSnapshot(
+            city: "London",
+            latitude: 51.5074,
+            longitude: -0.1278,
+            temp: 14,
+            feelsLike: 13,
+            high: 17,
+            low: 10,
+            condition: "Rain",
+            symbolName: "cloud.rain.fill",
+            rainChance: 70,
+            rainInsight: "Rain likely · 70%",
+            hourly: [],
+            daily: [],
+            updatedAt: savedDate
+        )
+        try store.save(savedSnapshot)
+
+        struct MockNetworkError: Error {}
+        final class FailingFetcher: WidgetWeatherFetching, @unchecked Sendable {
+            func fetchWeather(for location: CLLocation, cityName: String) async throws -> Weather {
+                throw MockNetworkError()
+            }
+        }
+
+        let fakeFetcher = FailingFetcher()
+        let provider = WeatherWidgetTimelineProvider(weatherFetcher: fakeFetcher, snapshotStore: store)
+
+        let timeline = await provider.loadTimeline()
+
+        #expect(timeline.entries.count == 1)
+        let fallbackEntry = timeline.entries[0]
+        #expect(fallbackEntry.cityName == "London")
+        #expect(fallbackEntry.temperature == 14)
+        #expect(fallbackEntry.isStale == true)
+        #expect(fallbackEntry.updatedAtText?.hasPrefix("Updated ") == true)
+    }
+
+    @Test("Timeline provider: returns empty state when no snapshot exists")
+    func timelineNoSnapshotReturnsEmptyState() async {
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test_provider_empty_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = WidgetSnapshotStore(fileURL: tempURL)
+        final class EmptyFetcher: WidgetWeatherFetching, @unchecked Sendable {
+            func fetchWeather(for location: CLLocation, cityName: String) async throws -> Weather {
+                throw WeatherUnavailableError()
+            }
+        }
+
+        let fakeFetcher = EmptyFetcher()
+        let provider = WeatherWidgetTimelineProvider(weatherFetcher: fakeFetcher, snapshotStore: store)
+
+        let timeline = await provider.loadTimeline()
+
+        #expect(timeline.entries.count == 1)
+        let entry = timeline.entries[0]
+        #expect(entry.isEmpty == true)
+        #expect(entry.condition == "Open UpThere to set your location")
+        #expect(entry.rainInsight == "Open UpThere to set your location")
     }
 
     @Test("WeatherWidgetEntry displays fresh state when under 3 hours")
