@@ -145,14 +145,38 @@ Data access is isolated behind the `WeatherRepository` protocol:
 - **Live WeatherKit Data**: Apple WeatherKit requires an active Apple Developer Program account, an explicit App ID with the WeatherKit capability enabled, and proper code signing. The entitlement is defined in `Upthere/Upthere.entitlements`.
 - **Offline / Simulator Testing**: To run the project without an active Apple Developer team or certificate, inject `MockWeatherRepository` into `AppContainer` (`Upthere/App/AppContainer.swift`), which provides full synthetic hourly and 10-day forecasts without external network calls.
 
-### Running Tests via Terminal
+### Building & Testing via Terminal
+
+#### Building
+To build from the terminal without binding to a specific simulator installed on your machine:
+
+```bash
+xcodebuild build \
+  -scheme Upthere \
+  -destination 'generic/platform=iOS Simulator'
+```
+
+#### Running Tests
+Executing tests requires a concrete simulator device. Run the test suite on any booted simulator:
 
 ```bash
 xcodebuild test \
   -scheme Upthere \
-  -destination "platform=iOS Simulator,name=iPhone 16" \
+  -destination "platform=iOS Simulator,id=booted" \
   -only-testing:UpthereTests
 ```
+
+Or target the first available iPhone simulator dynamically without hardcoding a device name:
+
+```bash
+DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 "iPhone" | grep -E -o '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+xcodebuild test \
+  -scheme Upthere \
+  -destination "id=$DEVICE_ID" \
+  -only-testing:UpthereTests
+```
+
+> **Note:** To list all installed simulator runtimes and devices on your machine, run `xcrun simctl list devices available`.
 
 ---
 

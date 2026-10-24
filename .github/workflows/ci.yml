@@ -5,10 +5,18 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  unit-tests:
+    name: Unit tests
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: macos-15
 
     steps:
@@ -17,25 +25,129 @@ jobs:
 
       - name: Select Xcode 26
         run: |
+          FOUND_XCODE=""
           for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
             if [ -d "$app" ]; then
-              sudo xcode-select -s "$app/Contents/Developer"
+              FOUND_XCODE="$app"
               break
             fi
           done
+
+          if [ -z "$FOUND_XCODE" ] && [ -d "/Applications/Xcode.app" ]; then
+            VERSION=$(defaults read /Applications/Xcode.app/Contents/Info.plist CFBundleShortVersionString 2>/dev/null || echo "")
+            if [[ "$VERSION" =~ ^26\. ]]; then
+              FOUND_XCODE="/Applications/Xcode.app"
+            fi
+          fi
+
+          if [ -z "$FOUND_XCODE" ]; then
+            echo "::error::No Xcode 26 installation found in /Applications (looked for Xcode_26*.app and Xcode-26*.app)."
+            exit 1
+          fi
+
+          echo "Selecting Xcode 26 at $FOUND_XCODE"
+          sudo xcode-select -s "$FOUND_XCODE/Contents/Developer"
           xcodebuild -version
+
+      - name: Find available iPhone simulator
+        id: select-simulator
+        run: |
           xcrun simctl list devices available
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | grep "Booted" | grep -E -o '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -n 1)
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 "iPhone" | grep -E -o '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          fi
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available iPhone simulator found."
+            exit 1
+          fi
+          echo "Selected iPhone simulator UDID: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
 
-      - name: Build Upthere Scheme
+      - name: Run Unit Tests
         run: |
-          xcodebuild build \
-            -scheme Upthere \
-            -destination "generic/platform=iOS Simulator" \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run Tests on iPhone Simulator
-        run: |
+          rm -rf TestResults.xcresult
           xcodebuild test \
             -scheme Upthere \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "id=${{ steps.select-simulator.outputs.device_id }}" \
+            -only-testing:UpthereTests \
+            -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore
+
+  ui-tests:
+    name: UI tests
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          FOUND_XCODE=""
+          for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
+            if [ -d "$app" ]; then
+              FOUND_XCODE="$app"
+              break
+            fi
+          done
+
+          if [ -z "$FOUND_XCODE" ] && [ -d "/Applications/Xcode.app" ]; then
+            VERSION=$(defaults read /Applications/Xcode.app/Contents/Info.plist CFBundleShortVersionString 2>/dev/null || echo "")
+            if [[ "$VERSION" =~ ^26\. ]]; then
+              FOUND_XCODE="/Applications/Xcode.app"
+            fi
+          fi
+
+          if [ -z "$FOUND_XCODE" ]; then
+            echo "::error::No Xcode 26 installation found in /Applications (looked for Xcode_26*.app and Xcode-26*.app)."
+            exit 1
+          fi
+
+          echo "Selecting Xcode 26 at $FOUND_XCODE"
+          sudo xcode-select -s "$FOUND_XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Find available iPhone simulator
+        id: select-simulator
+        run: |
+          xcrun simctl list devices available
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | grep "Booted" | grep -E -o '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}' | head -n 1)
+          if [ -z "$DEVICE_ID" ]; then
+            DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 "iPhone" | grep -E -o '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          fi
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available iPhone simulator found."
+            exit 1
+          fi
+          echo "Selected iPhone simulator UDID: $DEVICE_ID"
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Run UI Tests
+        run: |
+          rm -rf TestResults.xcresult
+          xcodebuild test \
+            -scheme Upthere \
+            -destination "id=${{ steps.select-simulator.outputs.device_id }}" \
+            -only-testing:UpthereUITests \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore
