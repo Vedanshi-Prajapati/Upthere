@@ -1,6 +1,7 @@
 import Foundation
 import CoreSpotlight
 import UniformTypeIdentifiers
+import os
 
 @MainActor
 public final class SpotlightService {
@@ -9,6 +10,7 @@ public final class SpotlightService {
     public static let weatherDomain = "com.vedanshi.upthere.weather"
     public static let locationsDomain = "com.vedanshi.upthere.locations"
 
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.vedanshi.upthereapp", category: "Spotlight")
     private let index = CSSearchableIndex.default()
 
     private init() {}
@@ -48,11 +50,14 @@ public final class SpotlightService {
         // Keep fresh for 4 hours
         item.expirationDate = Date().addingTimeInterval(4 * 3600)
 
-        index.indexSearchableItems([item]) { error in
+        let latStr = weather.latitude.map { "\($0)" } ?? "nil"
+        let lonStr = weather.longitude.map { "\($0)" } ?? "nil"
+
+        index.indexSearchableItems([item]) { [weak self] error in
             if let error = error {
-                #if DEBUG
-                print("[Spotlight] Failed to index weather for \(weather.cityName): \(error.localizedDescription)")
-                #endif
+                self?.logger.error("Failed to index weather for \(weather.cityName, privacy: .private) (lat: \(latStr, privacy: .private), lon: \(lonStr, privacy: .private)): \(error.localizedDescription)")
+            } else {
+                self?.logger.debug("Successfully indexed weather for \(weather.cityName, privacy: .private) (lat: \(latStr, privacy: .private), lon: \(lonStr, privacy: .private))")
             }
         }
     }
@@ -90,11 +95,11 @@ public final class SpotlightService {
 
         guard !items.isEmpty else { return }
 
-        index.indexSearchableItems(items) { error in
+        index.indexSearchableItems(items) { [weak self] error in
             if let error = error {
-                #if DEBUG
-                print("[Spotlight] Failed to index saved locations: \(error.localizedDescription)")
-                #endif
+                self?.logger.error("Failed to index saved locations: \(error.localizedDescription)")
+            } else {
+                self?.logger.debug("Successfully indexed \(locations.count) saved locations")
             }
         }
     }
@@ -102,16 +107,19 @@ public final class SpotlightService {
     // MARK: - Removal
 
     public func removeWeatherIndex(for cityName: String) {
+        logger.debug("Removing weather index for \(cityName, privacy: .private)")
         let id = "weather.\(cityName.lowercased().replacingOccurrences(of: " ", with: "_"))"
         index.deleteSearchableItems(withIdentifiers: [id], completionHandler: nil)
     }
 
     public func removeLocationIndex(for cityName: String) {
+        logger.debug("Removing location index for \(cityName, privacy: .private)")
         let id = "location.\(cityName.lowercased().replacingOccurrences(of: " ", with: "_"))"
         index.deleteSearchableItems(withIdentifiers: [id], completionHandler: nil)
     }
 
     public func deindexAll() {
+        logger.debug("De-indexing all Spotlight items")
         index.deleteAllSearchableItems(completionHandler: nil)
     }
 
