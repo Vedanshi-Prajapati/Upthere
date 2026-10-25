@@ -186,3 +186,9 @@ xcodebuild test \
 - **WeatherKit Entitlement Requirement**: Fetching real-time meteorological data requires a paid Apple Developer account and signed bundle provisioning with the `com.apple.developer.weatherkit` entitlement.
 - **Forecast Horizon**: The application displays up to 24 hourly intervals and a 10-day daily forecast based on the maximum forecast windows provided by Apple's WeatherService.
 - **Geocoding Availability**: City name resolution, MapKit city searches, and reverse geocoding rely on Apple network services (`MKLocalSearch` and `CLGeocoder`).
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
