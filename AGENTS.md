@@ -33,7 +33,7 @@ xcrun simctl launch booted com.vedanshi.upthereapp -useMockRepository -disableSp
 ### Automated Hierarchy Screenshots
 Use the helper script instead of running manual sequential commands:
 ```bash
-python3 scratch/capture_hierarchy.py [before|after]
+python3 scripts/capture_hierarchy.py [before|after]
 ```
 
 ---
