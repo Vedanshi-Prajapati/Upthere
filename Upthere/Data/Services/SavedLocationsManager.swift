@@ -183,14 +183,7 @@ public final class SavedLocationsManager: ObservableObject {
     }
 
     public static var defaultLocations: [SavedLocation] {
-        [
-            defaultCurrentLocation,
-            SavedLocation(cityName: "Sydney",    regionName: "New South Wales, Australia", condition: "--", isCurrentLocation: false, latitude: -33.8688, longitude: 151.2093),
-            SavedLocation(cityName: "Cupertino", regionName: "California, USA",            condition: "--", isCurrentLocation: false, latitude: 37.3230,  longitude: -122.0322),
-            SavedLocation(cityName: "London",    regionName: "United Kingdom",             condition: "--", isCurrentLocation: false, latitude: 51.5074,  longitude: -0.1278),
-            SavedLocation(cityName: "Tokyo",     regionName: "Japan",                      condition: "--", isCurrentLocation: false, latitude: 35.6762,  longitude: 139.6503),
-            SavedLocation(cityName: "Delhi",     regionName: "National Capital Territory", condition: "--", isCurrentLocation: false, latitude: 28.6139,  longitude: 77.2090),
-        ]
+        [defaultCurrentLocation]
     }
 }
 

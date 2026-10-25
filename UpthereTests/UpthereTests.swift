@@ -779,6 +779,19 @@ struct UpthereTests {
         #expect(manager2.locations.contains(where: { $0.cityName == "Berlin" }))
     }
 
+    @Test("New users start with only Current location entry")
+    func newUsersStartWithOnlyCurrentLocation() {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_new_user_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let store = FileLocationStore(fileURL: tempURL)
+        let manager = SavedLocationsManager(store: store)
+
+        #expect(manager.locations.count == 1)
+        #expect(manager.locations.first?.isCurrentLocation == true)
+        #expect(manager.locations.first?.cityName == "Current location")
+    }
+
     @Test("Remove location deletes non-current location but protects Current location")
     func removeLocationProtectsCurrentLocation() {
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_locs_\(UUID().uuidString).json")
@@ -786,6 +799,8 @@ struct UpthereTests {
 
         let store = FileLocationStore(fileURL: tempURL)
         let manager = SavedLocationsManager(store: store)
+        let testCity = SavedLocation(cityName: "Berlin", regionName: "Germany", condition: "Sunny", isCurrentLocation: false, latitude: 52.52, longitude: 13.405)
+        manager.addLocation(testCity)
 
         guard let currentLoc = manager.locations.first(where: { $0.isCurrentLocation }),
               let nonCurrentLoc = manager.locations.first(where: { !$0.isCurrentLocation }) else {

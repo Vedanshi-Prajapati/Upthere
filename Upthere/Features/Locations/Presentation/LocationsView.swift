@@ -74,6 +74,52 @@ public struct LocationsView: View {
                         locationsManager.moveLocation(fromOffsets: fromOffsets, toOffset: toOffset, within: filteredLocations)
                     }
 
+                    // Empty state when only Current location exists and not searching
+                    if !locationsManager.locations.contains(where: { !$0.isCurrentLocation }) && searchText.isEmpty {
+                        Section {
+                            VStack(spacing: 12) {
+                                Image(systemName: "building.2.crop.circle")
+                                    .font(.system(size: 38))
+                                    .foregroundStyle(AppTheme.textSecondary)
+
+                                Text("Add your first city")
+                                    .font(AppFont.headline)
+                                    .foregroundStyle(AppTheme.textPrimary)
+
+                                Text("Search and save cities to track their weather and quickly switch between them.")
+                                    .font(AppFont.subheadline)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 16)
+
+                                Button {
+                                    showCitySearch = true
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "plus")
+                                        Text("Add City")
+                                    }
+                                    .font(AppFont.subheadlineSemibold)
+                                    .foregroundStyle(Color.black)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Capsule().fill(Color.white))
+                                }
+                                .padding(.top, 4)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 24)
+                            .padding(.horizontal, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white.opacity(0.06))
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                        }
+                    }
+
                     // Hint + legal
                     Section {
                         VStack(alignment: .center, spacing: 8) {
