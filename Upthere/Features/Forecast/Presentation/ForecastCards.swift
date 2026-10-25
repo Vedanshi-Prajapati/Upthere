@@ -153,6 +153,7 @@ struct DailyWeatherRow: View {
 
 // MARK: - Previews
 
+#if DEBUG
 #Preview("Forecast") {
     let repo = MockWeatherRepository()
     let uc = GetWeatherUseCase(repository: repo)
@@ -167,3 +168,4 @@ struct DailyWeatherRow: View {
     return ForecastView(viewModel: vm)
         .dynamicTypeSize(.accessibility3)
 }
+#endif

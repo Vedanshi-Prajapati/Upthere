@@ -111,9 +111,11 @@ public enum AppTab: String, CaseIterable, Hashable, Sendable {
     case home, forecast, insights, locations, settings
 }
 
+#if DEBUG
 #Preview {
     let repo = MockWeatherRepository()
     let uc = GetWeatherUseCase(repository: repo)
     let vm = HomeViewModel(getWeatherUseCase: uc)
     return MainTabView(homeViewModel: vm)
 }
+#endif

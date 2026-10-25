@@ -162,6 +162,7 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
 
 // MARK: - Fake Scheduler for Unit Tests
 
+#if DEBUG
 public final class FakeNotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
     public var authorizationStatusToReturn: NotificationAuthorizationStatus = .authorized
     public var requestAuthorizationResult: Bool = true
@@ -215,4 +216,5 @@ public final class FakeNotificationScheduler: NotificationSchedulerProtocol, @un
         deliveredAlertIds.insert(id)
     }
 }
+#endif
 

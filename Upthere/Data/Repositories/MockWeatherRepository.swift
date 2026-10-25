@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-
+#if DEBUG
 public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
     public var mockWeather: Weather?
     public var errorToThrow: Error?
@@ -196,3 +196,4 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
         )
     }
 }
+#endif

@@ -260,6 +260,7 @@ public struct InsightsView: View {
 
 // MARK: - Previews
 
+#if DEBUG
 #Preview("Insights") {
     let repo = MockWeatherRepository()
     let uc = GetWeatherUseCase(repository: repo)
@@ -274,3 +275,4 @@ public struct InsightsView: View {
     InsightsView(viewModel: vm)
         .dynamicTypeSize(.accessibility3)
 }
+#endif

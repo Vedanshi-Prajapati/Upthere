@@ -721,6 +721,7 @@ private struct PrecipitationBarChart: View {
 
 // MARK: - Preview
 
+#if DEBUG
 private let _previewVM: HomeViewModel = {
     let repo = MockWeatherRepository()
     let uc = GetWeatherUseCase(repository: repo)
@@ -741,3 +742,4 @@ private let _previewVM: HomeViewModel = {
     }
     .dynamicTypeSize(.accessibility3)
 }
+#endif
