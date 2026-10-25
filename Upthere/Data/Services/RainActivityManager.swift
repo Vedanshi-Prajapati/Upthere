@@ -3,27 +3,27 @@ import ActivityKit
 import OSLog
 
 @MainActor
-public final class RainActivityManager {
-    public static let shared = RainActivityManager()
+final class RainActivityManager {
+    static let shared = RainActivityManager()
 
     private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "RainActivityManager")
     private let insightEngine = InsightEngine()
 
-    public init() {}
+    init() {}
 
     /// Checks if Live Activities are enabled and if an active rain activity exists
-    public var hasActiveActivity: Bool {
+    var hasActiveActivity: Bool {
         !Activity<RainStartActivityAttributes>.activities.isEmpty
     }
 
     /// The first active rain activity if present
-    public var activeActivity: Activity<RainStartActivityAttributes>? {
+    var activeActivity: Activity<RainStartActivityAttributes>? {
         Activity<RainStartActivityAttributes>.activities.first
     }
 
     /// Starts a RainStartActivity for the specified city and hourly forecast
     @discardableResult
-    public func startRainActivity(
+    func startRainActivity(
         city: String,
         hourly: [HourlyWeather],
         now: Date = Date()
@@ -66,7 +66,7 @@ public final class RainActivityManager {
     }
 
     /// Updates existing RainStartActivities on foreground refresh
-    public func updateOnForegroundRefresh(
+    func updateOnForegroundRefresh(
         hourly: [HourlyWeather],
         city: String? = nil,
         now: Date = Date()
@@ -97,7 +97,7 @@ public final class RainActivityManager {
     }
 
     /// Ends all active RainStartActivities
-    public func endAllRainActivities(dismissalPolicy: ActivityUIDismissalPolicy = .immediate) async {
+    func endAllRainActivities(dismissalPolicy: ActivityUIDismissalPolicy = .immediate) async {
         for activity in Activity<RainStartActivityAttributes>.activities {
             let finalContent = ActivityContent(state: activity.content.state, staleDate: nil)
             await activity.end(finalContent, dismissalPolicy: dismissalPolicy)

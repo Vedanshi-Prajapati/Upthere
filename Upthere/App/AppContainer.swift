@@ -1,18 +1,18 @@
 import Foundation
 
 @MainActor
-public final class AppContainer {
-    public let unitPreferences: UnitPreferences
-    public let weatherFormatter: WeatherFormatter
-    public let locationService: LocationService
-    public let locationsManager: SavedLocationsManager
-    public let weatherRepository: any WeatherRepository
-    public let getWeatherUseCase: any GetWeatherUseCaseProtocol
+final class AppContainer {
+    let unitPreferences: UnitPreferences
+    let weatherFormatter: WeatherFormatter
+    let locationService: LocationService
+    let locationsManager: SavedLocationsManager
+    let weatherRepository: any WeatherRepository
+    let getWeatherUseCase: any GetWeatherUseCaseProtocol
 
-    public let settingsViewModel: SettingsViewModel
-    public let homeViewModel: HomeViewModel
+    let settingsViewModel: SettingsViewModel
+    let homeViewModel: HomeViewModel
 
-    public init(
+    init(
         unitPreferences: UnitPreferences? = nil,
         weatherRepository: (any WeatherRepository)? = nil,
         locationService: LocationService? = nil,
@@ -85,7 +85,7 @@ public final class AppContainer {
         )
     }
 
-    public func makeHomeViewModel() -> HomeViewModel {
+    func makeHomeViewModel() -> HomeViewModel {
         homeViewModel
     }
 }

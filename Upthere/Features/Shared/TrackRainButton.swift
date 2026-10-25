@@ -1,19 +1,19 @@
 import SwiftUI
 
-public struct TrackRainButton: View {
-    public let cityName: String
-    public let hourly: [HourlyWeather]
+struct TrackRainButton: View {
+    let cityName: String
+    let hourly: [HourlyWeather]
     @State private var isTracking: Bool = false
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    public init(cityName: String, hourly: [HourlyWeather]) {
+    init(cityName: String, hourly: [HourlyWeather]) {
         self.cityName = cityName
         self.hourly = hourly
         self._isTracking = State(initialValue: RainActivityManager.shared.hasActiveActivity)
     }
 
-    public var body: some View {
+    var body: some View {
         Group {
             if reduceTransparency {
                 if isTracking {

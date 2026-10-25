@@ -1,40 +1,40 @@
 import Foundation
 
-public struct CachedWeatherRecord: Codable {
-    public let weather: Weather
-    public let savedAt: Date
+struct CachedWeatherRecord: Codable {
+    let weather: Weather
+    let savedAt: Date
 
-    public init(weather: Weather, savedAt: Date = Date()) {
+    init(weather: Weather, savedAt: Date = Date()) {
         self.weather = weather
         self.savedAt = savedAt
     }
 
-    public var isFresh: Bool {
+    var isFresh: Bool {
         Date().timeIntervalSince(savedAt) < 1800 // 30 minutes
     }
 
-    public var isStale: Bool {
+    var isStale: Bool {
         !isFresh && Date().timeIntervalSince(savedAt) < 86400 // Under 24 hours
     }
 
-    public var isExpired: Bool {
+    var isExpired: Bool {
         Date().timeIntervalSince(savedAt) >= 86400 // 24 hours or older
     }
 }
 
-public final class WeatherCacheManager: @unchecked Sendable {
-    public static let shared = WeatherCacheManager()
+final class WeatherCacheManager: @unchecked Sendable {
+    static let shared = WeatherCacheManager()
 
     private let defaults: UserDefaults
     private let keyPrefix = "upthere.weather.cache."
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    public init(defaults: UserDefaults = AppGroup.defaults) {
+    init(defaults: UserDefaults = AppGroup.defaults) {
         self.defaults = defaults
     }
 
-    public func cacheKey(for cityName: String, coordinate: (lat: Double, lon: Double)? = nil) -> String {
+    func cacheKey(for cityName: String, coordinate: (lat: Double, lon: Double)? = nil) -> String {
         let sanitized = cityName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if let coordinate = coordinate {
             let latRounded = String(format: "%.2f", coordinate.lat)
@@ -44,14 +44,14 @@ public final class WeatherCacheManager: @unchecked Sendable {
         return "\(keyPrefix)city_\(sanitized)"
     }
 
-    public func save(weather: Weather, key: String) {
+    func save(weather: Weather, key: String) {
         let record = CachedWeatherRecord(weather: weather, savedAt: Date())
         if let data = try? encoder.encode(record) {
             defaults.set(data, forKey: key)
         }
     }
 
-    public func load(key: String, allowExpired: Bool = false) -> CachedWeatherRecord? {
+    func load(key: String, allowExpired: Bool = false) -> CachedWeatherRecord? {
         guard let data = defaults.data(forKey: key),
               let record = try? decoder.decode(CachedWeatherRecord.self, from: data) else {
             return nil
@@ -62,11 +62,11 @@ public final class WeatherCacheManager: @unchecked Sendable {
         return record
     }
 
-    public func clear(key: String) {
+    func clear(key: String) {
         defaults.removeObject(forKey: key)
     }
 
-    public func clearAll() {
+    func clearAll() {
         let dictionary = defaults.dictionaryRepresentation()
         for k in dictionary.keys where k.hasPrefix(keyPrefix) {
             defaults.removeObject(forKey: k)

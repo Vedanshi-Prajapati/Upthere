@@ -1,16 +1,16 @@
 import SwiftUI
 
 /// Permission denied screen shown when location access has been denied.
-public struct PermissionDeniedView: View {
-    public var onSearch: () -> Void
-    public var onOpenSettings: () -> Void
+struct PermissionDeniedView: View {
+    var onSearch: () -> Void
+    var onOpenSettings: () -> Void
 
-    public init(onSearch: @escaping () -> Void, onOpenSettings: @escaping () -> Void) {
+    init(onSearch: @escaping () -> Void, onOpenSettings: @escaping () -> Void) {
         self.onSearch = onSearch
         self.onOpenSettings = onOpenSettings
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             AppTheme.backgroundGradient.ignoresSafeArea()
 

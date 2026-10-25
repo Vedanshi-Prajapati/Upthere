@@ -2,8 +2,8 @@ import Foundation
 import AppIntents
 
 /// AppShortcutsProvider exposing Siri & Shortcuts shortcuts to the system
-public struct UpthereShortcuts: AppShortcutsProvider {
-    public static var appShortcuts: [AppShortcut] {
+struct UpthereShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: CheckWeatherIntent(),
             phrases: [
@@ -48,7 +48,7 @@ public struct UpthereShortcuts: AppShortcutsProvider {
         )
     }
 
-    public static var shortcutTileColor: ShortcutTileColor {
+    static var shortcutTileColor: ShortcutTileColor {
         .lightBlue
     }
 }

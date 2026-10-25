@@ -1,6 +1,6 @@
 import Foundation
 
-public enum WeatherServiceError: LocalizedError, Equatable, Sendable {
+enum WeatherServiceError: LocalizedError, Equatable, Sendable {
     case offline
     case timeout
     case unauthorized
@@ -9,7 +9,7 @@ public enum WeatherServiceError: LocalizedError, Equatable, Sendable {
     case dataUnavailable
     case corruptedData(String)
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .offline:
             return "No internet connection. Please check your network and try again."
@@ -28,7 +28,7 @@ public enum WeatherServiceError: LocalizedError, Equatable, Sendable {
         }
     }
 
-    public var isRetryable: Bool {
+    var isRetryable: Bool {
         switch self {
         case .offline, .timeout, .serverError, .rateLimited:
             return true

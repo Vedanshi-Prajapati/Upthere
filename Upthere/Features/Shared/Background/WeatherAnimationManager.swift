@@ -3,15 +3,15 @@ import Combine
 
 @MainActor
 @Observable
-public final class WeatherAnimationManager {
-    public static let shared = WeatherAnimationManager()
+final class WeatherAnimationManager {
+    static let shared = WeatherAnimationManager()
 
-    public private(set) var isLowPowerModeEnabled: Bool
-    public private(set) var thermalState: ProcessInfo.ThermalState
+    private(set) var isLowPowerModeEnabled: Bool
+    private(set) var thermalState: ProcessInfo.ThermalState
 
     private var cancellables = Set<AnyCancellable>()
 
-    public init() {
+    init() {
         self.isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
         self.thermalState = ProcessInfo.processInfo.thermalState
 
@@ -30,7 +30,7 @@ public final class WeatherAnimationManager {
             .store(in: &cancellables)
     }
 
-    public func shouldPause(
+    func shouldPause(
         scenePhase: ScenePhase,
         isHomeTab: Bool,
         reduceMotion: Bool
@@ -43,7 +43,7 @@ public final class WeatherAnimationManager {
         return false
     }
 
-    public var particleScale: Double {
+    var particleScale: Double {
         switch thermalState {
         case .serious:
             return 0.5

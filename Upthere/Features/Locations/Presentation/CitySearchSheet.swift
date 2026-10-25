@@ -2,16 +2,16 @@ import SwiftUI
 
 /// City search sheet shown when the user taps "+" on the Locations screen.
 /// Uses MapKit city searching via MKLocalSearchCompleter and MKLocalSearch.
-public struct CitySearchSheet: View {
+struct CitySearchSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: CitySearchViewModel
     @State private var searchText = ""
 
-    public var condition: String?
-    public var symbolName: String?
-    public var onCitySelected: (SavedLocation) -> Void
+    var condition: String?
+    var symbolName: String?
+    var onCitySelected: (SavedLocation) -> Void
 
-    public init(
+    init(
         condition: String? = nil,
         symbolName: String? = nil,
         searchService: (any CitySearching)? = nil,
@@ -23,7 +23,7 @@ public struct CitySearchSheet: View {
         self.onCitySelected = onCitySelected
     }
 
-    public init(
+    init(
         viewModel: CitySearchViewModel,
         condition: String? = nil,
         symbolName: String? = nil,
@@ -35,7 +35,7 @@ public struct CitySearchSheet: View {
         self.onCitySelected = onCitySelected
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             // Drag indicator
             Capsule()

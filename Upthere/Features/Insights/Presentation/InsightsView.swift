@@ -1,15 +1,15 @@
 import SwiftUI
 
-public struct InsightsView: View {
+struct InsightsView: View {
     @State var viewModel: HomeViewModel
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
     @Environment(\.weatherFormatter) var weatherFormatter
 
-    public init(viewModel: HomeViewModel) {
+    init(viewModel: HomeViewModel) {
         self._viewModel = State(initialValue: viewModel)
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             WeatherBackgroundView(
                 condition: viewModel.displayedWeather?.condition,

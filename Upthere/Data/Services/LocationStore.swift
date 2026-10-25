@@ -1,13 +1,13 @@
 import Foundation
 
-public protocol LocationStore: AnyObject, Sendable {
+protocol LocationStore: AnyObject, Sendable {
     func loadLocations() throws -> [SavedLocation]
     func saveLocations(_ locations: [SavedLocation]) throws
     func loadSelectedLocationId() -> UUID?
     func saveSelectedLocationId(_ id: UUID?)
 }
 
-public final class FileLocationStore: LocationStore, @unchecked Sendable {
+final class FileLocationStore: LocationStore, @unchecked Sendable {
     private struct StoredPayload: Codable {
         var locations: [SavedLocation]
         var selectedLocationId: UUID?
@@ -21,7 +21,7 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
     private let storeFilenameKey = "upthere.saved_locations.store_filename"
     private let lock = NSLock()
 
-    public init(
+    init(
         fileURL: URL? = nil,
         defaults: UserDefaults = .standard
     ) {
@@ -81,7 +81,7 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
         }
     }
 
-    public func loadLocations() throws -> [SavedLocation] {
+    func loadLocations() throws -> [SavedLocation] {
         lock.lock()
         defer { lock.unlock() }
 
@@ -91,7 +91,7 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
         return payload.locations
     }
 
-    public func saveLocations(_ locations: [SavedLocation]) throws {
+    func saveLocations(_ locations: [SavedLocation]) throws {
         lock.lock()
         defer { lock.unlock() }
 
@@ -100,14 +100,14 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
         try writePayload(payload)
     }
 
-    public func loadSelectedLocationId() -> UUID? {
+    func loadSelectedLocationId() -> UUID? {
         lock.lock()
         defer { lock.unlock() }
 
         return readPayload()?.selectedLocationId
     }
 
-    public func saveSelectedLocationId(_ id: UUID?) {
+    func saveSelectedLocationId(_ id: UUID?) {
         lock.lock()
         defer { lock.unlock() }
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Reusable picker screen for unit selection (Temperature, Wind speed, Precipitation).
 /// Shows a list of options with a checkmark on the currently selected one.
-public struct UnitPickerView: View {
+struct UnitPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -13,7 +13,7 @@ public struct UnitPickerView: View {
     let symbolName: String?
     let onSelect: (String) -> Void
 
-    public init(
+    init(
         title: String,
         options: [String],
         selected: String,
@@ -29,7 +29,7 @@ public struct UnitPickerView: View {
         self.onSelect = onSelect
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             WeatherBackgroundView(condition: condition, symbolName: symbolName)
 

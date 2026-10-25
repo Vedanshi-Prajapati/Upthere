@@ -2,11 +2,11 @@ import Foundation
 import CoreLocation
 import MapKit
 
-public enum CitySearchError: LocalizedError, Equatable, Sendable {
+enum CitySearchError: LocalizedError, Equatable, Sendable {
     case locationNotFound
     case searchFailed(String)
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .locationNotFound:
             return "Unable to find coordinates for the selected city."
@@ -16,25 +16,25 @@ public enum CitySearchError: LocalizedError, Equatable, Sendable {
     }
 }
 
-public struct CitySearchResult: Identifiable, Hashable, Sendable {
-    public let id: String
-    public let title: String
-    public let subtitle: String
+struct CitySearchResult: Identifiable, Hashable, Sendable {
+    let id: String
+    let title: String
+    let subtitle: String
 
-    public init(id: String = UUID().uuidString, title: String, subtitle: String) {
+    init(id: String = UUID().uuidString, title: String, subtitle: String) {
         self.id = id
         self.title = title
         self.subtitle = subtitle
     }
 }
 
-public struct ResolvedCityLocation: Equatable, Sendable {
-    public let cityName: String
-    public let regionName: String
-    public let latitude: Double
-    public let longitude: Double
+struct ResolvedCityLocation: Equatable, Sendable {
+    let cityName: String
+    let regionName: String
+    let latitude: Double
+    let longitude: Double
 
-    public init(cityName: String, regionName: String, latitude: Double, longitude: Double) {
+    init(cityName: String, regionName: String, latitude: Double, longitude: Double) {
         self.cityName = cityName
         self.regionName = regionName
         self.latitude = latitude
@@ -42,24 +42,24 @@ public struct ResolvedCityLocation: Equatable, Sendable {
     }
 }
 
-public protocol CitySearching: AnyObject, Sendable {
+protocol CitySearching: AnyObject, Sendable {
     func searchCompletions(for query: String) async throws -> [CitySearchResult]
     func resolveLocation(for result: CitySearchResult) async throws -> ResolvedCityLocation
 }
 
 @MainActor
-public final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSearchCompleterDelegate {
+final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSearchCompleterDelegate {
     private let completer: MKLocalSearchCompleter
     private var pendingContinuation: CheckedContinuation<[CitySearchResult], Never>?
 
-    public override init() {
+    override init() {
         self.completer = MKLocalSearchCompleter()
         super.init()
         self.completer.delegate = self
         self.completer.resultTypes = .address
     }
 
-    public func searchCompletions(for query: String) async throws -> [CitySearchResult] {
+    func searchCompletions(for query: String) async throws -> [CitySearchResult] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             completer.queryFragment = ""
@@ -90,13 +90,13 @@ public final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSear
         }
     }
 
-    public func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         let mapped = mapCompletions(completer.results)
         pendingContinuation?.resume(returning: mapped)
         pendingContinuation = nil
     }
 
-    public func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
         pendingContinuation?.resume(returning: [])
         pendingContinuation = nil
     }
@@ -110,7 +110,7 @@ public final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSear
         }
     }
 
-    public func resolveLocation(for result: CitySearchResult) async throws -> ResolvedCityLocation {
+    func resolveLocation(for result: CitySearchResult) async throws -> ResolvedCityLocation {
         let request = MKLocalSearch.Request()
         let query = result.subtitle.isEmpty ? result.title : "\(result.title), \(result.subtitle)"
         request.naturalLanguageQuery = query

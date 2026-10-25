@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-public struct MainTabView: View {
+struct MainTabView: View {
     @State private var selectedTab: AppTab
     @State private var showPermission: Bool
 
@@ -10,7 +10,7 @@ public struct MainTabView: View {
     private let locationService: LocationService
     private let locationsManager: SavedLocationsManager
 
-    public init(
+    init(
         homeViewModel: HomeViewModel,
         settingsViewModel: SettingsViewModel? = nil,
         locationService: LocationService? = nil,
@@ -31,7 +31,7 @@ public struct MainTabView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    public var body: some View {
+    var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Home", systemImage: "house", value: .home) {
                 HomeView(viewModel: homeViewModel, onNavigateToInsights: {
@@ -107,7 +107,7 @@ public struct MainTabView: View {
 
 // MARK: - Tab enum
 
-public enum AppTab: String, CaseIterable, Hashable, Sendable {
+enum AppTab: String, CaseIterable, Hashable, Sendable {
     case home, forecast, insights, locations, settings
 }
 

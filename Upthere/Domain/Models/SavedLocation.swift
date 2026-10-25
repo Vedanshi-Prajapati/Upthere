@@ -1,15 +1,15 @@
 import Foundation
 
-public struct SavedLocation: Equatable, Sendable, Identifiable, Codable {
-    public let id: UUID
-    public let cityName: String
-    public let regionName: String
-    public let condition: String
-    public let isCurrentLocation: Bool
-    public let latitude: Double?
-    public let longitude: Double?
+struct SavedLocation: Equatable, Sendable, Identifiable, Codable {
+    let id: UUID
+    let cityName: String
+    let regionName: String
+    let condition: String
+    let isCurrentLocation: Bool
+    let latitude: Double?
+    let longitude: Double?
 
-    public init(
+    init(
         id: UUID = UUID(),
         cityName: String,
         regionName: String,

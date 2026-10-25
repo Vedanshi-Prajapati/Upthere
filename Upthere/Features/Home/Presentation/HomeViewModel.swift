@@ -6,40 +6,40 @@ import os
 
 @Observable
 @MainActor
-public final class HomeViewModel {
-    public enum BannerType: Equatable {
+final class HomeViewModel {
+    enum BannerType: Equatable {
         case cached(lastUpdated: String)
         case offline(lastUpdated: String)
         case refreshFailed(reason: String)
         case locationFallback(reason: String)
     }
 
-    public enum ViewState: Equatable {
+    enum ViewState: Equatable {
         case idle
         case loading(isSilent: Bool)
         case loaded(weather: Weather, banner: BannerType?)
         case error(message: String, isRetryable: Bool)
     }
 
-    public private(set) var state: ViewState = .idle
-    public private(set) var selectedLocation: SavedLocation?
-    public private(set) var isRefreshing: Bool = false
-    public private(set) var currentLoadedWeather: Weather?
-    public private(set) var activeTask: Task<Void, Never>?
-    public var isCurrentLocation: Bool {
+    private(set) var state: ViewState = .idle
+    private(set) var selectedLocation: SavedLocation?
+    private(set) var isRefreshing: Bool = false
+    private(set) var currentLoadedWeather: Weather?
+    private(set) var activeTask: Task<Void, Never>?
+    var isCurrentLocation: Bool {
         selectedLocation == nil || selectedLocation?.isCurrentLocation == true
     }
 
-    public let locationService: LocationService
+    let locationService: LocationService
     private let getWeatherUseCase: any GetWeatherUseCaseProtocol
     private let cacheManager: WeatherCacheManager
-    public let locationsManager: SavedLocationsManager
+    let locationsManager: SavedLocationsManager
     private let notificationScheduler: any NotificationSchedulerProtocol
     private let defaults: UserDefaults
     private var locationTask: Task<Void, Never>?
     private var latestRequestId = UUID()
 
-    public init(
+    init(
         getWeatherUseCase: any GetWeatherUseCaseProtocol,
         cacheManager: WeatherCacheManager? = nil,
         locationsManager: SavedLocationsManager? = nil,
@@ -68,7 +68,7 @@ public final class HomeViewModel {
         }
     }
 
-    public var displayedWeather: Weather? {
+    var displayedWeather: Weather? {
         if let current = currentLoadedWeather {
             return current
         }
@@ -80,7 +80,7 @@ public final class HomeViewModel {
         }
     }
 
-    public func selectLocation(_ location: SavedLocation?) {
+    func selectLocation(_ location: SavedLocation?) {
         locationsManager.selectLocation(location)
         self.selectedLocation = locationsManager.selectedLocation
         self.currentLoadedWeather = nil
@@ -99,7 +99,7 @@ public final class HomeViewModel {
         self.activeTask = task
     }
 
-    public func loadWeather(force: Bool = false) async {
+    func loadWeather(force: Bool = false) async {
         // Switching tabs or calling when already loaded without force makes zero calls
         if !force, case .loaded = state {
             return
@@ -225,7 +225,7 @@ public final class HomeViewModel {
         }
     }
 
-    public func refreshWeather() async {
+    func refreshWeather() async {
         await loadWeather(force: true)
     }
 

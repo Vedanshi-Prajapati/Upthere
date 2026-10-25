@@ -1,26 +1,26 @@
 import Foundation
 
-public nonisolated enum RainStateCalculationStatus: Equatable, Sendable {
+nonisolated enum RainStateCalculationStatus: Equatable, Sendable {
     case rainPending(minutesUntilRain: Int)
     case rainStarted
     case rainEnded
 }
 
-public nonisolated struct RainStateCalculationResult: Equatable, Sendable {
-    public let status: RainStateCalculationStatus
-    public let minutesUntilRain: Int
-    public let intensity: String
-    public let endTime: Date
+nonisolated struct RainStateCalculationResult: Equatable, Sendable {
+    let status: RainStateCalculationStatus
+    let minutesUntilRain: Int
+    let intensity: String
+    let endTime: Date
 
-    public var isEnded: Bool {
+    var isEnded: Bool {
         status == .rainEnded
     }
 
-    public var isRaining: Bool {
+    var isRaining: Bool {
         status == .rainStarted
     }
 
-    public init(
+    init(
         status: RainStateCalculationStatus,
         minutesUntilRain: Int,
         intensity: String,
@@ -32,7 +32,7 @@ public nonisolated struct RainStateCalculationResult: Equatable, Sendable {
         self.endTime = endTime
     }
 
-    public var contentState: RainStartActivityAttributes.ContentState {
+    var contentState: RainStartActivityAttributes.ContentState {
         RainStartActivityAttributes.ContentState(
             minutesUntilRain: minutesUntilRain,
             intensity: intensity,
@@ -41,11 +41,11 @@ public nonisolated struct RainStateCalculationResult: Equatable, Sendable {
     }
 }
 
-public nonisolated struct RainActivityStateCalculator: Sendable {
-    public init() {}
+nonisolated struct RainActivityStateCalculator: Sendable {
+    init() {}
 
     /// Formats intensity string based on peak rain probability and precipitation volume.
-    public static func determineIntensity(peakProbability: Double, totalPrecipitation: Double = 0.0) -> String {
+    static func determineIntensity(peakProbability: Double, totalPrecipitation: Double = 0.0) -> String {
         if peakProbability >= 0.70 || totalPrecipitation >= 5.0 {
             return "Heavy rain"
         } else if peakProbability >= 0.45 || totalPrecipitation >= 1.5 {
@@ -56,7 +56,7 @@ public nonisolated struct RainActivityStateCalculator: Sendable {
     }
 
     /// Evaluates whether rain starts within 2 hours or is currently active.
-    public static func isRainWithinTwoHours(
+    static func isRainWithinTwoHours(
         rainWindow: InsightEngine.RainWindowResult?,
         now: Date = Date()
     ) -> Bool {
@@ -72,7 +72,7 @@ public nonisolated struct RainActivityStateCalculator: Sendable {
     }
 
     /// Calculates state: minutes remaining, rain started, or rain ended.
-    public static func calculateState(
+    static func calculateState(
         rainWindow: InsightEngine.RainWindowResult?,
         now: Date = Date()
     ) -> RainStateCalculationResult? {

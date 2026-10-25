@@ -4,29 +4,29 @@ import CoreLocation
 import os
 
 @MainActor
-public final class SavedLocationsManager: ObservableObject {
-    public static let shared = SavedLocationsManager()
+final class SavedLocationsManager: ObservableObject {
+    static let shared = SavedLocationsManager()
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.vedanshi.upthereapp", category: "SavedLocations")
     private let store: LocationStore
 
-    @Published public private(set) var locations: [SavedLocation] = []
-    @Published public private(set) var selectedLocationId: UUID?
-    @Published public var saveErrorMessage: String?
+    @Published private(set) var locations: [SavedLocation] = []
+    @Published private(set) var selectedLocationId: UUID?
+    @Published var saveErrorMessage: String?
 
-    public init(store: LocationStore? = nil, defaults: UserDefaults = .standard) {
+    init(store: LocationStore? = nil, defaults: UserDefaults = .standard) {
         self.store = store ?? FileLocationStore(defaults: defaults)
         load()
     }
 
-    public var savedLocations: [SavedLocation] { locations }
+    var savedLocations: [SavedLocation] { locations }
 
-    public var selectedLocation: SavedLocation? {
+    var selectedLocation: SavedLocation? {
         guard let id = selectedLocationId else { return nil }
         return locations.first { $0.id == id && !$0.isCurrentLocation }
     }
 
-    public func selectLocation(_ location: SavedLocation?) {
+    func selectLocation(_ location: SavedLocation?) {
         if let location = location, !location.isCurrentLocation {
             self.selectedLocationId = location.id
             store.saveSelectedLocationId(location.id)
@@ -37,7 +37,7 @@ public final class SavedLocationsManager: ObservableObject {
     }
 
     // MARK: - Duplicate Detection (within ~5 km based on coordinates)
-    public func isDuplicate(_ location: SavedLocation) -> Bool {
+    func isDuplicate(_ location: SavedLocation) -> Bool {
         if location.isCurrentLocation {
             return locations.contains(where: { $0.isCurrentLocation })
         }
@@ -59,14 +59,14 @@ public final class SavedLocationsManager: ObservableObject {
         return false
     }
 
-    public func addLocation(_ location: SavedLocation) {
+    func addLocation(_ location: SavedLocation) {
         guard !isDuplicate(location) else { return }
         locations.append(location)
         ensureCurrentLocationPinned()
         save()
     }
 
-    public func removeLocation(id: UUID) {
+    func removeLocation(id: UUID) {
         // Never remove current location
         guard let target = locations.first(where: { $0.id == id }), !target.isCurrentLocation else {
             return
@@ -80,7 +80,7 @@ public final class SavedLocationsManager: ObservableObject {
         save()
     }
 
-    public func moveLocation(fromIndex: Int, toIndex: Int) {
+    func moveLocation(fromIndex: Int, toIndex: Int) {
         guard fromIndex > 0, toIndex > 0,
               fromIndex < locations.count, toIndex < locations.count,
               !locations[fromIndex].isCurrentLocation,
@@ -91,7 +91,7 @@ public final class SavedLocationsManager: ObservableObject {
     }
 
     // MARK: - Reordering (supports normal and filtered moves)
-    public func moveLocation(fromOffsets: IndexSet, toOffset: Int, within filtered: [SavedLocation]? = nil) {
+    func moveLocation(fromOffsets: IndexSet, toOffset: Int, within filtered: [SavedLocation]? = nil) {
         // Guard: current location at index 0 must never be moved or displaced
         guard let filtered = filtered, filtered.count != locations.count else {
             var mutableOffsets = fromOffsets
@@ -131,7 +131,7 @@ public final class SavedLocationsManager: ObservableObject {
         save()
     }
 
-    public func updateCurrentLocationHeader(cityName: String, subtitle: String) {
+    func updateCurrentLocationHeader(cityName: String, subtitle: String) {
         guard !locations.isEmpty, locations[0].isCurrentLocation else { return }
         locations[0] = SavedLocation(
             id: locations[0].id,
@@ -191,11 +191,11 @@ public final class SavedLocationsManager: ObservableObject {
         }
     }
 
-    public static var defaultCurrentLocation: SavedLocation {
+    static var defaultCurrentLocation: SavedLocation {
         SavedLocation(cityName: "Current location", regionName: "GPS location", condition: "Live", isCurrentLocation: true)
     }
 
-    public static var defaultLocations: [SavedLocation] {
+    static var defaultLocations: [SavedLocation] {
         [defaultCurrentLocation]
     }
 }

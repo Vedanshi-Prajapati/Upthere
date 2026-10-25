@@ -1,19 +1,19 @@
 import Foundation
 import UserNotifications
 
-public enum NotificationAuthorizationStatus: Sendable, Equatable {
+enum NotificationAuthorizationStatus: Sendable, Equatable {
     case notDetermined
     case authorized
     case denied
 }
 
-public struct LocalNotificationRequest: Equatable, Sendable {
-    public let id: String
-    public let title: String
-    public let body: String
-    public let fireDate: Date?
+struct LocalNotificationRequest: Equatable, Sendable {
+    let id: String
+    let title: String
+    let body: String
+    let fireDate: Date?
 
-    public init(id: String, title: String, body: String, fireDate: Date? = nil) {
+    init(id: String, title: String, body: String, fireDate: Date? = nil) {
         self.id = id
         self.title = title
         self.body = body
@@ -21,7 +21,7 @@ public struct LocalNotificationRequest: Equatable, Sendable {
     }
 }
 
-public protocol NotificationSchedulerProtocol: AnyObject, Sendable {
+protocol NotificationSchedulerProtocol: AnyObject, Sendable {
     func requestAuthorization() async -> Bool
     func authorizationStatus() async -> NotificationAuthorizationStatus
     func schedule(_ request: LocalNotificationRequest) async throws
@@ -32,7 +32,7 @@ public protocol NotificationSchedulerProtocol: AnyObject, Sendable {
 }
 
 extension NotificationSchedulerProtocol {
-    public func handleWeatherRefresh(
+    func handleWeatherRefresh(
         weather: Weather,
         rainAlertsEnabled: Bool,
         severeAlertsEnabled: Bool,
@@ -73,17 +73,17 @@ extension NotificationSchedulerProtocol {
     }
 }
 
-public final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
-    public static let shared = NotificationScheduler()
+final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
+    static let shared = NotificationScheduler()
 
-    public static let rainAlertId = "upthere.notification.rain"
-    public static let severeAlertIdPrefix = "upthere.notification.severe."
+    static let rainAlertId = "upthere.notification.rain"
+    static let severeAlertIdPrefix = "upthere.notification.severe."
 
     private let center: UNUserNotificationCenter
     private let defaults: UserDefaults
     private let deliveredAlertsKey = "upthere.notifications.delivered_alerts"
 
-    public init(
+    init(
         center: UNUserNotificationCenter = .current(),
         defaults: UserDefaults = AppGroup.defaults
     ) {
@@ -91,7 +91,7 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
         self.defaults = defaults
     }
 
-    public func requestAuthorization() async -> Bool {
+    func requestAuthorization() async -> Bool {
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             return granted
@@ -100,7 +100,7 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
         }
     }
 
-    public func authorizationStatus() async -> NotificationAuthorizationStatus {
+    func authorizationStatus() async -> NotificationAuthorizationStatus {
         let settings = await center.notificationSettings()
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
@@ -114,7 +114,7 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
         }
     }
 
-    public func schedule(_ request: LocalNotificationRequest) async throws {
+    func schedule(_ request: LocalNotificationRequest) async throws {
         let content = UNMutableNotificationContent()
         content.title = request.title
         content.body = request.body
@@ -136,22 +136,22 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
         try await center.add(unRequest)
     }
 
-    public func cancel(id: String) async {
+    func cancel(id: String) async {
         center.removePendingNotificationRequests(withIdentifiers: [id])
         center.removeDeliveredNotifications(withIdentifiers: [id])
     }
 
-    public func cancelAll() async {
+    func cancelAll() async {
         center.removeAllPendingNotificationRequests()
         center.removeAllDeliveredNotifications()
     }
 
-    public func isAlertDelivered(id: String) -> Bool {
+    func isAlertDelivered(id: String) -> Bool {
         let delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
         return delivered.contains(id)
     }
 
-    public func markAlertDelivered(id: String) {
+    func markAlertDelivered(id: String) {
         var delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
         if !delivered.contains(id) {
             delivered.append(id)
@@ -163,16 +163,16 @@ public final class NotificationScheduler: NotificationSchedulerProtocol, @unchec
 // MARK: - Fake Scheduler for Unit Tests
 
 #if DEBUG
-public final class FakeNotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
-    public var authorizationStatusToReturn: NotificationAuthorizationStatus = .authorized
-    public var requestAuthorizationResult: Bool = true
-    public private(set) var requestAuthorizationCallCount: Int = 0
+final class FakeNotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
+    var authorizationStatusToReturn: NotificationAuthorizationStatus = .authorized
+    var requestAuthorizationResult: Bool = true
+    private(set) var requestAuthorizationCallCount: Int = 0
 
-    public private(set) var scheduledRequests: [LocalNotificationRequest] = []
-    public private(set) var cancelledIds: [String] = []
-    public var deliveredAlertIds: Set<String> = []
+    private(set) var scheduledRequests: [LocalNotificationRequest] = []
+    private(set) var cancelledIds: [String] = []
+    var deliveredAlertIds: Set<String> = []
 
-    public init(
+    init(
         authorizationStatus: NotificationAuthorizationStatus = .authorized,
         requestAuthorizationResult: Bool = true
     ) {
@@ -180,7 +180,7 @@ public final class FakeNotificationScheduler: NotificationSchedulerProtocol, @un
         self.requestAuthorizationResult = requestAuthorizationResult
     }
 
-    public func requestAuthorization() async -> Bool {
+    func requestAuthorization() async -> Bool {
         requestAuthorizationCallCount += 1
         if requestAuthorizationResult {
             authorizationStatusToReturn = .authorized
@@ -190,29 +190,29 @@ public final class FakeNotificationScheduler: NotificationSchedulerProtocol, @un
         return requestAuthorizationResult
     }
 
-    public func authorizationStatus() async -> NotificationAuthorizationStatus {
+    func authorizationStatus() async -> NotificationAuthorizationStatus {
         authorizationStatusToReturn
     }
 
-    public func schedule(_ request: LocalNotificationRequest) async throws {
+    func schedule(_ request: LocalNotificationRequest) async throws {
         scheduledRequests.removeAll { $0.id == request.id }
         scheduledRequests.append(request)
     }
 
-    public func cancel(id: String) async {
+    func cancel(id: String) async {
         cancelledIds.append(id)
         scheduledRequests.removeAll { $0.id == id }
     }
 
-    public func cancelAll() async {
+    func cancelAll() async {
         scheduledRequests.removeAll()
     }
 
-    public func isAlertDelivered(id: String) -> Bool {
+    func isAlertDelivered(id: String) -> Bool {
         deliveredAlertIds.contains(id)
     }
 
-    public func markAlertDelivered(id: String) {
+    func markAlertDelivered(id: String) {
         deliveredAlertIds.insert(id)
     }
 }

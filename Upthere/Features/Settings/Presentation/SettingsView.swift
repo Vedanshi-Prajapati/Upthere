@@ -1,16 +1,16 @@
 import SwiftUI
 import CoreLocation
 
-public struct SettingsView: View {
+struct SettingsView: View {
     @Bindable private var viewModel: SettingsViewModel
     private let locationService: LocationService
     @State private var showLocationPermission = false
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    public var condition: String?
-    public var symbolName: String?
+    var condition: String?
+    var symbolName: String?
 
-    public init(
+    init(
         viewModel: SettingsViewModel? = nil,
         locationService: LocationService? = nil,
         condition: String? = nil,
@@ -23,7 +23,7 @@ public struct SettingsView: View {
         self.symbolName = symbolName
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             ZStack {
                 WeatherBackgroundView(condition: condition, symbolName: symbolName)

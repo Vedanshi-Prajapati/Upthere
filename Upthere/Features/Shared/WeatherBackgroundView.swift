@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Weather Condition Category
 
-public enum WeatherVisualType: String, Equatable, Sendable {
+enum WeatherVisualType: String, Equatable, Sendable {
     case sunny
     case partlyCloudy
     case cloudy
@@ -12,7 +12,7 @@ public enum WeatherVisualType: String, Equatable, Sendable {
     case night
     case defaultTheme
 
-    public static func from(condition: String?, symbolName: String? = nil) -> WeatherVisualType {
+    static func from(condition: String?, symbolName: String? = nil) -> WeatherVisualType {
         let cond = (condition ?? "").lowercased()
         let sym = (symbolName ?? "").lowercased()
 
@@ -43,24 +43,24 @@ public enum WeatherVisualType: String, Equatable, Sendable {
 
 // MARK: - Unified Master Weather Background View
 
-public struct WeatherBackgroundView: View {
+struct WeatherBackgroundView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
-    public let type: WeatherVisualType
+    let type: WeatherVisualType
 
-    public init(type: WeatherVisualType) {
+    init(type: WeatherVisualType) {
         self.type = type
     }
 
-    public init(condition: String?, symbolName: String? = nil) {
+    init(condition: String?, symbolName: String? = nil) {
         self.type = WeatherVisualType.from(condition: condition, symbolName: symbolName)
     }
 
     @Environment(\.isWeatherAnimationPaused) private var isPaused
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             // Layer 1: Photorealistic sky canvas with natural atmospheric gradient & subtle lighting
             RealisticSkyCanvas(type: type, reduceMotion: reduceMotion)

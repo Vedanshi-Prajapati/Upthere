@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-public struct LocationsView: View {
+struct LocationsView: View {
     @Environment(\.weatherFormatter) private var weatherFormatter
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var searchText = ""
@@ -11,15 +11,15 @@ public struct LocationsView: View {
 
     @State private var weatherSummaries: [UUID: (temperature: Double, symbolName: String)] = [:]
 
-    public var condition: String?
-    public var symbolName: String?
-    public var onSelectLocation: ((SavedLocation) -> Void)?
+    var condition: String?
+    var symbolName: String?
+    var onSelectLocation: ((SavedLocation) -> Void)?
     private let locationService: LocationService
     private let weatherRepository: any WeatherRepository
     private let cacheManager: WeatherCacheManager
     private let citySearchService: any CitySearching
 
-    public init(
+    init(
         condition: String? = nil,
         symbolName: String? = nil,
         locationsManager: SavedLocationsManager? = nil,
@@ -40,7 +40,7 @@ public struct LocationsView: View {
         self.onSelectLocation = onSelectLocation
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
                 WeatherBackgroundView(condition: condition, symbolName: symbolName)

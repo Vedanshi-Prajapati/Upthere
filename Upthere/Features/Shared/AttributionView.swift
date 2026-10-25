@@ -4,13 +4,13 @@ import WeatherKit
 /// Service that fetches and caches WeatherKit attribution metadata once per session.
 @MainActor
 @Observable
-public final class WeatherAttributionService {
-    public static let shared = WeatherAttributionService()
+final class WeatherAttributionService {
+    static let shared = WeatherAttributionService()
 
-    public private(set) var attribution: WeatherAttribution?
+    private(set) var attribution: WeatherAttribution?
     private var isFetching = false
 
-    public func loadAttribution() async {
+    func loadAttribution() async {
         guard attribution == nil, !isFetching else { return }
         isFetching = true
         defer { isFetching = false }
@@ -25,19 +25,19 @@ public final class WeatherAttributionService {
 
 /// WeatherKit attribution mark and legal attribution link view.
 /// Adapts to light/dark appearance and scales cleanly across Dynamic Type sizes.
-public struct AttributionView: View {
+struct AttributionView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var service = WeatherAttributionService.shared
 
-    public init() {}
+    init() {}
 
     private var markURL: URL? {
         guard let attr = service.attribution else { return nil }
         return colorScheme == .dark ? attr.combinedMarkDarkURL : attr.combinedMarkLightURL
     }
 
-    public var body: some View {
+    var body: some View {
         Group {
             if let attr = service.attribution {
                 attributionContent(attr)

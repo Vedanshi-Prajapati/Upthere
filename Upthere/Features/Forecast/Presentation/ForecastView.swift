@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct ForecastView: View {
+struct ForecastView: View {
     @State private var viewModel: HomeViewModel
     @State private var selectedTab: ForecastTab = .daily
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -8,15 +8,15 @@ public struct ForecastView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    public enum ForecastTab {
+    enum ForecastTab {
         case hourly, daily
     }
 
-    public init(viewModel: HomeViewModel) {
+    init(viewModel: HomeViewModel) {
         self._viewModel = State(initialValue: viewModel)
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             WeatherBackgroundView(
                 condition: viewModel.displayedWeather?.condition,

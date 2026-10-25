@@ -4,12 +4,12 @@ import WeatherKit
 import os
 
 @MainActor
-public final class WeatherKitWeatherRepository: WeatherRepository {
+final class WeatherKitWeatherRepository: WeatherRepository {
     private let weatherService: WeatherService
     private let locationService: LocationService
     private let cacheManager: WeatherCacheManager
 
-    public init(
+    init(
         weatherService: WeatherService? = nil,
         locationService: LocationService? = nil,
         cacheManager: WeatherCacheManager? = nil
@@ -19,7 +19,7 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         self.cacheManager = cacheManager ?? .shared
     }
 
-    public func fetchCurrentWeather() async throws -> Weather {
+    func fetchCurrentWeather() async throws -> Weather {
         let location: CLLocation
         let cityName: String
         let subtitle: String
@@ -57,7 +57,7 @@ public final class WeatherKitWeatherRepository: WeatherRepository {
         return try await fetchWeather(for: location, cityName: cityName, locationSubtitle: subtitle)
     }
 
-    public func fetchWeather(
+    func fetchWeather(
         for location: CLLocation,
         cityName: String,
         locationSubtitle: String

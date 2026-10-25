@@ -3,23 +3,23 @@ import AppIntents
 import CoreLocation
 
 /// AppIntent allowing users and Siri to start tracking rain in a Live Activity
-public struct TrackRainIntent: AppIntent {
-    public static let title: LocalizedStringResource = "Track Rain"
-    public static let description = IntentDescription("Start a Live Activity to track upcoming or current rain in UpThere.")
-    public static let openAppWhenRun: Bool = false
+struct TrackRainIntent: AppIntent {
+    static let title: LocalizedStringResource = "Track Rain"
+    static let description = IntentDescription("Start a Live Activity to track upcoming or current rain in UpThere.")
+    static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Location", description: "City or location to track rain for")
-    public var location: LocationEntity?
+    var location: LocationEntity?
 
     private var repository: (any WeatherRepository)?
     private var cacheManager: WeatherCacheManager?
 
-    public init() {
+    init() {
         self.repository = nil
         self.cacheManager = nil
     }
 
-    public init(
+    init(
         location: LocationEntity?,
         repository: (any WeatherRepository)? = nil,
         cacheManager: WeatherCacheManager? = nil
@@ -29,12 +29,12 @@ public struct TrackRainIntent: AppIntent {
         self.location = location
     }
 
-    public static var parameterSummary: some ParameterSummary {
+    static var parameterSummary: some ParameterSummary {
         Summary("Track rain in \(\.$location)")
     }
 
     @MainActor
-    public func perform() async throws -> some ReturnsValue<Bool> & ProvidesDialog {
+    func perform() async throws -> some ReturnsValue<Bool> & ProvidesDialog {
         let targetCity: String
         let coordinate: CLLocationCoordinate2D
 

@@ -3,17 +3,17 @@ import AppIntents
 import CoreLocation
 
 /// AppEntity representing a saved or current location for App Intents, Siri, and Shortcuts
-public struct LocationEntity: AppEntity, Identifiable, Sendable {
-    public static let defaultQuery = LocationEntityQuery()
-    public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Location"
+struct LocationEntity: AppEntity, Identifiable, Sendable {
+    static let defaultQuery = LocationEntityQuery()
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Location"
 
-    public let id: String
-    public let name: String
-    public let region: String
-    public let latitude: Double
-    public let longitude: Double
+    let id: String
+    let name: String
+    let region: String
+    let latitude: Double
+    let longitude: Double
 
-    public init(id: String, name: String, region: String, latitude: Double, longitude: Double) {
+    init(id: String, name: String, region: String, latitude: Double, longitude: Double) {
         self.id = id
         self.name = name
         self.region = region
@@ -21,7 +21,7 @@ public struct LocationEntity: AppEntity, Identifiable, Sendable {
         self.longitude = longitude
     }
 
-    public var displayRepresentation: DisplayRepresentation {
+    var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
             title: "\(name)",
             subtitle: region.isEmpty ? nil : "\(region)"
@@ -29,10 +29,10 @@ public struct LocationEntity: AppEntity, Identifiable, Sendable {
     }
 }
 
-public struct LocationEntityQuery: EntityQuery, EnumerableEntityQuery, Sendable {
-    public init() {}
+struct LocationEntityQuery: EntityQuery, EnumerableEntityQuery, Sendable {
+    init() {}
 
-    public func allEntities() async throws -> [LocationEntity] {
+    func allEntities() async throws -> [LocationEntity] {
         await MainActor.run {
             let saved = SavedLocationsManager.shared.savedLocations
             var entities = saved.map {
@@ -58,12 +58,12 @@ public struct LocationEntityQuery: EntityQuery, EnumerableEntityQuery, Sendable 
         }
     }
 
-    public func entities(for identifiers: [String]) async throws -> [LocationEntity] {
+    func entities(for identifiers: [String]) async throws -> [LocationEntity] {
         let all = try await allEntities()
         return all.filter { identifiers.contains($0.id) }
     }
 
-    public func suggestedEntities() async throws -> [LocationEntity] {
+    func suggestedEntities() async throws -> [LocationEntity] {
         try await allEntities()
     }
 }

@@ -1,13 +1,13 @@
 import Foundation
 import CoreLocation
 #if DEBUG
-public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
-    public var mockWeather: Weather?
-    public var errorToThrow: Error?
-    public var delayNanoseconds: UInt64
-    public private(set) var fetchCallCount: Int = 0
+final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
+    var mockWeather: Weather?
+    var errorToThrow: Error?
+    var delayNanoseconds: UInt64
+    private(set) var fetchCallCount: Int = 0
 
-    public init(
+    init(
         mockWeather: Weather? = nil,
         shouldFail: Bool = false,
         errorToThrow: Error? = nil,
@@ -24,7 +24,7 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
         }
     }
 
-    public func fetchCurrentWeather() async throws -> Weather {
+    func fetchCurrentWeather() async throws -> Weather {
         fetchCallCount += 1
         if delayNanoseconds > 0 {
             try? await Task.sleep(nanoseconds: delayNanoseconds)
@@ -35,7 +35,7 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
         return mockWeather ?? Self.makeGhaziabadWeather()
     }
 
-    public func fetchWeather(
+    func fetchWeather(
         for location: CLLocation,
         cityName: String,
         locationSubtitle: String
@@ -82,7 +82,7 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
         )
     }
 
-    public static func makeGhaziabadWeather() -> Weather {
+    static func makeGhaziabadWeather() -> Weather {
         let baseDate = Date()
         let calendar = Calendar.current
 
@@ -162,7 +162,7 @@ public final class MockWeatherRepository: WeatherRepository, @unchecked Sendable
         )
     }
 
-    public static func makeWeather(condition: String, symbolName: String, temperature: Double = 24) -> Weather {
+    static func makeWeather(condition: String, symbolName: String, temperature: Double = 24) -> Weather {
         let base = makeGhaziabadWeather()
         return Weather(
             cityName: "Ghaziabad",

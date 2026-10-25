@@ -2,20 +2,20 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public struct WeatherFormatter: Sendable {
-    public let preferences: UnitPreferences
+struct WeatherFormatter: Sendable {
+    let preferences: UnitPreferences
 
-    public init(preferences: UnitPreferences) {
+    init(preferences: UnitPreferences) {
         self.preferences = preferences
     }
 
-    public init() {
+    init() {
         self.preferences = UnitPreferences()
     }
 
     // MARK: - Temperature
 
-    public func temp(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
+    func temp(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
         let activeUnit = unit ?? preferences.temperatureUnit
         let converted = activeUnit.convert(celsius)
         let rounded = round(converted)
@@ -24,7 +24,7 @@ public struct WeatherFormatter: Sendable {
         return "\(intVal)°"
     }
 
-    public func tempWithUnit(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
+    func tempWithUnit(_ celsius: Double, unit: TemperatureUnit? = nil) -> String {
         let activeUnit = unit ?? preferences.temperatureUnit
         let converted = activeUnit.convert(celsius)
         let rounded = round(converted)
@@ -32,14 +32,14 @@ public struct WeatherFormatter: Sendable {
         return "\(intVal)\(activeUnit.shortLabel)"
     }
 
-    public func tempValue(_ celsius: Double, unit: TemperatureUnit? = nil) -> Double {
+    func tempValue(_ celsius: Double, unit: TemperatureUnit? = nil) -> Double {
         let activeUnit = unit ?? preferences.temperatureUnit
         return activeUnit.convert(celsius)
     }
 
     // MARK: - Wind Speed
 
-    public func wind(_ kmh: Double, unit: WindSpeedUnit? = nil) -> String {
+    func wind(_ kmh: Double, unit: WindSpeedUnit? = nil) -> String {
         let activeUnit = unit ?? preferences.windSpeedUnit
         let converted = activeUnit.convert(kmh: max(0, kmh))
         let rounded = Int(round(converted))
@@ -48,7 +48,7 @@ public struct WeatherFormatter: Sendable {
 
     // MARK: - Precipitation
 
-    public func precipitation(_ mm: Double, unit: PrecipitationUnit? = nil) -> String {
+    func precipitation(_ mm: Double, unit: PrecipitationUnit? = nil) -> String {
         let activeUnit = unit ?? preferences.precipitationUnit
         let converted = activeUnit.convert(mm: max(0, mm))
         switch activeUnit {
@@ -61,14 +61,14 @@ public struct WeatherFormatter: Sendable {
 
     // MARK: - Pressure
 
-    public func pressure(_ hpa: Double) -> String {
+    func pressure(_ hpa: Double) -> String {
         let valid = max(800.0, min(1100.0, hpa))
         return "\(Int(round(valid))) hPa"
     }
 
     // MARK: - Visibility
 
-    public func visibility(_ km: Double) -> String {
+    func visibility(_ km: Double) -> String {
         let valid = max(0.0, km)
         let isMiles = (Locale.current.measurementSystem == .us || Locale.current.measurementSystem == .uk)
         if isMiles {
@@ -91,7 +91,7 @@ private struct WeatherFormatterKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    public var weatherFormatter: WeatherFormatter {
+    var weatherFormatter: WeatherFormatter {
         get { self[WeatherFormatterKey.self] }
         set { self[WeatherFormatterKey.self] = newValue }
     }

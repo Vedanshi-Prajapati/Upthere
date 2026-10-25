@@ -2,15 +2,15 @@ import SwiftUI
 
 // MARK: - HomeView
 
-public struct HomeView: View {
+struct HomeView: View {
     @State private var viewModel: HomeViewModel
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isHomeTabSelected) private var isHomeTabSelected
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hasAppeared = false
-    public var onNavigateToInsights: (() -> Void)?
+    var onNavigateToInsights: (() -> Void)?
 
-    public init(viewModel: HomeViewModel, onNavigateToInsights: (() -> Void)? = nil) {
+    init(viewModel: HomeViewModel, onNavigateToInsights: (() -> Void)? = nil) {
         self._viewModel = State(initialValue: viewModel)
         self.onNavigateToInsights = onNavigateToInsights
     }
@@ -25,7 +25,7 @@ public struct HomeView: View {
         )
     }
 
-    public var body: some View {
+    var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: isAnimationPaused)) { timeline in
             let clockTime = isAnimationPaused ? 0.0 : timeline.date.timeIntervalSinceReferenceDate
             homeContent

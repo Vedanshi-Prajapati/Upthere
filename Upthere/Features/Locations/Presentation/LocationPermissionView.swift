@@ -1,15 +1,15 @@
 import SwiftUI
 
-public struct LocationPermissionView: View {
-    public var onAllow: () -> Void
-    public var onSearchInstead: () -> Void
+struct LocationPermissionView: View {
+    var onAllow: () -> Void
+    var onSearchInstead: () -> Void
 
-    public init(onAllow: @escaping () -> Void, onSearchInstead: @escaping () -> Void) {
+    init(onAllow: @escaping () -> Void, onSearchInstead: @escaping () -> Void) {
         self.onAllow = onAllow
         self.onSearchInstead = onSearchInstead
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             AppTheme.backgroundGradient.ignoresSafeArea()
 

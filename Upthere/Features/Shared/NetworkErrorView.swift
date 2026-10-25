@@ -1,14 +1,14 @@
 import SwiftUI
 
 /// Network error state shown when weather data cannot be fetched.
-public struct NetworkErrorView: View {
-    public var onRetry: () -> Void
+struct NetworkErrorView: View {
+    var onRetry: () -> Void
 
-    public init(onRetry: @escaping () -> Void) {
+    init(onRetry: @escaping () -> Void) {
         self.onRetry = onRetry
     }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             // Darker, desaturated gradient for error state
             LinearGradient(

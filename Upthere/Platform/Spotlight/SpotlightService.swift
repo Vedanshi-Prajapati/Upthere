@@ -4,11 +4,11 @@ import UniformTypeIdentifiers
 import os
 
 @MainActor
-public final class SpotlightService {
-    public static let shared = SpotlightService()
+final class SpotlightService {
+    static let shared = SpotlightService()
 
-    public static let weatherDomain = "com.vedanshi.upthere.weather"
-    public static let locationsDomain = "com.vedanshi.upthere.locations"
+    static let weatherDomain = "com.vedanshi.upthere.weather"
+    static let locationsDomain = "com.vedanshi.upthere.locations"
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.vedanshi.upthereapp", category: "Spotlight")
     private let index = CSSearchableIndex.default()
@@ -18,7 +18,7 @@ public final class SpotlightService {
     // MARK: - Weather Indexing
 
     /// Indexes the current live weather into iOS Spotlight
-    public func indexWeather(_ weather: Weather) {
+    func indexWeather(_ weather: Weather) {
         let tempInt = Int(round(weather.temperature))
         let highInt = Int(round(weather.highTemperature))
         let lowInt = Int(round(weather.lowTemperature))
@@ -65,7 +65,7 @@ public final class SpotlightService {
     // MARK: - Saved Locations Indexing
 
     /// Indexes all saved locations into iOS Spotlight for instant system search
-    public func indexSavedLocations(_ locations: [SavedLocation]) {
+    func indexSavedLocations(_ locations: [SavedLocation]) {
         let items: [CSSearchableItem] = locations.map { loc in
             let attributeSet = CSSearchableItemAttributeSet(contentType: .content)
             attributeSet.title = "\(loc.cityName) Forecast"
@@ -106,19 +106,19 @@ public final class SpotlightService {
 
     // MARK: - Removal
 
-    public func removeWeatherIndex(for cityName: String) {
+    func removeWeatherIndex(for cityName: String) {
         logger.debug("Removing weather index for \(cityName, privacy: .private)")
         let id = "weather.\(cityName.lowercased().replacingOccurrences(of: " ", with: "_"))"
         index.deleteSearchableItems(withIdentifiers: [id], completionHandler: nil)
     }
 
-    public func removeLocationIndex(for cityName: String) {
+    func removeLocationIndex(for cityName: String) {
         logger.debug("Removing location index for \(cityName, privacy: .private)")
         let id = "location.\(cityName.lowercased().replacingOccurrences(of: " ", with: "_"))"
         index.deleteSearchableItems(withIdentifiers: [id], completionHandler: nil)
     }
 
-    public func deindexAll() {
+    func deindexAll() {
         logger.debug("De-indexing all Spotlight items")
         index.deleteAllSearchableItems(completionHandler: nil)
     }
@@ -126,7 +126,7 @@ public final class SpotlightService {
     // MARK: - Resolution
 
     /// Resolves city name from Spotlight selection identifier
-    public func resolveCityName(from identifier: String) -> String? {
+    func resolveCityName(from identifier: String) -> String? {
         if identifier.hasPrefix("weather.") {
             let slug = String(identifier.dropFirst("weather.".count))
             return slug.replacingOccurrences(of: "_", with: " ").capitalized

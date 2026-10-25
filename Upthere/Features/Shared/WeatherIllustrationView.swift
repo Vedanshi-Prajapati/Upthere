@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Weather Illustration Type
 
-public enum WeatherIllustrationType: String, Equatable, Sendable {
+enum WeatherIllustrationType: String, Equatable, Sendable {
     case clearDay
     case clearNight
     case partlyCloudyDay
@@ -15,7 +15,7 @@ public enum WeatherIllustrationType: String, Equatable, Sendable {
     case windy
     case foggy
 
-    public static func from(condition: String?, symbolName: String? = nil) -> WeatherIllustrationType {
+    static func from(condition: String?, symbolName: String? = nil) -> WeatherIllustrationType {
         let cond = (condition ?? "").lowercased()
         let sym = (symbolName ?? "").lowercased()
 
@@ -60,12 +60,12 @@ public enum WeatherIllustrationType: String, Equatable, Sendable {
 
 // MARK: - Master WeatherIllustrationView
 
-public struct WeatherIllustrationView: View {
-    public let type: WeatherIllustrationType
-    public let size: CGFloat
-    public let animated: Bool
+struct WeatherIllustrationView: View {
+    let type: WeatherIllustrationType
+    let size: CGFloat
+    let animated: Bool
 
-    public init(
+    init(
         type: WeatherIllustrationType,
         size: CGFloat = 80,
         animated: Bool = true
@@ -75,7 +75,7 @@ public struct WeatherIllustrationView: View {
         self.animated = animated
     }
 
-    public init(
+    init(
         condition: String?,
         symbolName: String? = nil,
         size: CGFloat = 80,
@@ -90,7 +90,7 @@ public struct WeatherIllustrationView: View {
     @Environment(\.weatherClockTime) private var clockTime
     @Environment(\.isWeatherAnimationPaused) private var isPaused
 
-    public var body: some View {
+    var body: some View {
         let t = (animated && !reduceMotion && !isPaused) ? clockTime : 0.0
         illustrationContent(time: t)
             .frame(width: size, height: size)

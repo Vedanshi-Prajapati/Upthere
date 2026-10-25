@@ -4,23 +4,23 @@ import SwiftUI
 import CoreLocation
 
 /// AppIntent allowing users and Siri to check current weather conditions and forecast in UpThere
-public struct CheckWeatherIntent: AppIntent {
-    public static let title: LocalizedStringResource = "Check Weather"
-    public static let description = IntentDescription("Check current weather conditions, temperature, and rain chances in UpThere.")
-    public static let openAppWhenRun: Bool = false
+struct CheckWeatherIntent: AppIntent {
+    static let title: LocalizedStringResource = "Check Weather"
+    static let description = IntentDescription("Check current weather conditions, temperature, and rain chances in UpThere.")
+    static let openAppWhenRun: Bool = false
 
     @Parameter(title: "Location", description: "City or location to check weather for")
-    public var location: LocationEntity?
+    var location: LocationEntity?
 
     private var repository: (any WeatherRepository)?
     private var cacheManager: WeatherCacheManager?
 
-    public init() {
+    init() {
         self.repository = nil
         self.cacheManager = nil
     }
 
-    public init(
+    init(
         location: LocationEntity?,
         repository: (any WeatherRepository)? = nil,
         cacheManager: WeatherCacheManager? = nil
@@ -30,12 +30,12 @@ public struct CheckWeatherIntent: AppIntent {
         self.location = location
     }
 
-    public static var parameterSummary: some ParameterSummary {
+    static var parameterSummary: some ParameterSummary {
         Summary("Check weather in \(\.$location)")
     }
 
     @MainActor
-    public func perform() async throws -> some ReturnsValue<String> & ProvidesDialog & ShowsSnippetView {
+    func perform() async throws -> some ReturnsValue<String> & ProvidesDialog & ShowsSnippetView {
         let targetCity: String
         let coordinate: CLLocationCoordinate2D
 

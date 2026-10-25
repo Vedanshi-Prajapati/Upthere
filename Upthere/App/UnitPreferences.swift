@@ -1,20 +1,20 @@
 import Foundation
 import Observation
 
-public enum TemperatureUnit: String, CaseIterable, Identifiable, Sendable {
+enum TemperatureUnit: String, CaseIterable, Identifiable, Sendable {
     case celsius = "Celsius (°C)"
     case fahrenheit = "Fahrenheit (°F)"
 
-    public var id: String { rawValue }
+    var id: String { rawValue }
 
-    public var shortLabel: String {
+    var shortLabel: String {
         switch self {
         case .celsius: return "°C"
         case .fahrenheit: return "°F"
         }
     }
 
-    public func convert(_ celsius: Double) -> Double {
+    func convert(_ celsius: Double) -> Double {
         switch self {
         case .celsius: return celsius
         case .fahrenheit: return (celsius * 9 / 5) + 32
@@ -22,14 +22,14 @@ public enum TemperatureUnit: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-public enum WindSpeedUnit: String, CaseIterable, Identifiable, Sendable {
+enum WindSpeedUnit: String, CaseIterable, Identifiable, Sendable {
     case kmh = "km/h"
     case mph = "mph"
     case ms = "m/s"
 
-    public var id: String { rawValue }
+    var id: String { rawValue }
 
-    public func convert(kmh: Double) -> Double {
+    func convert(kmh: Double) -> Double {
         switch self {
         case .kmh: return kmh
         case .mph: return kmh * 0.621371
@@ -38,13 +38,13 @@ public enum WindSpeedUnit: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-public enum PrecipitationUnit: String, CaseIterable, Identifiable, Sendable {
+enum PrecipitationUnit: String, CaseIterable, Identifiable, Sendable {
     case mm = "mm"
     case inches = "in"
 
-    public var id: String { rawValue }
+    var id: String { rawValue }
 
-    public func convert(mm: Double) -> Double {
+    func convert(mm: Double) -> Double {
         switch self {
         case .mm: return mm
         case .inches: return mm * 0.0393701
@@ -54,28 +54,28 @@ public enum PrecipitationUnit: String, CaseIterable, Identifiable, Sendable {
 
 @Observable
 @MainActor
-public final class UnitPreferences: @unchecked Sendable {
+final class UnitPreferences: @unchecked Sendable {
     private let defaults: UserDefaults
 
-    public var temperatureUnit: TemperatureUnit {
+    var temperatureUnit: TemperatureUnit {
         didSet {
             defaults.set(temperatureUnit.rawValue, forKey: "settings.temperatureUnit")
         }
     }
 
-    public var windSpeedUnit: WindSpeedUnit {
+    var windSpeedUnit: WindSpeedUnit {
         didSet {
             defaults.set(windSpeedUnit.rawValue, forKey: "settings.windSpeedUnit")
         }
     }
 
-    public var precipitationUnit: PrecipitationUnit {
+    var precipitationUnit: PrecipitationUnit {
         didSet {
             defaults.set(precipitationUnit.rawValue, forKey: "settings.precipitationUnit")
         }
     }
 
-    public init(
+    init(
         temperatureUnit: TemperatureUnit? = nil,
         windSpeedUnit: WindSpeedUnit? = nil,
         precipitationUnit: PrecipitationUnit? = nil,

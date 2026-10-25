@@ -3,21 +3,21 @@ import CoreLocation
 import MapKit
 import Observation
 
-public enum LocationResolutionStatus: Equatable, Sendable {
+enum LocationResolutionStatus: Equatable, Sendable {
     case liveGPS(CLLocation)
     case approximateGPS(CLLocation)
     case manualSelected(SavedLocation)
     case fallbackDefault(reason: String)
 }
 
-public enum LocationServiceError: LocalizedError, Sendable {
+enum LocationServiceError: LocalizedError, Sendable {
     case servicesDisabled
     case permissionDenied
     case restricted
     case timeout
     case invalidCoordinates
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .servicesDisabled:
             return "Location Services are disabled on this device."
@@ -33,7 +33,7 @@ public enum LocationServiceError: LocalizedError, Sendable {
     }
 }
 
-public protocol LocationManagerProtocol: AnyObject {
+protocol LocationManagerProtocol: AnyObject {
     var delegate: CLLocationManagerDelegate? { get set }
     var desiredAccuracy: CLLocationAccuracy { get set }
     var distanceFilter: CLLocationDistance { get set }
@@ -49,24 +49,24 @@ extension CLLocationManager: LocationManagerProtocol {}
 
 @Observable
 @MainActor
-public final class LocationService: NSObject, CLLocationManagerDelegate {
-    public static let shared = LocationService()
+final class LocationService: NSObject, CLLocationManagerDelegate {
+    static let shared = LocationService()
 
     // Explicit Default Fallback Location: Ghaziabad, Uttar Pradesh, India
-    public static let fallbackCoordinate = CLLocation(latitude: 28.6692, longitude: 77.4538)
-    public static let fallbackCityName = "Ghaziabad"
-    public static let fallbackRegionName = "Uttar Pradesh, India"
+    static let fallbackCoordinate = CLLocation(latitude: 28.6692, longitude: 77.4538)
+    static let fallbackCityName = "Ghaziabad"
+    static let fallbackRegionName = "Uttar Pradesh, India"
 
-    public private(set) var authorizationStatus: CLAuthorizationStatus
-    public private(set) var accuracyAuthorization: CLAccuracyAuthorization
-    public private(set) var isLocationServicesEnabled: Bool
-    public private(set) var currentLocation: CLLocation?
-    public private(set) var currentCityName: String = fallbackCityName
-    public private(set) var currentSubtitle: String = ""
+    private(set) var authorizationStatus: CLAuthorizationStatus
+    private(set) var accuracyAuthorization: CLAccuracyAuthorization
+    private(set) var isLocationServicesEnabled: Bool
+    private(set) var currentLocation: CLLocation?
+    private(set) var currentCityName: String = fallbackCityName
+    private(set) var currentSubtitle: String = ""
 
     private var streamContinuations: [UUID: AsyncStream<CLLocation>.Continuation] = [:]
 
-    public var locationUpdates: AsyncStream<CLLocation> {
+    var locationUpdates: AsyncStream<CLLocation> {
         AsyncStream { continuation in
             let id = UUID()
             self.streamContinuations[id] = continuation
@@ -88,11 +88,11 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     private var requestGeneration: Int = 0
     private var geocodeCache: [String: (cityName: String, subtitle: String)] = [:]
 
-    public convenience override init() {
+    convenience override init() {
         self.init(manager: CLLocationManager(), isLocationServicesEnabledProvider: nil)
     }
 
-    public init(
+    init(
         manager: any LocationManagerProtocol,
         isLocationServicesEnabledProvider: (@Sendable () -> Bool)? = nil,
         timeoutSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
@@ -113,13 +113,13 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.distanceFilter = 1000 // 1 kilometer to prevent battery drain
     }
 
-    public func requestAuthorization() {
+    func requestAuthorization() {
         if authorizationStatus == .notDetermined {
             clManager.requestWhenInUseAuthorization()
         }
     }
 
-    public var isAuthorized: Bool {
+    var isAuthorized: Bool {
         #if os(iOS)
         return authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
         #else
@@ -127,11 +127,11 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         #endif
     }
 
-    public var isReducedAccuracy: Bool {
+    var isReducedAccuracy: Bool {
         accuracyAuthorization == .reducedAccuracy
     }
 
-    public func requestCurrentLocation(force: Bool = false) async throws -> CLLocation {
+    func requestCurrentLocation(force: Bool = false) async throws -> CLLocation {
         let servicesEnabled = await Task.detached(priority: .userInitiated) { [isLocationServicesEnabledProvider] in
             if let custom = isLocationServicesEnabledProvider {
                 return custom()
@@ -219,7 +219,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    public func isValidCoordinate(_ coord: CLLocationCoordinate2D) -> Bool {
+    func isValidCoordinate(_ coord: CLLocationCoordinate2D) -> Bool {
         guard coord.latitude.isFinite, coord.longitude.isFinite else { return false }
         guard coord.latitude >= -90.0, coord.latitude <= 90.0 else { return false }
         guard coord.longitude >= -180.0, coord.longitude <= 180.0 else { return false }
@@ -227,7 +227,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     /// Pure reverse geocode: returns (cityName, subtitle) without mutating currentCityName or currentSubtitle.
-    public func reverseGeocode(location: CLLocation) async -> (cityName: String, subtitle: String) {
+    func reverseGeocode(location: CLLocation) async -> (cityName: String, subtitle: String) {
         guard isValidCoordinate(location.coordinate) else {
             return (Self.fallbackCityName, "Default location · \(Self.fallbackRegionName)")
         }
@@ -298,11 +298,11 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
 
     // MARK: - Lifecycle
 
-    public func pauseLocationUpdates() {
+    func pauseLocationUpdates() {
         clManager.stopUpdatingLocation()
     }
 
-    public func resumeLocationUpdates() {
+    func resumeLocationUpdates() {
         if isAuthorized {
             clManager.startUpdatingLocation()
         }
@@ -310,7 +310,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
 
     // MARK: - CLLocationManagerDelegate
 
-    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
 
@@ -325,7 +325,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         guard isValidCoordinate(location.coordinate) else {
             resumeContinuations(with: .failure(LocationServiceError.invalidCoordinates))
@@ -358,7 +358,7 @@ public final class LocationService: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         resumeContinuations(with: .failure(error))
     }
 }

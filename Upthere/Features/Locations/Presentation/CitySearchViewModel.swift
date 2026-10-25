@@ -3,25 +3,25 @@ import Observation
 
 @Observable
 @MainActor
-public final class CitySearchViewModel {
-    public var searchText: String = "" {
+final class CitySearchViewModel {
+    var searchText: String = "" {
         didSet {
             guard searchText != oldValue else { return }
             handleSearchTextChanged(searchText)
         }
     }
 
-    public private(set) var results: [CitySearchResult] = []
-    public private(set) var isLoading: Bool = false
-    public private(set) var isResolving: Bool = false
-    public private(set) var errorMessage: String? = nil
+    private(set) var results: [CitySearchResult] = []
+    private(set) var isLoading: Bool = false
+    private(set) var isResolving: Bool = false
+    private(set) var errorMessage: String? = nil
 
     private let searchService: any CitySearching
     private let debounceNanoseconds: UInt64
     private var activeSearchTask: Task<Void, Never>?
     private var currentSearchId: UUID = UUID()
 
-    public init(
+    init(
         searchService: (any CitySearching)? = nil,
         debounceNanoseconds: UInt64 = 300_000_000 // 300 ms
     ) {
@@ -29,11 +29,11 @@ public final class CitySearchViewModel {
         self.debounceNanoseconds = debounceNanoseconds
     }
 
-    public func updateSearchText(_ text: String) {
+    func updateSearchText(_ text: String) {
         searchText = text
     }
 
-    public func handleSearchTextChanged(_ newText: String) {
+    func handleSearchTextChanged(_ newText: String) {
         // 1. Cancel previous stale search task
         activeSearchTask?.cancel()
         activeSearchTask = nil
@@ -85,7 +85,7 @@ public final class CitySearchViewModel {
         }
     }
 
-    public func select(result: CitySearchResult) async throws -> ResolvedCityLocation {
+    func select(result: CitySearchResult) async throws -> ResolvedCityLocation {
         isResolving = true
         defer { isResolving = false }
         return try await searchService.resolveLocation(for: result)

@@ -6,30 +6,30 @@ import SwiftUI
 
 @Observable
 @MainActor
-public final class SettingsViewModel {
-    public let unitPreferences: UnitPreferences
+final class SettingsViewModel {
+    let unitPreferences: UnitPreferences
 
     // MARK: - Weather Units
-    public var temperatureUnit: TemperatureUnit {
+    var temperatureUnit: TemperatureUnit {
         get { unitPreferences.temperatureUnit }
         set { unitPreferences.temperatureUnit = newValue }
     }
-    public var windSpeedUnit: WindSpeedUnit {
+    var windSpeedUnit: WindSpeedUnit {
         get { unitPreferences.windSpeedUnit }
         set { unitPreferences.windSpeedUnit = newValue }
     }
-    public var precipitationUnit: PrecipitationUnit {
+    var precipitationUnit: PrecipitationUnit {
         get { unitPreferences.precipitationUnit }
         set { unitPreferences.precipitationUnit = newValue }
     }
 
     // MARK: - Notifications
-    public var rainAlertsEnabled: Bool {
+    var rainAlertsEnabled: Bool {
         didSet {
             defaults.set(rainAlertsEnabled, forKey: AppGroup.rainAlertsKey)
         }
     }
-    public var severeAlertsEnabled: Bool {
+    var severeAlertsEnabled: Bool {
         didSet {
             defaults.set(severeAlertsEnabled, forKey: AppGroup.severeAlertsKey)
             WidgetCenter.shared.reloadAllTimelines()
@@ -38,7 +38,7 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Spotlight
-    public var spotlightEnabled: Bool {
+    var spotlightEnabled: Bool {
         didSet {
             defaults.set(spotlightEnabled, forKey: AppGroup.spotlightEnabledKey)
             if !spotlightEnabled {
@@ -49,15 +49,15 @@ public final class SettingsViewModel {
         }
     }
 
-    public var notificationsDenied: Bool = false
+    var notificationsDenied: Bool = false
     private let notificationScheduler: any NotificationSchedulerProtocol
 
-    public func checkNotificationStatus() async {
+    func checkNotificationStatus() async {
         let status = await notificationScheduler.authorizationStatus()
         notificationsDenied = (status == .denied)
     }
 
-    public func setRainAlerts(_ enabled: Bool) async {
+    func setRainAlerts(_ enabled: Bool) async {
         if enabled {
             let allowed = await requestNotificationPermissionIfNeeded()
             if !allowed {
@@ -68,7 +68,7 @@ public final class SettingsViewModel {
         self.rainAlertsEnabled = enabled
     }
 
-    public func setSevereAlerts(_ enabled: Bool) async {
+    func setSevereAlerts(_ enabled: Bool) async {
         if enabled {
             let allowed = await requestNotificationPermissionIfNeeded()
             if !allowed {
@@ -99,10 +99,10 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Location
-    public let locationService: LocationService
+    let locationService: LocationService
     private let defaults: UserDefaults
 
-    public var currentLocationName: String {
+    var currentLocationName: String {
         if locationService.isAuthorized {
             return locationService.currentCityName
         } else if locationService.authorizationStatus == .notDetermined {
@@ -111,7 +111,7 @@ public final class SettingsViewModel {
             return "Permission Denied"
         }
     }
-    public var locationPermission: String {
+    var locationPermission: String {
         switch locationService.authorizationStatus {
         case .authorizedWhenInUse: return "While Using"
         case .authorizedAlways:    return "Always"
@@ -123,13 +123,13 @@ public final class SettingsViewModel {
     }
 
     // MARK: - Appearance
-    public var appearanceMode: AppearanceMode {
+    var appearanceMode: AppearanceMode {
         didSet { defaults.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
     }
 
     // MARK: - About
-    public let weatherDataProvider = "Apple WeatherKit"
-    public var appVersion: String {
+    let weatherDataProvider = "Apple WeatherKit"
+    var appVersion: String {
         let shortVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let buildVersion = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(shortVersion) (\(buildVersion))"
@@ -137,7 +137,7 @@ public final class SettingsViewModel {
 
     private let bundle: Bundle
 
-    public init(
+    init(
         unitPreferences: UnitPreferences? = nil,
         locationService: LocationService? = nil,
         defaults: UserDefaults = AppGroup.defaults,
@@ -177,12 +177,12 @@ public final class SettingsViewModel {
 
     // MARK: - Helpers
 
-    public func formatTemp(_ celsius: Double) -> String {
+    func formatTemp(_ celsius: Double) -> String {
         let val = temperatureUnit.convert(celsius)
         return "\(Int(round(val)))°"
     }
 
-    public func formatWind(_ kmh: Double) -> String {
+    func formatWind(_ kmh: Double) -> String {
         let val = windSpeedUnit.convert(kmh: kmh)
         return "\(Int(round(val))) \(windSpeedUnit.rawValue)"
     }
@@ -190,14 +190,14 @@ public final class SettingsViewModel {
 
 // MARK: - AppearanceMode Enum
 
-public enum AppearanceMode: String, CaseIterable, Identifiable {
+enum AppearanceMode: String, CaseIterable, Identifiable {
     case system = "System"
     case light = "Light"
     case dark = "Dark"
 
-    public var id: String { rawValue }
+    var id: String { rawValue }
 
-    public var colorScheme: ColorScheme? {
+    var colorScheme: ColorScheme? {
         switch self {
         case .system: return nil
         case .light:  return .light

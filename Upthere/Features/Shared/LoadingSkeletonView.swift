@@ -2,13 +2,13 @@ import SwiftUI
 
 /// Skeleton loading screen shown while weather data is being fetched.
 /// Displays animated shimmer placeholders matching the home screen layout.
-public struct LoadingSkeletonView: View {
+struct LoadingSkeletonView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shimmer = false
 
-    public init() {}
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             AppTheme.backgroundGradient.ignoresSafeArea()
 

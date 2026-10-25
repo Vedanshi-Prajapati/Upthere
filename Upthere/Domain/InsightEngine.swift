@@ -1,18 +1,18 @@
 import Foundation
 import os
 
-public nonisolated struct InsightEngine: Sendable {
-    public init() {}
+nonisolated struct InsightEngine: Sendable {
+    init() {}
 
     // MARK: - 1. Rain Window
-    public struct RainWindowResult: Equatable, Sendable {
-        public let startDate: Date
-        public let endDate: Date
-        public let peakDate: Date
-        public let peakProbability: Double
-        public let totalPrecipitationAmount: Double
+    struct RainWindowResult: Equatable, Sendable {
+        let startDate: Date
+        let endDate: Date
+        let peakDate: Date
+        let peakProbability: Double
+        let totalPrecipitationAmount: Double
 
-        public init(
+        init(
             startDate: Date,
             endDate: Date,
             peakDate: Date,
@@ -27,7 +27,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func rainWindow(from hourly: [HourlyWeather]) -> RainWindowResult? {
+    func rainWindow(from hourly: [HourlyWeather]) -> RainWindowResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("RainWindowComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("RainWindowComputation", spState) }
@@ -51,15 +51,15 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     // MARK: - 2. Temperature Trend
-    public struct TemperatureTrendResult: Equatable, Sendable {
-        public let minTemperature: Double
-        public let maxTemperature: Double
-        public let minDate: Date
-        public let maxDate: Date
-        public let currentTemperature: Double
-        public let temperatureSwing: Double
+    struct TemperatureTrendResult: Equatable, Sendable {
+        let minTemperature: Double
+        let maxTemperature: Double
+        let minDate: Date
+        let maxDate: Date
+        let currentTemperature: Double
+        let temperatureSwing: Double
 
-        public init(
+        init(
             minTemperature: Double,
             maxTemperature: Double,
             minDate: Date,
@@ -76,7 +76,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func temperatureTrend(from hourly: [HourlyWeather]) -> TemperatureTrendResult? {
+    func temperatureTrend(from hourly: [HourlyWeather]) -> TemperatureTrendResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("TemperatureTrendComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("TemperatureTrendComputation", spState) }
@@ -101,13 +101,13 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     // MARK: - 3. Strongest Wind
-    public struct StrongestWindResult: Equatable, Sendable {
-        public let currentWindSpeed: Double
-        public let peakWindSpeed: Double
-        public let peakGust: Double
-        public let peakDate: Date
+    struct StrongestWindResult: Equatable, Sendable {
+        let currentWindSpeed: Double
+        let peakWindSpeed: Double
+        let peakGust: Double
+        let peakDate: Date
 
-        public init(
+        init(
             currentWindSpeed: Double,
             peakWindSpeed: Double,
             peakGust: Double,
@@ -120,7 +120,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func strongestWind(from hourly: [HourlyWeather]) -> StrongestWindResult? {
+    func strongestWind(from hourly: [HourlyWeather]) -> StrongestWindResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("StrongestWindComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("StrongestWindComputation", spState) }
@@ -142,18 +142,18 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     // MARK: - 4. Best Outdoor Window
-    public struct BestOutdoorWindowResult: Equatable, Sendable {
-        public let startDate: Date
-        public let endDate: Date
-        public let startIndex: Int
-        public let endIndex: Int
-        public let totalCount: Int
-        public let averageTemperature: Double
-        public let maxPrecipitationChance: Double
-        public let averageWindSpeed: Double
-        public let score: Double
+    struct BestOutdoorWindowResult: Equatable, Sendable {
+        let startDate: Date
+        let endDate: Date
+        let startIndex: Int
+        let endIndex: Int
+        let totalCount: Int
+        let averageTemperature: Double
+        let maxPrecipitationChance: Double
+        let averageWindSpeed: Double
+        let score: Double
 
-        public init(
+        init(
             startDate: Date,
             endDate: Date,
             startIndex: Int,
@@ -176,7 +176,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func bestOutdoorWindow(from hourly: [HourlyWeather]) -> BestOutdoorWindowResult? {
+    func bestOutdoorWindow(from hourly: [HourlyWeather]) -> BestOutdoorWindowResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("BestOutdoorWindowComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("BestOutdoorWindowComputation", spState) }
@@ -246,13 +246,13 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     // MARK: - 5. Peak UV
-    public struct PeakUVResult: Equatable, Sendable {
-        public let peakUVIndex: Int
-        public let peakDate: Date
-        public let startDate: Date
-        public let endDate: Date
+    struct PeakUVResult: Equatable, Sendable {
+        let peakUVIndex: Int
+        let peakDate: Date
+        let startDate: Date
+        let endDate: Date
 
-        public init(
+        init(
             peakUVIndex: Int,
             peakDate: Date,
             startDate: Date,
@@ -265,7 +265,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func peakUV(from hourly: [HourlyWeather]) -> PeakUVResult? {
+    func peakUV(from hourly: [HourlyWeather]) -> PeakUVResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("PeakUVComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("PeakUVComputation", spState) }
@@ -291,15 +291,15 @@ public nonisolated struct InsightEngine: Sendable {
     }
 
     // MARK: - 6. Cloud Change
-    public struct CloudChangeResult: Equatable, Sendable {
-        public let changeDate: Date
-        public let changeIndex: Int
-        public let initialCloudCover: Double
-        public let targetCloudCover: Double
-        public let isClearing: Bool
-        public let maxChangeRate: Double
+    struct CloudChangeResult: Equatable, Sendable {
+        let changeDate: Date
+        let changeIndex: Int
+        let initialCloudCover: Double
+        let targetCloudCover: Double
+        let isClearing: Bool
+        let maxChangeRate: Double
 
-        public init(
+        init(
             changeDate: Date,
             changeIndex: Int,
             initialCloudCover: Double,
@@ -316,7 +316,7 @@ public nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    public func cloudChange(from hourly: [HourlyWeather]) -> CloudChangeResult? {
+    func cloudChange(from hourly: [HourlyWeather]) -> CloudChangeResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("CloudChangeComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("CloudChangeComputation", spState) }

@@ -2,10 +2,10 @@ import SwiftUI
 
 /// Splash screen shown on app launch.
 /// Displays the UpThere logo, app name, and tagline.
-public struct SplashView: View {
-    public init() {}
+struct SplashView: View {
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             AppTheme.backgroundGradient.ignoresSafeArea()
 
