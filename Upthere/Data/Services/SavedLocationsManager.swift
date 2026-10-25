@@ -1,15 +1,18 @@
 import Foundation
 import Combine
 import CoreLocation
+import os
 
 @MainActor
 public final class SavedLocationsManager: ObservableObject {
     public static let shared = SavedLocationsManager()
 
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.vedanshi.upthereapp", category: "SavedLocations")
     private let store: LocationStore
 
     @Published public private(set) var locations: [SavedLocation] = []
     @Published public private(set) var selectedLocationId: UUID?
+    @Published public var saveErrorMessage: String?
 
     public init(store: LocationStore? = nil, defaults: UserDefaults = .standard) {
         self.store = store ?? FileLocationStore(defaults: defaults)
@@ -171,7 +174,13 @@ public final class SavedLocationsManager: ObservableObject {
     }
 
     private func save() {
-        try? store.saveLocations(locations)
+        do {
+            try store.saveLocations(locations)
+            saveErrorMessage = nil
+        } catch {
+            logger.error("Failed to persist saved locations: \(error.localizedDescription)")
+            saveErrorMessage = "Unable to save locations changes. Please try again."
+        }
         store.saveSelectedLocationId(selectedLocationId)
         Task.detached(priority: .utility) { [locations] in
             await SpotlightService.shared.indexSavedLocations(locations)

@@ -909,6 +909,33 @@ struct UpthereTests {
         #expect(FileManager.default.fileExists(atPath: tempURL.path))
     }
 
+    private final class FailingLocationStore: LocationStore, @unchecked Sendable {
+        var shouldFailSave = false
+
+        func loadLocations() throws -> [SavedLocation] { [SavedLocationsManager.defaultCurrentLocation] }
+        func saveLocations(_ locations: [SavedLocation]) throws {
+            if shouldFailSave {
+                throw NSError(domain: "TestStoreError", code: 42, userInfo: [NSLocalizedDescriptionKey: "Disk full"])
+            }
+        }
+        func loadSelectedLocationId() -> UUID? { nil }
+        func saveSelectedLocationId(_ id: UUID?) {}
+    }
+
+    @Test("SavedLocationsManager sets saveErrorMessage when store write fails")
+    func saveFailureSetsErrorMessage() {
+        let failingStore = FailingLocationStore()
+        let manager = SavedLocationsManager(store: failingStore)
+
+        #expect(manager.saveErrorMessage == nil)
+        failingStore.shouldFailSave = true
+
+        let testCity = SavedLocation(cityName: "Rome", regionName: "Italy", condition: "Sunny", isCurrentLocation: false, latitude: 41.9028, longitude: 12.4964)
+        manager.addLocation(testCity)
+
+        #expect(manager.saveErrorMessage != nil)
+    }
+
     // MARK: - App Group Settings Migration
     @Test("App Group migration copies settings once and does not overwrite later changes")
     func appGroupSettingsMigration() {

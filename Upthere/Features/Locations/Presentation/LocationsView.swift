@@ -42,11 +42,42 @@ public struct LocationsView: View {
 
     public var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .top) {
                 WeatherBackgroundView(condition: condition, symbolName: symbolName)
 
-                List {
-                    ForEach(filteredLocations) { location in
+                VStack(spacing: 0) {
+                    if let error = locationsManager.saveErrorMessage {
+                        HStack(spacing: 10) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.yellow)
+                            Text(error)
+                                .font(AppFont.caption)
+                                .foregroundStyle(AppTheme.textPrimary)
+                            Spacer()
+                            Button {
+                                locationsManager.saveErrorMessage = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(AppTheme.textSecondary)
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.red.opacity(0.2))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.red.opacity(0.35), lineWidth: 1)
+                                )
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .animation(.easeInOut, value: locationsManager.saveErrorMessage)
+                    }
+
+                    List {
+                        ForEach(filteredLocations) { location in
                         LocationRowView(
                             location: location,
                             isSelected: isLocationSelected(location),
@@ -137,10 +168,11 @@ public struct LocationsView: View {
                         .listRowSeparator(.hidden)
                     }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .searchable(text: $searchText, prompt: "Search saved cities")
-                .environment(\.editMode, $editMode)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .searchable(text: $searchText, prompt: "Search saved cities")
+                    .environment(\.editMode, $editMode)
+                }
             }
             .navigationTitle("Locations")
             .navigationBarTitleDisplayMode(.large)

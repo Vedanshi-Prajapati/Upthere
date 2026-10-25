@@ -75,8 +75,9 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
                 selectedId = UUID(uuidString: idString)
             }
             let payload = StoredPayload(locations: saved, selectedLocationId: selectedId)
-            writePayload(payload)
-            defaults.set(true, forKey: migrationKey)
+            if (try? writePayload(payload)) != nil {
+                defaults.set(true, forKey: migrationKey)
+            }
         }
     }
 
@@ -96,7 +97,7 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
 
         var payload = readPayload() ?? StoredPayload(locations: [], selectedLocationId: nil)
         payload.locations = locations
-        writePayload(payload)
+        try writePayload(payload)
     }
 
     public func loadSelectedLocationId() -> UUID? {
@@ -112,7 +113,7 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
 
         var payload = readPayload() ?? StoredPayload(locations: [], selectedLocationId: nil)
         payload.selectedLocationId = id
-        writePayload(payload)
+        try? writePayload(payload)
     }
 
     // MARK: - Internal File I/O
@@ -125,10 +126,10 @@ public final class FileLocationStore: LocationStore, @unchecked Sendable {
         return payload
     }
 
-    private func writePayload(_ payload: StoredPayload) {
-        guard let data = try? JSONEncoder().encode(payload) else { return }
+    private func writePayload(_ payload: StoredPayload) throws {
+        let data = try JSONEncoder().encode(payload)
         let parentDir = fileURL.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
-        try? data.write(to: fileURL, options: .atomic)
+        try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
+        try data.write(to: fileURL, options: .atomic)
     }
 }
