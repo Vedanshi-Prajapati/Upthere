@@ -24,6 +24,7 @@ public enum AppGroup: Sendable {
     // MARK: - Setting Keys
     nonisolated public static let severeAlertsKey = "settings.severeAlertsEnabled"
     nonisolated public static let rainAlertsKey = "settings.rainAlertsEnabled"
+    nonisolated public static let spotlightEnabledKey = "settings.spotlightEnabled"
 
     // MARK: - Migration Keys
     nonisolated public static let settingsKeys = [
@@ -32,7 +33,8 @@ public enum AppGroup: Sendable {
         "settings.precipitationUnit",
         "settings.appearanceMode",
         "settings.rainAlertsEnabled",
-        "settings.severeAlertsEnabled"
+        "settings.severeAlertsEnabled",
+        "settings.spotlightEnabled"
     ]
 
     nonisolated public static let migrationKey = "upthere.settings.migrated_to_app_group"

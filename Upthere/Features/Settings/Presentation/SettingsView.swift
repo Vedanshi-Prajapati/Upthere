@@ -39,7 +39,10 @@ public struct SettingsView: View {
                         // 2. Notifications
                         notificationsSection
 
-                        // 3. Location
+                        // 3. Spotlight
+                        spotlightSection
+
+                        // 4. Location
                         locationSection
 
                         // 4. Appearance
@@ -249,7 +252,26 @@ public struct SettingsView: View {
         }
     }
 
-    // MARK: - 3. Location
+    // MARK: - Spotlight
+    private var spotlightSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
+            sectionHeader("Search")
+
+            groupedCard {
+                Toggle(isOn: $viewModel.spotlightEnabled) {
+                    HStack(spacing: AppTheme.spacingMedium) {
+                        iconBadge(icon: "magnifyingglass", color: Color(red: 255/255, green: 149/255, blue: 0/255))
+                        Text("Show weather in Spotlight")
+                            .font(.body)
+                            .foregroundStyle(AppTheme.textPrimary)
+                    }
+                }
+                .tint(AppTheme.accent)
+            }
+        }
+    }
+
+    // MARK: - 4. Location
     private var locationSection: some View {
         VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
             sectionHeader("Location")

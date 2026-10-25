@@ -168,8 +168,10 @@ public final class SavedLocationsManager: ObservableObject {
             self.selectedLocationId = savedId
         }
 
-        Task.detached(priority: .utility) { [locations] in
-            await SpotlightService.shared.indexSavedLocations(locations)
+        if AppGroup.defaults.object(forKey: AppGroup.spotlightEnabledKey) as? Bool ?? true {
+            Task.detached(priority: .utility) { [locations] in
+                await SpotlightService.shared.indexSavedLocations(locations)
+            }
         }
     }
 
@@ -182,8 +184,10 @@ public final class SavedLocationsManager: ObservableObject {
             saveErrorMessage = "Unable to save locations changes. Please try again."
         }
         store.saveSelectedLocationId(selectedLocationId)
-        Task.detached(priority: .utility) { [locations] in
-            await SpotlightService.shared.indexSavedLocations(locations)
+        if AppGroup.defaults.object(forKey: AppGroup.spotlightEnabledKey) as? Bool ?? true {
+            Task.detached(priority: .utility) { [locations] in
+                await SpotlightService.shared.indexSavedLocations(locations)
+            }
         }
     }
 

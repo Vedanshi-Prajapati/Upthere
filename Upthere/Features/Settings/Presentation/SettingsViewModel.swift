@@ -37,6 +37,18 @@ public final class SettingsViewModel {
         }
     }
 
+    // MARK: - Spotlight
+    public var spotlightEnabled: Bool {
+        didSet {
+            defaults.set(spotlightEnabled, forKey: AppGroup.spotlightEnabledKey)
+            if !spotlightEnabled {
+                Task { @MainActor in
+                    SpotlightService.shared.deindexAll()
+                }
+            }
+        }
+    }
+
     public var notificationsDenied: Bool = false
     private let notificationScheduler: any NotificationSchedulerProtocol
 
@@ -155,6 +167,11 @@ public final class SettingsViewModel {
             self.severeAlertsEnabled = defaults.bool(forKey: AppGroup.severeAlertsKey)
         } else {
             self.severeAlertsEnabled = false
+        }
+        if defaults.object(forKey: AppGroup.spotlightEnabledKey) != nil {
+            self.spotlightEnabled = defaults.bool(forKey: AppGroup.spotlightEnabledKey)
+        } else {
+            self.spotlightEnabled = true
         }
     }
 

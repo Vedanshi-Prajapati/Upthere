@@ -175,8 +175,10 @@ public final class HomeViewModel {
             try? WidgetSnapshotStore.shared.save(snapshot)
             WidgetCenter.shared.reloadAllTimelines()
 
-            Task.detached(priority: .utility) {
-                await SpotlightService.shared.indexWeather(weather)
+            if AppGroup.defaults.object(forKey: AppGroup.spotlightEnabledKey) as? Bool ?? true {
+                Task.detached(priority: .utility) {
+                    await SpotlightService.shared.indexWeather(weather)
+                }
             }
 
             Task { @MainActor in

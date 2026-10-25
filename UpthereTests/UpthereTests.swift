@@ -1422,6 +1422,21 @@ struct UpthereTests {
         #expect(vm.appVersion == "\(expectedShort) (\(expectedBuild))")
     }
 
+    @Test("SettingsViewModel defaults spotlightEnabled to true and writes key on change")
+    func settingsViewModelSpotlightToggle() {
+        let (mockDefaults, suiteName) = makeIsolatedDefaults()
+        defer { mockDefaults.removePersistentDomain(forName: suiteName) }
+
+        let vm = SettingsViewModel(defaults: mockDefaults)
+        #expect(vm.spotlightEnabled == true)
+
+        vm.spotlightEnabled = false
+        #expect(mockDefaults.bool(forKey: AppGroup.spotlightEnabledKey) == false)
+
+        let vm2 = SettingsViewModel(defaults: mockDefaults)
+        #expect(vm2.spotlightEnabled == false)
+    }
+
     // MARK: - Local Notification Tests
 
     @Test("Severe weather alert scheduled once per alert id")
