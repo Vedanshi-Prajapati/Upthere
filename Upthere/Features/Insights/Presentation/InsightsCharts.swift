@@ -1,4 +1,5 @@
 import SwiftUI
+import Accessibility
 
 // MARK: - Mini Charts
 
@@ -29,6 +30,7 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Precipitation probability mini chart")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(HourlyPrecipitationChartDescriptor(items: hourly, summary: chartSummary))
         }
     }
 
@@ -37,11 +39,27 @@ extension InsightsView {
         @Environment(\.weatherFormatter) private var weatherFormatter
 
         private var chartSummary: String {
-            guard !hourly.isEmpty else { return "No temperature data" }
-            let temps = hourly.map(\.temperature)
-            let minT = weatherFormatter.temp(temps.min() ?? 0)
-            let maxT = weatherFormatter.temp(temps.max() ?? 0)
-            return "Temperature trend ranging from \(minT) to \(maxT)"
+            guard !hourly.isEmpty, let first = hourly.first else { return "No temperature data" }
+            let currentT = first.temperature
+            let nowTemp = weatherFormatter.temp(currentT)
+            let peak = hourly.max(by: { $0.temperature < $1.temperature }) ?? first
+            let trough = hourly.min(by: { $0.temperature < $1.temperature }) ?? first
+            let troughIndex = hourly.firstIndex(where: { $0.id == trough.id }) ?? 0
+            let peakIndex = hourly.firstIndex(where: { $0.id == peak.id }) ?? 0
+            let peakTemp = weatherFormatter.temp(peak.temperature)
+            let troughTemp = weatherFormatter.temp(trough.temperature)
+
+            if troughIndex < peakIndex && trough.temperature < currentT - 1.0 && peak.temperature > trough.temperature + 1.0 {
+                return "Temperature falls from \(nowTemp) to \(troughTemp) by \(trough.time), then rises to \(peakTemp) by \(peak.time)"
+            } else if peakIndex < troughIndex && peak.temperature > currentT + 1.0 && trough.temperature < peak.temperature - 1.0 {
+                return "Temperature rises from \(nowTemp) to \(peakTemp) by \(peak.time), then falls to \(troughTemp) by \(trough.time)"
+            } else if peak.temperature > currentT + 1.0 {
+                return "Temperature rises from \(nowTemp) to \(peakTemp) by \(peak.time)"
+            } else if trough.temperature < currentT - 1.0 {
+                return "Temperature falls from \(nowTemp) to \(troughTemp) by \(trough.time)"
+            } else {
+                return "Temperature steady around \(nowTemp), high of \(peakTemp), low of \(troughTemp)"
+            }
         }
 
         var body: some View {
@@ -67,6 +85,7 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Temperature trend mini chart")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(HourlyTemperatureChartDescriptor(hourly: hourly, summary: chartSummary))
         }
     }
 
@@ -75,9 +94,15 @@ extension InsightsView {
         @Environment(\.weatherFormatter) private var weatherFormatter
 
         private var chartSummary: String {
-            guard !hourly.isEmpty else { return "No wind data" }
-            let maxSpeed = hourly.map(\.windSpeed).max() ?? 0
-            return "Wind speed trend with peak sustained wind of \(weatherFormatter.wind(maxSpeed))"
+            guard !hourly.isEmpty, let first = hourly.first else { return "No wind data" }
+            let maxHour = hourly.max(by: { $0.windSpeed < $1.windSpeed }) ?? first
+            let startSpeed = weatherFormatter.wind(first.windSpeed)
+            let peakSpeed = weatherFormatter.wind(maxHour.windSpeed)
+            if maxHour.windSpeed > first.windSpeed + 5.0 {
+                return "Wind speed rises from \(startSpeed) now to \(peakSpeed) at \(maxHour.time)"
+            } else {
+                return "Wind speed steady around \(startSpeed), peak of \(peakSpeed) at \(maxHour.time)"
+            }
         }
 
         var body: some View {
@@ -136,6 +161,7 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Wind speed trend mini chart")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(WindSpeedChartDescriptor(hourly: hourly, summary: chartSummary))
         }
     }
 
@@ -186,6 +212,7 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Best outdoor activity timeline")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(OutdoorSuitabilityChartDescriptor(outdoor: outdoor, summary: chartSummary))
         }
     }
 
@@ -193,8 +220,14 @@ extension InsightsView {
         let hourly: [HourlyWeather]
 
         private var chartSummary: String {
-            let maxUV = hourly.map(\.uvIndex).max() ?? 0
-            return "UV Index timeline with peak index of \(maxUV)"
+            guard !hourly.isEmpty, let first = hourly.first else { return "No UV data" }
+            let maxHour = hourly.max(by: { $0.uvIndex < $1.uvIndex }) ?? first
+            let peakUV = maxHour.uvIndex
+            if peakUV > 0 {
+                return "UV index reaches peak of \(peakUV) at \(maxHour.time) over 24 hours"
+            } else {
+                return "UV index remains low at 0 throughout the period"
+            }
         }
 
         var body: some View {
@@ -216,6 +249,7 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("UV index forecast mini chart")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(UVForecastChartDescriptor(hourly: hourly, summary: chartSummary))
         }
     }
 
@@ -224,8 +258,20 @@ extension InsightsView {
         let shiftIndex: Int
 
         private var chartSummary: String {
-            let avgCloud = hourly.isEmpty ? 0 : Int(hourly.map(\.cloudCover).reduce(0, +) / Double(max(1, hourly.count)) * 100)
-            return "Cloud cover timeline averaging \(avgCloud)%"
+            guard !hourly.isEmpty, let first = hourly.first else { return "No cloud cover data" }
+            let startPct = Int(round(first.cloudCover * 100))
+            let avgCloud = Int(hourly.map(\.cloudCover).reduce(0, +) / Double(max(1, hourly.count)) * 100)
+            if shiftIndex > 0 && shiftIndex < hourly.count {
+                let shiftHour = hourly[shiftIndex]
+                let shiftPct = Int(round(shiftHour.cloudCover * 100))
+                if shiftPct < startPct {
+                    return "Cloud cover falls from \(startPct)% to \(shiftPct)% around \(shiftHour.time), averaging \(avgCloud)%"
+                } else {
+                    return "Cloud cover rises from \(startPct)% to \(shiftPct)% around \(shiftHour.time), averaging \(avgCloud)%"
+                }
+            } else {
+                return "Cloud cover steady around \(startPct)%, averaging \(avgCloud)%"
+            }
         }
 
         var body: some View {
@@ -285,6 +331,163 @@ extension InsightsView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Cloud cover forecast mini chart")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(CloudCoverChartDescriptor(hourly: hourly, summary: chartSummary))
         }
+    }
+}
+
+// MARK: - Insights Audio Graph Descriptors
+
+struct WindSpeedChartDescriptor: AXChartDescriptorRepresentable {
+    let hourly: [HourlyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !hourly.isEmpty else {
+            return AXChartDescriptor(
+                title: "Wind Speed Forecast",
+                summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "Wind Speed", range: 0...100, gridlinePositions: []) { _ in "" },
+                additionalAxes: [],
+                series: []
+            )
+        }
+        let xAxis = AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: hourly.map(\.time))
+        let speeds = hourly.map(\.windSpeed)
+        let maxSpeed = max(10, speeds.max() ?? 10)
+        let yAxis = AXNumericDataAxisDescriptor(
+            title: "Wind Speed",
+            range: 0...maxSpeed,
+            gridlinePositions: [0, maxSpeed / 2, maxSpeed]
+        ) { value in "\(Int(round(value))) km/h" }
+
+        let dataPoints = hourly.map { item in
+            AXDataPoint(
+                x: item.time,
+                y: item.windSpeed,
+                additionalValues: [],
+                label: "\(item.time): \(Int(round(item.windSpeed))) km/h"
+            )
+        }
+
+        let series = AXDataSeriesDescriptor(
+            name: "Wind Speed",
+            isContinuous: true,
+            dataPoints: dataPoints
+        )
+
+        return AXChartDescriptor(
+            title: "Wind Speed Forecast",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
+    }
+}
+
+struct OutdoorSuitabilityChartDescriptor: AXChartDescriptorRepresentable {
+    let outdoor: InsightEngine.BestOutdoorWindowResult
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US")
+        f.dateFormat = "ha"
+        let s = f.string(from: outdoor.startDate).lowercased()
+        let e = f.string(from: outdoor.endDate).lowercased()
+        let xAxis = AXCategoricalDataAxisDescriptor(title: "Window", categoryOrder: [s, e])
+        let yAxis = AXNumericDataAxisDescriptor(
+            title: "Temperature",
+            range: 0...50,
+            gridlinePositions: []
+        ) { value in "\(Int(round(value)))°" }
+
+        let dataPoints = [
+            AXDataPoint(x: s, y: outdoor.averageTemperature, additionalValues: [], label: "\(s): \(Int(round(outdoor.averageTemperature)))°"),
+            AXDataPoint(x: e, y: outdoor.averageTemperature, additionalValues: [], label: "\(e): \(Int(round(outdoor.averageTemperature)))°")
+        ]
+        let series = AXDataSeriesDescriptor(name: "Outdoor Suitability", isContinuous: true, dataPoints: dataPoints)
+
+        return AXChartDescriptor(
+            title: "Best Outdoor Window",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
+    }
+}
+
+struct UVForecastChartDescriptor: AXChartDescriptorRepresentable {
+    let hourly: [HourlyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !hourly.isEmpty else {
+            return AXChartDescriptor(
+                title: "UV Forecast",
+                summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "UV Index", range: 0...12, gridlinePositions: []) { _ in "" },
+                additionalAxes: [],
+                series: []
+            )
+        }
+        let xAxis = AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: hourly.map(\.time))
+        let maxUV = max(11, Double(hourly.map(\.uvIndex).max() ?? 10))
+        let yAxis = AXNumericDataAxisDescriptor(title: "UV Index", range: 0...maxUV, gridlinePositions: [0, 3, 6, 8, 11]) { value in "\(Int(round(value)))" }
+
+        let dataPoints = hourly.map { item in
+            AXDataPoint(x: item.time, y: Double(item.uvIndex), additionalValues: [], label: "\(item.time): UV \(item.uvIndex)")
+        }
+        let series = AXDataSeriesDescriptor(name: "UV Index", isContinuous: false, dataPoints: dataPoints)
+
+        return AXChartDescriptor(
+            title: "UV Forecast",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
+    }
+}
+
+struct CloudCoverChartDescriptor: AXChartDescriptorRepresentable {
+    let hourly: [HourlyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !hourly.isEmpty else {
+            return AXChartDescriptor(
+                title: "Cloud Cover Forecast",
+                summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "Cloud Cover", range: 0...100, gridlinePositions: []) { _ in "" },
+                additionalAxes: [],
+                series: []
+            )
+        }
+        let xAxis = AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: hourly.map(\.time))
+        let yAxis = AXNumericDataAxisDescriptor(title: "Cloud Cover", range: 0...100, gridlinePositions: [0, 50, 100]) { value in "\(Int(round(value)))%" }
+
+        let dataPoints = hourly.map { item in
+            let pct = Int(round(item.cloudCover * 100))
+            return AXDataPoint(x: item.time, y: Double(pct), additionalValues: [], label: "\(item.time): \(pct)% clouds")
+        }
+        let series = AXDataSeriesDescriptor(name: "Cloud Cover", isContinuous: false, dataPoints: dataPoints)
+
+        return AXChartDescriptor(
+            title: "Cloud Cover Forecast",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
     }
 }

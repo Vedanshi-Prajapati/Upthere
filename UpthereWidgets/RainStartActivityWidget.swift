@@ -63,13 +63,9 @@ public struct RainStartActivityWidget: Widget {
                             .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
 
-                        Text("Ending around ")
+                        Text("Ending around \(Text(context.state.endTime, style: .time).fontWeight(.semibold).foregroundStyle(AppTheme.textPrimary))")
                             .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
-                        +
-                        Text(context.state.endTime, style: .time)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppTheme.textPrimary)
 
                         Spacer()
 
@@ -162,13 +158,9 @@ private struct RainActivityLockScreenView: View {
                             .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
 
-                        Text("Expected end around ")
+                        Text("Expected end around \(Text(context.state.endTime, style: .time).fontWeight(.semibold).foregroundStyle(AppTheme.textPrimary))")
                             .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
-                        +
-                        Text(context.state.endTime, style: .time)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppTheme.textPrimary)
                     }
                 }
 

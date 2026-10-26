@@ -1,8 +1,6 @@
 import Foundation
 import CoreLocation
 import Observation
-import WidgetKit
-import os
 
 @Observable
 @MainActor
@@ -11,7 +9,7 @@ final class HomeViewModel {
         case cached(lastUpdated: String)
         case offline(lastUpdated: String)
         case refreshFailed(reason: String)
-        case locationFallback(reason: String)
+        case locationFallback(message: String, action: LocationBannerAction? = nil)
     }
 
     enum ViewState: Equatable {
@@ -34,37 +32,62 @@ final class HomeViewModel {
     private let getWeatherUseCase: any GetWeatherUseCaseProtocol
     private let cacheManager: WeatherCacheManager
     let locationsManager: SavedLocationsManager
-    private let notificationScheduler: any NotificationSchedulerProtocol
+    private let refreshCoordinator: (any WeatherRefreshCoordinating)?
     private let defaults: UserDefaults
+    private let openSettingsAction: (() -> Void)?
     private var locationTask: Task<Void, Never>?
     private var latestRequestId = UUID()
 
     init(
         getWeatherUseCase: any GetWeatherUseCaseProtocol,
+        refreshCoordinator: (any WeatherRefreshCoordinating)? = nil,
         cacheManager: WeatherCacheManager? = nil,
         locationsManager: SavedLocationsManager? = nil,
         locationService: LocationService? = nil,
-        notificationScheduler: (any NotificationSchedulerProtocol)? = nil,
-        defaults: UserDefaults = AppGroup.defaults
+        notificationScheduler: (any NotificationScheduling)? = nil,
+        defaults: UserDefaults = AppGroup.defaults,
+        openSettingsAction: (() -> Void)? = nil
     ) {
         self.getWeatherUseCase = getWeatherUseCase
-        self.cacheManager = cacheManager ?? .shared
+        self.cacheManager = cacheManager ?? WeatherCacheManager(defaults: defaults)
         let locManager = locationsManager ?? SavedLocationsManager()
         self.locationsManager = locManager
         self.selectedLocation = locManager.selectedLocation
         let locService = locationService ?? LocationService()
         self.locationService = locService
-        self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
         self.defaults = defaults
+        self.openSettingsAction = openSettingsAction
+
+        if let refreshCoordinator {
+            self.refreshCoordinator = refreshCoordinator
+        } else if let notificationScheduler {
+            self.refreshCoordinator = WeatherRefreshCoordinator(
+                widgetSnapshotWriter: NoOpWidgetSnapshotWriter(),
+                spotlightIndexer: NoOpSpotlightIndexer(),
+                rainActivityUpdater: NoOpRainActivityUpdater(),
+                notificationScheduler: notificationScheduler,
+                fetchMetrics: NoOpFetchMetrics(),
+                defaults: defaults
+            )
+        } else {
+            self.refreshCoordinator = nil
+        }
 
         // Consume AsyncStream of location updates
         self.locationTask = Task { [weak self, locService] in
             for await _ in locService.locationUpdates {
                 guard let self = self else { break }
                 if self.selectedLocation == nil {
+                    if self.activeTask != nil || self.isRefreshing {
+                        continue
+                    }
                     await self.loadWeather(force: true)
                 }
             }
+        }
+
+        locService.onCityResolved = { [weak self] newCity in
+            self?.updateDisplayedCityName(newCity)
         }
     }
 
@@ -135,24 +158,37 @@ final class HomeViewModel {
     }
 
     private func performLoad(force: Bool, requestId: UUID, targetLocation: SavedLocation? = nil) async {
-        let signpostID = AppSignposts.shared.weatherSignposter.makeSignpostID()
-        let signpostState = AppSignposts.shared.weatherSignposter.beginInterval("WeatherFetch", id: signpostID)
-        defer {
-            AppSignposts.shared.weatherSignposter.endInterval("WeatherFetch", signpostState)
-            AppSignposts.shared.recordWeatherFetch()
-        }
-
         let previousWeather = self.currentLoadedWeather
 
         do {
             let weather: Weather
             let locationToLoad = targetLocation ?? selectedLocation
-            if let selected = locationToLoad, let lat = selected.latitude, let lon = selected.longitude {
+            if let selected = locationToLoad, !selected.isCurrentLocation, let lat = selected.latitude, let lon = selected.longitude {
                 let clLocation = CLLocation(latitude: lat, longitude: lon)
                 let subtitle = selected.regionName.isEmpty ? "Selected city" : selected.regionName
-                weather = try await getWeatherUseCase.execute(for: clLocation, cityName: selected.cityName, subtitle: subtitle)
+                let fetched = try await getWeatherUseCase.execute(for: clLocation, cityName: selected.cityName, subtitle: subtitle, locationStatus: .savedCity)
+                weather = fetched.withStatus(.savedCity)
             } else {
-                weather = try await getWeatherUseCase.execute()
+                let userLoc: CLLocation?
+                if locationService.isAuthorized {
+                    do {
+                        userLoc = try await locationService.requestCurrentLocation(force: force)
+                    } catch {
+                        userLoc = nil
+                    }
+                } else {
+                    userLoc = nil
+                }
+
+                if let loc = userLoc {
+                    let fallbackCity = locationService.matchSavedOrPresetCity(for: loc, savedLocations: locationsManager.locations) ?? "Current Location"
+                    let initialSubtitle = locationService.isReducedAccuracy ? "Approximate location" : "Current location"
+
+                    let fetched = try await getWeatherUseCase.execute(for: loc, cityName: fallbackCity, subtitle: initialSubtitle, locationStatus: .live)
+                    weather = fetched.withStatus(.live)
+                } else {
+                    weather = try await getWeatherUseCase.execute()
+                }
             }
 
             guard !Task.isCancelled, self.latestRequestId == requestId else {
@@ -163,39 +199,17 @@ final class HomeViewModel {
             if weather.isCached {
                 let timeStr = formatTime(weather.fetchTimestamp)
                 banner = .cached(lastUpdated: timeStr)
-            } else if weather.locationSubtitle.contains("Default location") || weather.locationSubtitle.contains("disabled") {
-                banner = .locationFallback(reason: "Location permission disabled")
+            } else if let copy = weather.locationStatus.bannerCopy {
+                banner = .locationFallback(message: copy, action: weather.locationStatus.bannerAction)
             }
 
             self.currentLoadedWeather = weather
             self.isRefreshing = false
             self.state = .loaded(weather: weather, banner: banner)
 
-            let snapshot = WidgetSnapshot(from: weather)
-            try? WidgetSnapshotStore.shared.save(snapshot)
-            WidgetCenter.shared.reloadAllTimelines()
-
-            if AppGroup.defaults.object(forKey: AppGroup.spotlightEnabledKey) as? Bool ?? true {
-                Task.detached(priority: .utility) {
-                    await SpotlightService.shared.indexWeather(weather)
-                }
+            if let coordinator = self.refreshCoordinator {
+                await coordinator.handleSuccessfulRefresh(weather)
             }
-
-            Task { @MainActor in
-                await RainActivityManager.shared.updateOnForegroundRefresh(
-                    hourly: weather.hourlyForecast,
-                    city: weather.cityName
-                )
-            }
-
-            let rainEnabled = defaults.bool(forKey: AppGroup.rainAlertsKey)
-            let severeEnabled = defaults.bool(forKey: AppGroup.severeAlertsKey)
-            await notificationScheduler.handleWeatherRefresh(
-                weather: weather,
-                rainAlertsEnabled: rainEnabled,
-                severeAlertsEnabled: severeEnabled,
-                now: Date()
-            )
         } catch {
             guard !Task.isCancelled, self.latestRequestId == requestId else {
                 return
@@ -248,6 +262,25 @@ final class HomeViewModel {
             }
         }
         return cacheManager.cacheKey(for: cityName, coordinate: coordinate)
+    }
+
+    func updateDisplayedCityName(_ newCity: String, subtitle: String? = nil) {
+        guard isCurrentLocation else { return }
+        guard let current = self.currentLoadedWeather else { return }
+        guard current.cityName != newCity, !newCity.isEmpty else { return }
+        let updated = current.withCityName(newCity, subtitle: subtitle)
+        self.currentLoadedWeather = updated
+        if case .loaded(_, let banner) = self.state {
+            self.state = .loaded(weather: updated, banner: banner)
+        }
+    }
+
+    func retryLocation() async {
+        await loadWeather(force: true)
+    }
+
+    func openSettings() {
+        openSettingsAction?()
     }
 
     private func formatTime(_ date: Date) -> String {

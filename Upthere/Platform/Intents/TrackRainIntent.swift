@@ -13,20 +13,24 @@ struct TrackRainIntent: AppIntent {
 
     private var repository: (any WeatherRepository)?
     private var cacheManager: WeatherCacheManager?
+    private var weatherLoader: (any IntentWeatherLoading)?
 
     init() {
         self.repository = nil
         self.cacheManager = nil
+        self.weatherLoader = nil
     }
 
     init(
         location: LocationEntity?,
         repository: (any WeatherRepository)? = nil,
-        cacheManager: WeatherCacheManager? = nil
+        cacheManager: WeatherCacheManager? = nil,
+        weatherLoader: (any IntentWeatherLoading)? = nil
     ) {
         self.repository = repository
         self.cacheManager = cacheManager
         self.location = location
+        self.weatherLoader = weatherLoader
     }
 
     static var parameterSummary: some ParameterSummary {
@@ -35,46 +39,20 @@ struct TrackRainIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some ReturnsValue<Bool> & ProvidesDialog {
-        let targetCity: String
-        let coordinate: CLLocationCoordinate2D
+        let loader = weatherLoader ?? IntentWeatherLoader()
+        let (weather, resolved) = try await loader.loadWeather(
+            for: location,
+            repository: repository,
+            cacheManager: cacheManager
+        )
 
-        if let loc = location, loc.id != "current" {
-            targetCity = loc.name
-            coordinate = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
-        } else {
-            targetCity = LocationService.shared.currentCityName
-            coordinate = LocationService.shared.currentLocation?.coordinate ?? LocationService.fallbackCoordinate.coordinate
-        }
-
-        // Fetch current weather or fallback to cached
-        let cache = cacheManager ?? WeatherCacheManager.shared
-        let repo = repository ?? WeatherKitWeatherRepository(locationService: LocationService.shared, cacheManager: cache)
-
-        let weather: Weather
-        do {
-            weather = try await repo.fetchWeather(
-                for: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
-                cityName: targetCity,
-                locationSubtitle: targetCity == LocationService.shared.currentCityName ? "Current Location" : ""
-            )
-        } catch {
-            let coordKey = cache.cacheKey(
-                for: targetCity,
-                coordinate: (lat: coordinate.latitude, lon: coordinate.longitude)
-            )
-            let cityKey = cache.cacheKey(for: targetCity)
-            if let cached = cache.load(key: coordKey, allowExpired: true)?.weather ?? cache.load(key: cityKey, allowExpired: true)?.weather {
-                weather = cached
-            } else {
-                throw WeatherUnavailableError()
-            }
-        }
+        let targetCity = resolved.cityName
 
         guard let rainWindow = InsightEngine().rainWindow(from: weather.hourlyForecast),
               RainActivityStateCalculator.isRainWithinTwoHours(rainWindow: rainWindow) else {
             return .result(
                 value: false,
-                dialog: IntentDialog("No rain expected within the next 2 hours in \(targetCity).")
+                dialog: IntentDialog(stringLiteral: IntentDialogSnippetBuilder.trackRainNoRainDialog(city: targetCity))
             )
         }
 
@@ -85,17 +63,15 @@ struct TrackRainIntent: AppIntent {
 
         if started {
             let calculation = RainActivityStateCalculator.calculateState(rainWindow: rainWindow)
-            let dialogText: String
-            if let calc = calculation, calc.minutesUntilRain > 0 {
-                dialogText = "Tracking rain for \(targetCity). Rain starting in \(calc.minutesUntilRain) minutes."
-            } else {
-                dialogText = "Tracking rain for \(targetCity). Rain is currently in progress."
-            }
+            let dialogText = IntentDialogSnippetBuilder.trackRainStartedDialog(
+                city: targetCity,
+                minutesUntilRain: calculation?.minutesUntilRain ?? 0
+            )
             return .result(value: true, dialog: IntentDialog(stringLiteral: dialogText))
         } else {
             return .result(
                 value: false,
-                dialog: IntentDialog("Unable to start rain tracking. Please ensure Live Activities are enabled in Settings.")
+                dialog: IntentDialog(stringLiteral: IntentDialogSnippetBuilder.trackRainUnableToStartDialog())
             )
         }
     }

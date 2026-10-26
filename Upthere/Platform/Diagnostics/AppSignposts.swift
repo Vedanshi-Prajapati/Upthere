@@ -1,8 +1,12 @@
 import Foundation
 import os
 
+public protocol FetchMetrics: Sendable {
+    func recordWeatherFetch()
+}
+
 /// Performance signpost instrumentation and session telemetry using OSSignposter.
-nonisolated final class AppSignposts: Sendable {
+nonisolated final class AppSignposts: FetchMetrics, Sendable {
     static let shared = AppSignposts()
 
     let weatherSignposter: OSSignposter

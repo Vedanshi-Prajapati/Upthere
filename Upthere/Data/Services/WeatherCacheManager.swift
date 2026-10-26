@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct CachedWeatherRecord: Codable {
     let weather: Weather
@@ -22,9 +23,13 @@ struct CachedWeatherRecord: Codable {
     }
 }
 
+/// Lock-protected weather cache manager ensuring thread-safe cache operations across background and UI tasks.
+/// Invariant: All cache reads, writes, and clearing operations are synchronized via `lock`.
 final class WeatherCacheManager: @unchecked Sendable {
     static let shared = WeatherCacheManager()
 
+    private let lock = NSLock()
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "WeatherCache")
     private let defaults: UserDefaults
     private let keyPrefix = "upthere.weather.cache."
     private let encoder = JSONEncoder()
@@ -45,31 +50,48 @@ final class WeatherCacheManager: @unchecked Sendable {
     }
 
     func save(weather: Weather, key: String) {
-        let record = CachedWeatherRecord(weather: weather, savedAt: Date())
-        if let data = try? encoder.encode(record) {
-            defaults.set(data, forKey: key)
+        lock.withLock {
+            let record = CachedWeatherRecord(weather: weather, savedAt: Date())
+            do {
+                let data = try encoder.encode(record)
+                defaults.set(data, forKey: key)
+            } catch {
+                logger.error("Failed to encode cache record for key \(key): \(error.localizedDescription)")
+            }
         }
     }
 
     func load(key: String, allowExpired: Bool = false) -> CachedWeatherRecord? {
-        guard let data = defaults.data(forKey: key),
-              let record = try? decoder.decode(CachedWeatherRecord.self, from: data) else {
-            return nil
+        lock.withLock {
+            guard let data = defaults.data(forKey: key) else {
+                // Genuinely optional: cache miss when no record has been stored for this key
+                return nil
+            }
+            do {
+                let record = try decoder.decode(CachedWeatherRecord.self, from: data)
+                if record.isExpired && !allowExpired {
+                    return nil
+                }
+                return record
+            } catch {
+                logger.error("Failed to decode cache record for key \(key): \(error.localizedDescription)")
+                return nil
+            }
         }
-        if record.isExpired && !allowExpired {
-            return nil
-        }
-        return record
     }
 
     func clear(key: String) {
-        defaults.removeObject(forKey: key)
+        lock.withLock {
+            defaults.removeObject(forKey: key)
+        }
     }
 
     func clearAll() {
-        let dictionary = defaults.dictionaryRepresentation()
-        for k in dictionary.keys where k.hasPrefix(keyPrefix) {
-            defaults.removeObject(forKey: k)
+        lock.withLock {
+            let dictionary = defaults.dictionaryRepresentation()
+            for k in dictionary.keys where k.hasPrefix(keyPrefix) {
+                defaults.removeObject(forKey: k)
+            }
         }
     }
 }

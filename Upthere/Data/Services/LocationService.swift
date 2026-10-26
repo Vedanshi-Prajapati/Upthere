@@ -33,6 +33,31 @@ enum LocationServiceError: LocalizedError, Sendable {
     }
 }
 
+extension LocationStatus {
+    static func from(_ error: LocationServiceError) -> LocationStatus {
+        switch error {
+        case .permissionDenied:
+            return .denied
+        case .restricted:
+            return .restricted
+        case .servicesDisabled:
+            return .servicesDisabled
+        case .timeout:
+            return .timedOut
+        case .invalidCoordinates:
+            return .unavailable
+        }
+    }
+
+    static func from(_ error: Error?) -> LocationStatus {
+        guard let error = error else { return .live }
+        if let locError = error as? LocationServiceError {
+            return from(locError)
+        }
+        return .unavailable
+    }
+}
+
 protocol LocationManagerProtocol: AnyObject {
     var delegate: CLLocationManagerDelegate? { get set }
     var desiredAccuracy: CLLocationAccuracy { get set }
@@ -47,6 +72,21 @@ protocol LocationManagerProtocol: AnyObject {
 
 extension CLLocationManager: LocationManagerProtocol {}
 
+protocol GeocoderProtocol: Sendable {
+    func reverseGeocode(location: CLLocation) async throws -> String?
+}
+
+final class SystemGeocoder: GeocoderProtocol {
+    func reverseGeocode(location: CLLocation) async throws -> String? {
+        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+        let mapItems = try await request.mapItems
+        if let first = mapItems.first {
+            return first.addressRepresentations?.cityName ?? first.name
+        }
+        return nil
+    }
+}
+
 @Observable
 @MainActor
 final class LocationService: NSObject, CLLocationManagerDelegate {
@@ -57,12 +97,35 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     static let fallbackCityName = "Ghaziabad"
     static let fallbackRegionName = "Uttar Pradesh, India"
 
+    static let presetCities: [(name: String, lat: Double, lon: Double)] = [
+        ("Sydney", -33.8688, 151.2093),
+        ("Cupertino", 37.3230, -122.0322),
+        ("San Francisco", 37.7749, -122.4194),
+        ("New York", 40.7128, -74.0060),
+        ("London", 51.5074, -0.1278),
+        ("Tokyo", 35.6762, 139.6503),
+        ("Paris", 48.8566, 2.3522),
+        ("Berlin", 52.5200, 13.4050),
+        ("Dubai", 25.2048, 55.2708),
+        ("Singapore", 1.3521, 103.8198),
+        ("Delhi", 28.6139, 77.2090),
+        ("Ghaziabad", 28.6692, 77.4538),
+        ("Mumbai", 19.0760, 72.8777),
+        ("Bengaluru", 12.9716, 77.5946),
+        ("Pune", 18.5204, 73.8567),
+        ("Jaipur", 26.9124, 75.7873),
+        ("Chennai", 13.0827, 80.2707),
+        ("Kolkata", 22.5726, 88.3639)
+    ]
+
     private(set) var authorizationStatus: CLAuthorizationStatus
     private(set) var accuracyAuthorization: CLAccuracyAuthorization
     private(set) var isLocationServicesEnabled: Bool
     private(set) var currentLocation: CLLocation?
     private(set) var currentCityName: String = fallbackCityName
     private(set) var currentSubtitle: String = ""
+    private(set) var currentStatus: LocationStatus = .live
+    var onCityResolved: (@MainActor (String) -> Void)?
 
     private var streamContinuations: [UUID: AsyncStream<CLLocation>.Continuation] = [:]
 
@@ -83,6 +146,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     private let timeoutSleep: @Sendable (Duration) async throws -> Void
     private let requestTimeout: Duration
     private let geocodeTimeout: Duration
+    private let geocoder: any GeocoderProtocol
+    private let savedLocationsProvider: (@Sendable () -> [SavedLocation])?
     private var locationContinuations: [CheckedContinuation<CLLocation, Error>] = []
     private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
     private var requestGeneration: Int = 0
@@ -97,13 +162,17 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         isLocationServicesEnabledProvider: (@Sendable () -> Bool)? = nil,
         timeoutSleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         requestTimeout: Duration = .seconds(3.5),
-        geocodeTimeout: Duration = .seconds(2.5)
+        geocodeTimeout: Duration = .seconds(5.0),
+        geocoder: any GeocoderProtocol = SystemGeocoder(),
+        savedLocationsProvider: (@Sendable () -> [SavedLocation])? = nil
     ) {
         self.clManager = manager
         self.isLocationServicesEnabledProvider = isLocationServicesEnabledProvider
         self.timeoutSleep = timeoutSleep
         self.requestTimeout = requestTimeout
         self.geocodeTimeout = geocodeTimeout
+        self.geocoder = geocoder
+        self.savedLocationsProvider = savedLocationsProvider
         self.authorizationStatus = manager.authorizationStatus
         self.accuracyAuthorization = manager.accuracyAuthorization
         self.isLocationServicesEnabled = true
@@ -116,6 +185,20 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func requestAuthorization() {
         if authorizationStatus == .notDetermined {
             clManager.requestWhenInUseAuthorization()
+        }
+    }
+
+    var authorizationError: LocationServiceError {
+        if !isLocationServicesEnabled {
+            return .servicesDisabled
+        }
+        switch authorizationStatus {
+        case .restricted:
+            return .restricted
+        case .denied, .notDetermined:
+            return .permissionDenied
+        default:
+            return .permissionDenied
         }
     }
 
@@ -140,13 +223,16 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         }.value
         self.isLocationServicesEnabled = servicesEnabled
         guard servicesEnabled else {
+            self.currentStatus = .servicesDisabled
             throw LocationServiceError.servicesDisabled
         }
 
         if authorizationStatus == .denied {
+            self.currentStatus = .denied
             throw LocationServiceError.permissionDenied
         }
         if authorizationStatus == .restricted {
+            self.currentStatus = .restricted
             throw LocationServiceError.restricted
         }
 
@@ -193,10 +279,16 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             self.clManager.requestLocation()
         }
 
-        // Current-location flow: update currentCityName and currentSubtitle
-        let geo = await reverseGeocode(location: location)
-        self.currentCityName = geo.cityName
-        self.currentSubtitle = geo.subtitle
+        // Set initial city name without blocking the return of coordinates
+        let initialFallback = matchSavedOrPresetCity(for: location) ?? "Current Location"
+        self.currentCityName = initialFallback
+
+        // Current-location flow: update currentCityName and currentSubtitle asynchronously
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            let geo = await self.reverseGeocode(location: location)
+            self.updateCity(geo.cityName, subtitle: geo.subtitle)
+        }
 
         return location
     }
@@ -206,6 +298,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             // Newer request already in flight or already resolved
             return
         }
+        self.currentStatus = .timedOut
         resumeContinuations(with: .failure(LocationServiceError.timeout))
     }
 
@@ -224,6 +317,48 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         guard coord.latitude >= -90.0, coord.latitude <= 90.0 else { return false }
         guard coord.longitude >= -180.0, coord.longitude <= 180.0 else { return false }
         return true
+    }
+
+    func matchSavedOrPresetCity(for location: CLLocation, savedLocations: [SavedLocation]? = nil) -> String? {
+        var closestMatch: (name: String, distance: CLLocationDistance)?
+
+        let savedList = savedLocations ?? savedLocationsProvider?() ?? []
+        for s in savedList {
+            guard !s.isCurrentLocation, let lat = s.latitude, let lon = s.longitude else { continue }
+            let sLoc = CLLocation(latitude: lat, longitude: lon)
+            let dist = location.distance(from: sLoc)
+            if dist <= 25_000 {
+                if let closest = closestMatch {
+                    if dist < closest.distance {
+                        closestMatch = (s.cityName, dist)
+                    }
+                } else {
+                    closestMatch = (s.cityName, dist)
+                }
+            }
+        }
+
+        for p in Self.presetCities {
+            let pLoc = CLLocation(latitude: p.lat, longitude: p.lon)
+            let dist = location.distance(from: pLoc)
+            if dist <= 25_000 {
+                if let closest = closestMatch {
+                    if dist < closest.distance {
+                        closestMatch = (p.name, dist)
+                    }
+                } else {
+                    closestMatch = (p.name, dist)
+                }
+            }
+        }
+
+        return closestMatch?.name
+    }
+
+    func updateCity(_ cityName: String, subtitle: String) {
+        self.currentCityName = cityName
+        self.currentSubtitle = subtitle
+        self.onCityResolved?(cityName)
     }
 
     /// Pure reverse geocode: returns (cityName, subtitle) without mutating currentCityName or currentSubtitle.
@@ -246,15 +381,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
             geocodedCity = nil
         } else {
             geocodedCity = await withTaskGroup(of: String?.self) { group in
-                group.addTask {
+                group.addTask { [geocoder] in
                     do {
-                        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
-                        let mapItems = try await request.mapItems
-                        if let first = mapItems.first {
-                            return first.addressRepresentations?.cityName ?? first.name
-                        }
+                        return try await geocoder.reverseGeocode(location: location)
                     } catch {
-                        // Apple's reverse geocoding failed or timed out
+                        // Geocoder failed or timed out
                     }
                     return nil
                 }
@@ -274,17 +405,19 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         if let geocodedCity = geocodedCity, !geocodedCity.isEmpty {
             resolvedCity = geocodedCity
             subtitle = isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle()
-        } else if location.distance(from: Self.fallbackCoordinate) < 25_000 {
-            resolvedCity = Self.fallbackCityName
-            subtitle = "Default location · \(Self.fallbackRegionName)"
+            geocodeCache[cacheKey] = (resolvedCity, subtitle)
+        } else if let matchedCity = matchSavedOrPresetCity(for: location) {
+            resolvedCity = matchedCity
+            if location.distance(from: Self.fallbackCoordinate) < 25_000 {
+                subtitle = "Default location · \(Self.fallbackRegionName)"
+            } else {
+                subtitle = isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle()
+            }
         } else {
-            let latStr = String(format: "%.2f", location.coordinate.latitude)
-            let lonStr = String(format: "%.2f", location.coordinate.longitude)
-            resolvedCity = "Location (\(latStr), \(lonStr))"
+            resolvedCity = "Current Location"
             subtitle = isReducedAccuracy ? "Approximate location" : formatCurrentDateSubtitle()
         }
 
-        geocodeCache[cacheKey] = (resolvedCity, subtitle)
         return (resolvedCity, subtitle)
     }
 
@@ -328,20 +461,24 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         guard isValidCoordinate(location.coordinate) else {
+            self.currentStatus = .unavailable
             resumeContinuations(with: .failure(LocationServiceError.invalidCoordinates))
             return
         }
 
+        self.currentStatus = .live
         let previous = self.currentLocation
         self.currentLocation = location
 
         resumeContinuations(with: .success(location))
 
+        let initialFallback = matchSavedOrPresetCity(for: location) ?? "Current Location"
+        self.currentCityName = initialFallback
+
         Task { @MainActor [weak self] in
             guard let self = self else { return }
             let geo = await self.reverseGeocode(location: location)
-            self.currentCityName = geo.cityName
-            self.currentSubtitle = geo.subtitle
+            self.updateCity(geo.cityName, subtitle: geo.subtitle)
         }
 
         let shouldNotify: Bool
@@ -359,6 +496,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        if let locError = error as? LocationServiceError {
+            self.currentStatus = LocationStatus.from(locError)
+        } else {
+            self.currentStatus = .unavailable
+        }
         resumeContinuations(with: .failure(error))
     }
 }

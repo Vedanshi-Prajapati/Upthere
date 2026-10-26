@@ -1,11 +1,34 @@
 import Foundation
 import CoreLocation
 #if DEBUG
+/// Lock-protected mock repository for testing and debug previews.
+/// Invariant: All mutable state (`mockWeather`, `errorToThrow`, `delayNanoseconds`, `fetchCallCount`)
+/// is synchronized via `lock` to ensure thread-safe access from any concurrency context.
 final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
-    var mockWeather: Weather?
-    var errorToThrow: Error?
-    var delayNanoseconds: UInt64
-    private(set) var fetchCallCount: Int = 0
+    private let lock = NSLock()
+    private var _mockWeather: Weather?
+    private var _errorToThrow: Error?
+    private var _delayNanoseconds: UInt64
+    private var _fetchCallCount: Int = 0
+
+    var mockWeather: Weather? {
+        get { lock.withLock { _mockWeather } }
+        set { lock.withLock { _mockWeather = newValue } }
+    }
+
+    var errorToThrow: Error? {
+        get { lock.withLock { _errorToThrow } }
+        set { lock.withLock { _errorToThrow = newValue } }
+    }
+
+    var delayNanoseconds: UInt64 {
+        get { lock.withLock { _delayNanoseconds } }
+        set { lock.withLock { _delayNanoseconds = newValue } }
+    }
+
+    var fetchCallCount: Int {
+        lock.withLock { _fetchCallCount }
+    }
 
     init(
         mockWeather: Weather? = nil,
@@ -13,26 +36,30 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
         errorToThrow: Error? = nil,
         delayNanoseconds: UInt64 = 50_000_000
     ) {
-        self.mockWeather = mockWeather
-        self.delayNanoseconds = delayNanoseconds
+        self._mockWeather = mockWeather
+        self._delayNanoseconds = delayNanoseconds
         if let error = errorToThrow {
-            self.errorToThrow = error
+            self._errorToThrow = error
         } else if shouldFail {
-            self.errorToThrow = WeatherServiceError.serverError(code: 500)
+            self._errorToThrow = WeatherServiceError.serverError(code: 500)
         } else {
-            self.errorToThrow = nil
+            self._errorToThrow = nil
         }
     }
 
     func fetchCurrentWeather() async throws -> Weather {
-        fetchCallCount += 1
-        if delayNanoseconds > 0 {
-            try? await Task.sleep(nanoseconds: delayNanoseconds)
+        let (delay, error, weather) = lock.withLock { () -> (UInt64, Error?, Weather?) in
+            _fetchCallCount += 1
+            return (_delayNanoseconds, _errorToThrow, _mockWeather)
         }
-        if let err = errorToThrow {
+        if delay > 0 {
+            // Genuinely optional: sleep cancellation during test teardown is acceptable
+            try? await Task.sleep(nanoseconds: delay)
+        }
+        if let err = error {
             throw err
         }
-        return mockWeather ?? Self.makeGhaziabadWeather()
+        return weather ?? Self.makeGhaziabadWeather()
     }
 
     func fetchWeather(
@@ -40,14 +67,28 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
         cityName: String,
         locationSubtitle: String
     ) async throws -> Weather {
-        fetchCallCount += 1
-        if delayNanoseconds > 0 {
-            try? await Task.sleep(nanoseconds: delayNanoseconds)
+        try await fetchWeather(for: location, cityName: cityName, locationSubtitle: locationSubtitle, locationStatus: .live)
+    }
+
+    func fetchWeather(
+        for location: CLLocation,
+        cityName: String,
+        locationSubtitle: String,
+        locationStatus: LocationStatus
+    ) async throws -> Weather {
+        let (delay, error, base) = lock.withLock { () -> (UInt64, Error?, Weather) in
+            _fetchCallCount += 1
+            let b = _mockWeather ?? Self.makeGhaziabadWeather()
+            return (_delayNanoseconds, _errorToThrow, b)
         }
-        if let err = errorToThrow {
+        if delay > 0 {
+            // Genuinely optional: sleep cancellation during test teardown is acceptable
+            try? await Task.sleep(nanoseconds: delay)
+        }
+        if let err = error {
             throw err
         }
-        let base = mockWeather ?? Self.makeGhaziabadWeather()
+        let baseWeather = base
         return Weather(
             cityName: cityName,
             locationSubtitle: locationSubtitle.isEmpty ? base.locationSubtitle : locationSubtitle,
@@ -78,11 +119,12 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
             sunrise: base.sunrise,
             sunset: base.sunset,
             fetchTimestamp: base.fetchTimestamp,
-            isCached: base.isCached
+            isCached: base.isCached,
+            locationStatus: locationStatus
         )
     }
 
-    static func makeGhaziabadWeather() -> Weather {
+    static func makeGhaziabadWeather(status: LocationStatus = .live) -> Weather {
         let baseDate = Date()
         let calendar = Calendar.current
 
@@ -158,11 +200,12 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
             warmingInsight: "+7° warming from 8 AM to 1 PM",
             chanceOfRain: 70,
             sunrise: "6:12 AM",
-            sunset: "5:51 PM"
+            sunset: "5:51 PM",
+            locationStatus: status
         )
     }
 
-    static func makeWeather(condition: String, symbolName: String, temperature: Double = 24) -> Weather {
+    static func makeWeather(condition: String, symbolName: String, temperature: Double = 24, status: LocationStatus = .live) -> Weather {
         let base = makeGhaziabadWeather()
         return Weather(
             cityName: "Ghaziabad",

@@ -30,6 +30,13 @@ When launching the app via `simctl`, use the debug flags to bypass splash/permis
 xcrun simctl launch booted com.vedanshi.upthereapp -useMockRepository -disableSplash -disablePermission -initialTab <home|forecast|insights|locations|settings>
 ```
 
+#### Forcing Sky Scene for Testing / Screenshots
+Use the `-skyScene` debug flag to override the background sky scene:
+```bash
+xcrun simctl launch booted com.vedanshi.upthereapp -useMockRepository -disableSplash -disablePermission -skyScene <clearDay|clearNight|partlyCloudyDay|partlyCloudyNight|cloudy|fog|haze|rain|thunderstorm|snow>
+```
+
+
 ### Automated Hierarchy Screenshots
 Use the helper script instead of running manual sequential commands:
 ```bash

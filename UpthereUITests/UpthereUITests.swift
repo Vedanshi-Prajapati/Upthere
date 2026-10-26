@@ -49,7 +49,8 @@ nonisolated final class UpthereUITests: XCTestCase {
         XCTAssertTrue(insightsTab.waitForExistence(timeout: 4), "Insights tab button should exist")
         insightsTab.tap()
 
-        let insightsContent = app.staticTexts["Forecast Insights"].waitForExistence(timeout: 4) || app.staticTexts["InsightEngine"].waitForExistence(timeout: 4)
+        let insightsContent = app.staticTexts["Forecast Insights"].waitForExistence(timeout: 4)
+            || app.staticTexts["InsightEngine"].waitForExistence(timeout: 4)
         XCTAssertTrue(insightsContent || tabBar.exists, "Insights tab content should appear")
 
         // 4. Locations tab
@@ -57,7 +58,8 @@ nonisolated final class UpthereUITests: XCTestCase {
         XCTAssertTrue(locationsTab.waitForExistence(timeout: 4), "Locations tab button should exist")
         locationsTab.tap()
 
-        let locationsNavBar = app.navigationBars["Locations"].waitForExistence(timeout: 4) || app.staticTexts["Locations"].waitForExistence(timeout: 4)
+        let locationsNavBar = app.navigationBars["Locations"].waitForExistence(timeout: 4)
+            || app.staticTexts["Locations"].waitForExistence(timeout: 4)
         XCTAssertTrue(locationsNavBar || tabBar.exists, "Locations tab content should appear")
 
         // 5. Settings tab
@@ -65,7 +67,8 @@ nonisolated final class UpthereUITests: XCTestCase {
         XCTAssertTrue(settingsTab.waitForExistence(timeout: 4), "Settings tab button should exist")
         settingsTab.tap()
 
-        let settingsContent = app.staticTexts["Settings"].waitForExistence(timeout: 4) || app.navigationBars["Settings"].waitForExistence(timeout: 4)
+        let settingsContent = app.staticTexts["Settings"].waitForExistence(timeout: 4)
+            || app.navigationBars["Settings"].waitForExistence(timeout: 4)
         XCTAssertTrue(settingsContent || tabBar.exists, "Settings tab content should appear")
 
         // Return to Home tab
@@ -188,5 +191,109 @@ nonisolated final class UpthereUITests: XCTestCase {
         measure(metrics: [metric], options: options) {
             Thread.sleep(forTimeInterval: 10.0)
         }
+    }
+
+    // MARK: - (6) Dynamic Type XXXL rendering test
+    @MainActor
+    func testDynamicTypeXXXL() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-disableSplash",
+            "-disablePermission",
+            "-initialTab", "home",
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch in Dynamic Type XXXL")
+
+        let heroSection = app.descendants(matching: .any)["hero_section"].firstMatch
+        XCTAssertTrue(heroSection.waitForExistence(timeout: 8), "Hero section should exist in Dynamic Type XXXL")
+        XCTAssertFalse(heroSection.frame.isEmpty, "Hero section frame must be non-empty in Dynamic Type XXXL")
+        XCTAssertGreaterThan(heroSection.frame.height, 0)
+        XCTAssertGreaterThan(heroSection.frame.width, 0)
+
+        // Verify navigation across tabs in XXXL without crashing
+        let forecastTab = tabBar.buttons["Forecast"].firstMatch
+        if forecastTab.waitForExistence(timeout: 4) {
+            forecastTab.tap()
+            XCTAssertTrue(app.staticTexts["Forecast"].firstMatch.waitForExistence(timeout: 4) || tabBar.exists)
+        }
+
+        let settingsTab = tabBar.buttons["Settings"].firstMatch
+        if settingsTab.waitForExistence(timeout: 4) {
+            settingsTab.tap()
+            XCTAssertTrue(app.staticTexts["Settings"].firstMatch.waitForExistence(timeout: 4) || tabBar.exists)
+        }
+    }
+
+    // MARK: - (7) VoiceOver label presence across all tabs
+    @MainActor
+    func testVoiceOverLabelPresence() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-disableSplash",
+            "-disablePermission",
+            "-initialTab", "home"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        // 1. Home VoiceOver elements
+        let heroSection = app.descendants(matching: .any)["hero_section"].firstMatch
+        XCTAssertTrue(heroSection.waitForExistence(timeout: 8), "Hero section should exist")
+        XCTAssertFalse(heroSection.label.isEmpty, "Hero section must have VoiceOver accessibility label")
+
+        let tempChart = app.descendants(matching: .any)["temperature_line_chart"].firstMatch
+        XCTAssertTrue(tempChart.waitForExistence(timeout: 8), "Temperature chart should exist with identifier")
+        XCTAssertFalse(tempChart.label.isEmpty, "Temperature chart accessibility label must not be empty")
+
+        // 2. Forecast VoiceOver elements
+        let forecastTab = tabBar.buttons["Forecast"].firstMatch
+        XCTAssertTrue(forecastTab.waitForExistence(timeout: 4))
+        forecastTab.tap()
+
+        let hourlyBtn = app.descendants(matching: .any)["forecast_hourly_button"].firstMatch
+        XCTAssertTrue(hourlyBtn.waitForExistence(timeout: 4), "Hourly forecast button should exist")
+        XCTAssertFalse(hourlyBtn.label.isEmpty, "Hourly forecast button must have VoiceOver label")
+
+        let dailyBtn = app.descendants(matching: .any)["forecast_daily_button"].firstMatch
+        XCTAssertTrue(dailyBtn.waitForExistence(timeout: 4), "Daily forecast button should exist")
+        XCTAssertFalse(dailyBtn.label.isEmpty, "Daily forecast button must have VoiceOver label")
+
+        // 3. Insights VoiceOver elements
+        let insightsTab = tabBar.buttons["Insights"].firstMatch
+        XCTAssertTrue(insightsTab.waitForExistence(timeout: 4))
+        insightsTab.tap()
+
+        let insightsHeader = app.staticTexts["Insights"].firstMatch
+        XCTAssertTrue(insightsHeader.waitForExistence(timeout: 4) || tabBar.exists)
+
+        // 4. Locations VoiceOver elements
+        let locationsTab = tabBar.buttons["Locations"].firstMatch
+        XCTAssertTrue(locationsTab.waitForExistence(timeout: 4))
+        locationsTab.tap()
+
+        let addCityBtn = app.descendants(matching: .any)["add_city_button"].firstMatch
+        XCTAssertTrue(addCityBtn.waitForExistence(timeout: 4), "Add city button should exist")
+        XCTAssertFalse(addCityBtn.label.isEmpty, "Add city button must have VoiceOver label")
+
+        // 5. Settings VoiceOver elements
+        let settingsTab = tabBar.buttons["Settings"].firstMatch
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 4))
+        settingsTab.tap()
+
+        let tempUnitRow = app.descendants(matching: .any)["settings_temp_unit_row"].firstMatch
+        XCTAssertTrue(tempUnitRow.waitForExistence(timeout: 4), "Temperature unit row should exist")
+        XCTAssertFalse(tempUnitRow.label.isEmpty, "Temperature unit row must have VoiceOver label")
+
+        let rainToggle = app.descendants(matching: .any)["settings_rain_alerts_toggle"].firstMatch
+        XCTAssertTrue(rainToggle.waitForExistence(timeout: 4), "Rain alerts toggle should exist")
+        XCTAssertFalse(rainToggle.label.isEmpty, "Rain alerts toggle must have VoiceOver label")
     }
 }

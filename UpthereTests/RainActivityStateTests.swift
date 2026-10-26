@@ -151,7 +151,8 @@ struct RainActivityStateTests {
         let result = RainActivityStateCalculator.calculateState(rainWindow: window, now: now)
 
         #expect(result != nil)
-        let contentState = result!.contentState
+        guard let result else { return }
+        let contentState = result.contentState
         #expect(contentState.minutesUntilRain == 30)
         #expect(contentState.intensity == "Heavy rain")
         #expect(contentState.endTime == window.endDate)

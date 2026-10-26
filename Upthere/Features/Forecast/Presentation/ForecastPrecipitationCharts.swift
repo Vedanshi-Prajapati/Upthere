@@ -1,4 +1,5 @@
 import SwiftUI
+import Accessibility
 
 // MARK: - Hourly Precipitation Bar Chart
 
@@ -149,6 +150,7 @@ struct HourlyPrecipitationBarChart: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Hourly precipitation timeline")
         .accessibilityValue(chartSummary)
+        .accessibilityChartDescriptor(HourlyPrecipitationChartDescriptor(items: items, summary: chartSummary))
     }
 
     private var timeLabels: some View {
@@ -222,6 +224,7 @@ extension ForecastView {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Precipitation forecast by day")
             .accessibilityValue(chartSummary)
+            .accessibilityChartDescriptor(DailyPrecipitationChartDescriptor(days: days, summary: chartSummary))
         }
     }
 
@@ -239,10 +242,12 @@ extension ForecastView {
 
         var body: some View {
             VStack(spacing: 4) {
-                // Percentage label above bar
-                Text(pct > 0.05 ? label : "")
+                // Percentage label above bar — only when bar > 0
+                Text(pct > 0.01 ? label : "")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(rainBlue)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .frame(height: 14)
 
                 // Bar itself
@@ -264,15 +269,129 @@ extension ForecastView {
                     }
                 }
 
-                // Day label
+                // Day label — abbreviated weekday (Mon, Tue…) with scale-down on overflow
                 Text(shortDay)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(AppTheme.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity)
             .onAppear { appeared = true }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(day.dayName): \(label) chance of rain")
         }
+    }
+}
+
+// MARK: - Audio Graph Accessibility Descriptors
+
+struct HourlyPrecipitationChartDescriptor: AXChartDescriptorRepresentable {
+    let items: [HourlyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !items.isEmpty else {
+            return AXChartDescriptor(
+                title: "Hourly Precipitation Forecast",
+                summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "Precipitation Probability", range: 0...100, gridlinePositions: []) { _ in "" },
+                additionalAxes: [],
+                series: []
+            )
+        }
+
+        let xAxis = AXCategoricalDataAxisDescriptor(
+            title: "Time",
+            categoryOrder: items.map(\.time)
+        )
+        let yAxis = AXNumericDataAxisDescriptor(
+            title: "Precipitation Probability",
+            range: 0...100,
+            gridlinePositions: [0, 25, 50, 75, 100]
+        ) { value in
+            "\(Int(round(value)))%"
+        }
+
+        let dataPoints = items.map { item in
+            let pct = Int(round(item.precipitationProbability * 100))
+            return AXDataPoint(
+                x: item.time,
+                y: Double(pct),
+                additionalValues: [],
+                label: "\(item.time): \(pct)% chance"
+            )
+        }
+
+        let series = AXDataSeriesDescriptor(
+            name: "Precipitation Chance",
+            isContinuous: false,
+            dataPoints: dataPoints
+        )
+
+        return AXChartDescriptor(
+            title: "Hourly Precipitation Forecast",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
+    }
+}
+
+struct DailyPrecipitationChartDescriptor: AXChartDescriptorRepresentable {
+    let days: [DailyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !days.isEmpty else {
+            return AXChartDescriptor(
+                title: "Daily Precipitation Forecast",
+                summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Day", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "Precipitation Probability", range: 0...100, gridlinePositions: []) { _ in "" },
+                additionalAxes: [],
+                series: []
+            )
+        }
+
+        let xAxis = AXCategoricalDataAxisDescriptor(
+            title: "Day",
+            categoryOrder: days.map(\.dayName)
+        )
+        let yAxis = AXNumericDataAxisDescriptor(
+            title: "Precipitation Probability",
+            range: 0...100,
+            gridlinePositions: [0, 25, 50, 75, 100]
+        ) { value in
+            "\(Int(round(value)))%"
+        }
+
+        let dataPoints = days.map { item in
+            let pct = Int(round(item.precipitationProbability * 100))
+            return AXDataPoint(
+                x: item.dayName,
+                y: Double(pct),
+                additionalValues: [],
+                label: "\(item.dayName): \(pct)% chance"
+            )
+        }
+
+        let series = AXDataSeriesDescriptor(
+            name: "Daily Precipitation Chance",
+            isContinuous: false,
+            dataPoints: dataPoints
+        )
+
+        return AXChartDescriptor(
+            title: "Daily Precipitation Forecast",
+            summary: summary,
+            xAxis: xAxis,
+            yAxis: yAxis,
+            additionalAxes: [],
+            series: [series]
+        )
     }
 }

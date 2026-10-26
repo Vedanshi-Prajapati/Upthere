@@ -26,8 +26,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                WeatherBackgroundView(condition: condition, symbolName: symbolName)
-
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: AppTheme.spacingXXLarge) {
                         // Header
@@ -52,12 +50,13 @@ struct SettingsView: View {
                         aboutSection
                     }
                     .padding(.horizontal, AppTheme.spacingXLarge)
-                    .padding(.bottom, AppTheme.tabBarClearance)
                 }
+                .scrollEdgeEffectStyle(.soft, for: .top)
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
+                .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .fullScreenCover(isPresented: $showLocationPermission) {
                 LocationPermissionView(
                     onAllow: {
@@ -73,7 +72,6 @@ struct SettingsView: View {
         .task {
             await viewModel.checkNotificationStatus()
         }
-        .environment(\.colorScheme, .dark)
     }
 
     // MARK: - Header
@@ -120,6 +118,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("settings_temp_unit_row")
 
                 divider
 
@@ -149,6 +148,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("settings_wind_unit_row")
 
                 divider
 
@@ -178,6 +178,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("settings_precip_unit_row")
             }
         }
     }
@@ -204,6 +205,7 @@ struct SettingsView: View {
                     }
                 }
                 .tint(AppTheme.accent)
+                .accessibilityIdentifier("settings_rain_alerts_toggle")
 
                 divider
 
@@ -223,6 +225,7 @@ struct SettingsView: View {
                     }
                 }
                 .tint(AppTheme.accent)
+                .accessibilityIdentifier("settings_severe_alerts_toggle")
             }
 
             if viewModel.notificationsDenied {
@@ -243,6 +246,7 @@ struct SettingsView: View {
                     }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppTheme.accent)
+                    .accessibilityIdentifier("settings_open_notifications_settings_button")
                 }
                 .padding(AppTheme.spacingMedium)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -267,6 +271,7 @@ struct SettingsView: View {
                     }
                 }
                 .tint(AppTheme.accent)
+                .accessibilityIdentifier("settings_spotlight_toggle")
             }
         }
     }
@@ -311,6 +316,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("settings_location_permissions_button")
             }
         }
     }
@@ -339,6 +345,7 @@ struct SettingsView: View {
                     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
                 }
             }
+            .accessibilityIdentifier("settings_appearance_picker")
 
             Text("Text size follows your iPhone’s Display & Brightness setting.")
                 .font(AppFont.footnote)

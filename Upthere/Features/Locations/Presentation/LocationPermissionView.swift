@@ -51,7 +51,7 @@ struct LocationPermissionView: View {
                             Image(systemName: "sparkles")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(AppTheme.accent)
-                            Text("Live InsightEngine Preview")
+                            Text("Example insight")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(AppTheme.textSecondary)
                         }

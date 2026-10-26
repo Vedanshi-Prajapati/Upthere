@@ -50,6 +50,15 @@ struct UpthereApp: App {
         return nil
     }
 
+    private var isInitialStateReady: Bool {
+        switch container.homeViewModel.state {
+        case .loaded, .error:
+            return true
+        case .idle, .loading:
+            return false
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             if isTesting {
@@ -75,10 +84,21 @@ struct UpthereApp: App {
                 .environment(container.unitPreferences)
                 .preferredColorScheme(selectedColorScheme)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: showSplash)
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                .task {
+                    guard showSplash && !disableSplash else { return }
+                    if reduceMotion {
                         showSplash = false
+                        return
                     }
+                    let deadline = ContinuousClock.now + .milliseconds(600)
+                    while showSplash && ContinuousClock.now < deadline {
+                        if isInitialStateReady {
+                            break
+                        }
+                        // Genuinely optional: cooperative polling sleep while waiting for initial state
+                        try? await Task.sleep(for: .milliseconds(20))
+                    }
+                    showSplash = false
                 }
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
                     guard let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,

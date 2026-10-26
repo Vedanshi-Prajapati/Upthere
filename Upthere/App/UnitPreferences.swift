@@ -54,7 +54,7 @@ enum PrecipitationUnit: String, CaseIterable, Identifiable, Sendable {
 
 @Observable
 @MainActor
-final class UnitPreferences: @unchecked Sendable {
+final class UnitPreferences: Sendable {
     private let defaults: UserDefaults
 
     var temperatureUnit: TemperatureUnit {

@@ -155,9 +155,16 @@ final class SavedLocationsManager: ObservableObject {
     }
 
     private func load() {
-        if let saved = try? store.loadLocations(), !saved.isEmpty {
-            self.locations = saved
-        } else {
+        do {
+            let saved = try store.loadLocations()
+            if !saved.isEmpty {
+                self.locations = saved
+            } else {
+                self.locations = Self.defaultLocations
+                save()
+            }
+        } catch {
+            logger.error("Failed to load locations from store: \(error.localizedDescription)")
             self.locations = Self.defaultLocations
             save()
         }

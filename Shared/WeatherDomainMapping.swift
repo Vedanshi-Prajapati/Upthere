@@ -2,6 +2,7 @@ import Foundation
 import CoreLocation
 import WeatherKit
 import WidgetKit
+import os
 
 // MARK: - Domain Models
 
@@ -268,6 +269,49 @@ public struct HourlyWeather: Equatable, Sendable, Identifiable, Codable {
     }
 }
 
+public enum LocationBannerAction: String, Equatable, Codable, Sendable {
+    case openSettings
+    case retry
+}
+
+public enum LocationStatus: String, Equatable, Codable, Sendable {
+    case live
+    case denied
+    case restricted
+    case servicesDisabled
+    case timedOut
+    case unavailable
+    case savedCity
+
+    public var bannerCopy: String? {
+        switch self {
+        case .live, .savedCity:
+            return nil
+        case .denied:
+            return String(localized: "Location access is off. Using Ghaziabad. Open Settings")
+        case .timedOut:
+            return String(localized: "Couldn't get your location. Using Ghaziabad. Retry")
+        case .servicesDisabled:
+            return String(localized: "Location services are disabled. Using Ghaziabad. Open Settings")
+        case .restricted:
+            return String(localized: "Location access is restricted. Using Ghaziabad. Open Settings")
+        case .unavailable:
+            return String(localized: "Location is unavailable. Using Ghaziabad. Retry")
+        }
+    }
+
+    public var bannerAction: LocationBannerAction? {
+        switch self {
+        case .live, .savedCity:
+            return nil
+        case .denied, .servicesDisabled, .restricted:
+            return .openSettings
+        case .timedOut, .unavailable:
+            return .retry
+        }
+    }
+}
+
 public struct Weather: Equatable, Sendable, Codable {
     public let cityName: String
     public let locationSubtitle: String
@@ -301,6 +345,17 @@ public struct Weather: Equatable, Sendable, Codable {
     public let sunset: String
     public let fetchTimestamp: Date
     public let isCached: Bool
+    public let locationStatus: LocationStatus
+
+    enum CodingKeys: String, CodingKey {
+        case cityName, locationSubtitle, latitude, longitude
+        case temperature, condition, highTemperature, lowTemperature, feelsLike
+        case weatherSymbolName, description, humidity, dewPoint, windSpeed, windDirection
+        case precipitationChance, uvIndex, uvDescription, visibility, visibilityDescription
+        case pressure, pressureTrend, alert, hourlyForecast, dailyForecast, rainWindow
+        case warmingInsight, chanceOfRain, sunrise, sunset, fetchTimestamp, isCached
+        case locationStatus
+    }
 
     public init(
         cityName: String,
@@ -334,7 +389,8 @@ public struct Weather: Equatable, Sendable, Codable {
         sunrise: String = "",
         sunset: String = "",
         fetchTimestamp: Date = Date(),
-        isCached: Bool = false
+        isCached: Bool = false,
+        locationStatus: LocationStatus = .live
     ) {
         self.cityName = cityName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.locationSubtitle = locationSubtitle.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -381,6 +437,81 @@ public struct Weather: Equatable, Sendable, Codable {
         self.sunset = sunset
         self.fetchTimestamp = fetchTimestamp
         self.isCached = isCached
+        self.locationStatus = locationStatus
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.cityName = try container.decodeIfPresent(String.self, forKey: .cityName) ?? ""
+        self.locationSubtitle = try container.decodeIfPresent(String.self, forKey: .locationSubtitle) ?? ""
+        self.latitude = try container.decodeIfPresent(Double.self, forKey: .latitude)
+        self.longitude = try container.decodeIfPresent(Double.self, forKey: .longitude)
+        self.temperature = try container.decode(Double.self, forKey: .temperature)
+        self.condition = try container.decode(String.self, forKey: .condition)
+        self.highTemperature = try container.decode(Double.self, forKey: .highTemperature)
+        self.lowTemperature = try container.decode(Double.self, forKey: .lowTemperature)
+        self.feelsLike = try container.decodeIfPresent(Double.self, forKey: .feelsLike) ?? self.temperature
+        self.weatherSymbolName = try container.decodeIfPresent(String.self, forKey: .weatherSymbolName) ?? "cloud.sun.fill"
+        self.description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        self.humidity = try container.decodeIfPresent(Int.self, forKey: .humidity) ?? 0
+        self.dewPoint = try container.decodeIfPresent(Double.self, forKey: .dewPoint) ?? self.temperature
+        self.windSpeed = try container.decodeIfPresent(Double.self, forKey: .windSpeed) ?? 0
+        self.windDirection = try container.decodeIfPresent(String.self, forKey: .windDirection) ?? ""
+        self.precipitationChance = try container.decodeIfPresent(Int.self, forKey: .precipitationChance) ?? 0
+        self.uvIndex = try container.decodeIfPresent(Int.self, forKey: .uvIndex) ?? 0
+        self.uvDescription = try container.decodeIfPresent(String.self, forKey: .uvDescription) ?? ""
+        self.visibility = try container.decodeIfPresent(Double.self, forKey: .visibility) ?? 10
+        self.visibilityDescription = try container.decodeIfPresent(String.self, forKey: .visibilityDescription) ?? ""
+        self.pressure = try container.decodeIfPresent(Double.self, forKey: .pressure) ?? 1013.25
+        self.pressureTrend = try container.decodeIfPresent(String.self, forKey: .pressureTrend) ?? ""
+        self.alert = try container.decodeIfPresent(WeatherAlert.self, forKey: .alert)
+        self.hourlyForecast = try container.decodeIfPresent([HourlyWeather].self, forKey: .hourlyForecast) ?? []
+        self.dailyForecast = try container.decodeIfPresent([DailyWeather].self, forKey: .dailyForecast) ?? []
+        self.rainWindow = try container.decodeIfPresent(RainWindow.self, forKey: .rainWindow)
+        self.warmingInsight = try container.decodeIfPresent(String.self, forKey: .warmingInsight) ?? ""
+        self.chanceOfRain = try container.decodeIfPresent(Int.self, forKey: .chanceOfRain) ?? 0
+        self.sunrise = try container.decodeIfPresent(String.self, forKey: .sunrise) ?? ""
+        self.sunset = try container.decodeIfPresent(String.self, forKey: .sunset) ?? ""
+        self.fetchTimestamp = try container.decodeIfPresent(Date.self, forKey: .fetchTimestamp) ?? Date()
+        self.isCached = try container.decodeIfPresent(Bool.self, forKey: .isCached) ?? false
+        self.locationStatus = try container.decodeIfPresent(LocationStatus.self, forKey: .locationStatus) ?? .live
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(cityName, forKey: .cityName)
+        try container.encode(locationSubtitle, forKey: .locationSubtitle)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encode(temperature, forKey: .temperature)
+        try container.encode(condition, forKey: .condition)
+        try container.encode(highTemperature, forKey: .highTemperature)
+        try container.encode(lowTemperature, forKey: .lowTemperature)
+        try container.encode(feelsLike, forKey: .feelsLike)
+        try container.encode(weatherSymbolName, forKey: .weatherSymbolName)
+        try container.encode(description, forKey: .description)
+        try container.encode(humidity, forKey: .humidity)
+        try container.encode(dewPoint, forKey: .dewPoint)
+        try container.encode(windSpeed, forKey: .windSpeed)
+        try container.encode(windDirection, forKey: .windDirection)
+        try container.encode(precipitationChance, forKey: .precipitationChance)
+        try container.encode(uvIndex, forKey: .uvIndex)
+        try container.encode(uvDescription, forKey: .uvDescription)
+        try container.encode(visibility, forKey: .visibility)
+        try container.encode(visibilityDescription, forKey: .visibilityDescription)
+        try container.encode(pressure, forKey: .pressure)
+        try container.encode(pressureTrend, forKey: .pressureTrend)
+        try container.encode(alert, forKey: .alert)
+        try container.encode(hourlyForecast, forKey: .hourlyForecast)
+        try container.encode(dailyForecast, forKey: .dailyForecast)
+        try container.encode(rainWindow, forKey: .rainWindow)
+        try container.encode(warmingInsight, forKey: .warmingInsight)
+        try container.encode(chanceOfRain, forKey: .chanceOfRain)
+        try container.encode(sunrise, forKey: .sunrise)
+        try container.encode(sunset, forKey: .sunset)
+        try container.encode(fetchTimestamp, forKey: .fetchTimestamp)
+        try container.encode(isCached, forKey: .isCached)
+        try container.encode(locationStatus, forKey: .locationStatus)
     }
 
     public func asCached(isCached: Bool = true) -> Weather {
@@ -416,8 +547,62 @@ public struct Weather: Equatable, Sendable, Codable {
             sunrise: self.sunrise,
             sunset: self.sunset,
             fetchTimestamp: self.fetchTimestamp,
-            isCached: isCached
+            isCached: isCached,
+            locationStatus: self.locationStatus
         )
+    }
+
+    public var isDaylight: Bool {
+        if let firstHourly = hourlyForecast.first {
+            return firstHourly.isDaylight
+        }
+        let sym = weatherSymbolName.lowercased()
+        if sym.contains("moon") {
+            return false
+        }
+        return true
+    }
+
+    public func withCityName(_ newName: String, subtitle: String? = nil, status: LocationStatus? = nil) -> Weather {
+        Weather(
+            cityName: newName,
+            locationSubtitle: subtitle ?? self.locationSubtitle,
+            latitude: self.latitude,
+            longitude: self.longitude,
+            temperature: self.temperature,
+            condition: self.condition,
+            highTemperature: self.highTemperature,
+            lowTemperature: self.lowTemperature,
+            feelsLike: self.feelsLike,
+            weatherSymbolName: self.weatherSymbolName,
+            description: self.description,
+            humidity: self.humidity,
+            dewPoint: self.dewPoint,
+            windSpeed: self.windSpeed,
+            windDirection: self.windDirection,
+            precipitationChance: self.precipitationChance,
+            uvIndex: self.uvIndex,
+            uvDescription: self.uvDescription,
+            visibility: self.visibility,
+            visibilityDescription: self.visibilityDescription,
+            pressure: self.pressure,
+            pressureTrend: self.pressureTrend,
+            alert: self.alert,
+            hourlyForecast: self.hourlyForecast,
+            dailyForecast: self.dailyForecast,
+            rainWindow: self.rainWindow,
+            warmingInsight: self.warmingInsight,
+            chanceOfRain: self.chanceOfRain,
+            sunrise: self.sunrise,
+            sunset: self.sunset,
+            fetchTimestamp: self.fetchTimestamp,
+            isCached: self.isCached,
+            locationStatus: status ?? self.locationStatus
+        )
+    }
+
+    public func withStatus(_ status: LocationStatus) -> Weather {
+        withCityName(self.cityName, subtitle: self.locationSubtitle, status: status)
     }
 }
 
@@ -493,7 +678,8 @@ extension WidgetSnapshot {
             rainInsight: rainInsight,
             hourly: hourly,
             daily: daily,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            locationStatus: weather.locationStatus
         )
     }
 }
@@ -505,7 +691,8 @@ public enum WeatherKitMapper {
         weather: WeatherKit.Weather,
         cityName: String,
         locationSubtitle: String = "",
-        coordinate: CLLocationCoordinate2D? = nil
+        coordinate: CLLocationCoordinate2D? = nil,
+        locationStatus: LocationStatus = .live
     ) -> Weather {
         let current = weather.currentWeather
 
@@ -742,7 +929,8 @@ public enum WeatherKitMapper {
             sunrise: sunriseStr,
             sunset: sunsetStr,
             fetchTimestamp: Date(),
-            isCached: false
+            isCached: false,
+            locationStatus: locationStatus
         )
     }
 }
@@ -822,7 +1010,12 @@ public struct WeatherWidgetTimelineProvider: TimelineProvider {
         do {
             let weather = try await weatherFetcher.fetchWeather(for: location, cityName: savedSnapshot.city)
             let newSnapshot = WidgetSnapshot(from: weather)
-            try? snapshotStore.save(newSnapshot)
+            do {
+                try snapshotStore.save(newSnapshot)
+            } catch {
+                let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "WeatherWidgetTimeline")
+                logger.error("Failed to save widget snapshot: \(error.localizedDescription)")
+            }
 
             let entries = makeHourlyEntries(from: newSnapshot)
             return Timeline(entries: entries, policy: .after(nextUpdate))

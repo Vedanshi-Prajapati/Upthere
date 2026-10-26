@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @MainActor
 final class AppContainer {
@@ -77,11 +80,34 @@ final class AppContainer {
             locationService: locService,
             notificationScheduler: scheduler
         )
+        let widgetWriter = WidgetSnapshotStore.shared
+        let spotlightIndexer = SpotlightService.shared
+        let rainUpdater = RainActivityManager.shared
+        let metrics = AppSignposts.shared
+        let coordinator = WeatherRefreshCoordinator(
+            widgetSnapshotWriter: widgetWriter,
+            spotlightIndexer: spotlightIndexer,
+            rainActivityUpdater: rainUpdater,
+            notificationScheduler: scheduler,
+            fetchMetrics: metrics,
+            defaults: AppGroup.defaults
+        )
+
         self.homeViewModel = HomeViewModel(
             getWeatherUseCase: useCase,
+            refreshCoordinator: coordinator,
+            cacheManager: WeatherCacheManager.shared,
             locationsManager: locManager,
             locationService: locService,
-            notificationScheduler: scheduler
+            defaults: AppGroup.defaults,
+            openSettingsAction: {
+                #if canImport(UIKit)
+                if let url = URL(string: UIApplication.openSettingsURLString),
+                   UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                }
+                #endif
+            }
         )
     }
 

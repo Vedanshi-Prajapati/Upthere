@@ -8,14 +8,14 @@
 An iOS weather application built with SwiftUI, Apple WeatherKit, and deterministic forecast intelligence algorithms.
 
 <p align="center">
-  <img src="docs/screenshots/home.png" alt="UpThere Home Screen" width="360">
+  <img src="docs/screenshots/home-dark.png" alt="UpThere Home Screen" width="360">
 </p>
 
 ### Interface & Adaptability
 
-| Light Mode | Dark Mode | Dynamic Type | WidgetKit |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/home-light.png" width="200" alt="Light Mode"> | <img src="docs/screenshots/home-dark.png" width="200" alt="Dark Mode"> | <img src="docs/screenshots/dynamic-type.png" width="200" alt="Dynamic Type Accessibility"> | <img src="docs/screenshots/widget.png" width="200" alt="WidgetKit Medium Widget"> |
+| Light Mode | Dark Mode | Dynamic Type (Small) | Dynamic Type (Large) | WidgetKit |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/home-light.png" width="180" alt="Light Mode"> | <img src="docs/screenshots/home-dark.png" width="180" alt="Dark Mode"> | <img src="docs/screenshots/home-small.png" width="180" alt="Dynamic Type - Small Text"> | <img src="docs/screenshots/home-large.png" width="180" alt="Dynamic Type - Large Text"> | <img src="docs/screenshots/widget.png" width="180" alt="WidgetKit Medium Widget"> |
 
 ---
 
@@ -23,37 +23,86 @@ An iOS weather application built with SwiftUI, Apple WeatherKit, and determinist
 
 Most weather applications present raw meteorological metrics—barometric pressures, percentages, and millibar measurements—leaving the user to interpret what those numbers mean for their daily schedule. UpThere bridges this gap by transforming hourly forecast telemetry into clear, actionable context: identifying exact precipitation windows, assessing outdoor activity suitability, tracking temperature swings, and flagging peak UV periods. Designed natively for iOS 26, the app pairs this analytical engine with dynamic atmospheric sky rendering, custom vector illustrations, and platform integrations across widgets, Control Center, Siri Shortcuts, and Spotlight.
 
+> [!NOTE]
+> **iOS 26+ Deployment Target as a Deliberate Choice**
+> UpThere exclusively targets iOS 26.0+ as a deliberate design and architectural decision. By eschewing backward-compatibility branching and runtime OS version checks (`if #available(...)`), the codebase fully leverages modern Swift 6 concurrency (`SWIFT_STRICT_CONCURRENCY = complete`), native `@Observable` state observation, modern SwiftUI Liquid Glass materials, standard MapKit address search representations, WidgetKit interactive timeline extensions, and App Intents without legacy compatibility shims.
+
 ---
 
 ## Architecture
 
-The project follows a clean, modular architecture separating Presentation, Domain business logic, Data repositories, and Platform integration.
+The project follows a clean, modular layer architecture separating Presentation, Domain business logic, Data repositories, and Platform integration.
 
 ```mermaid
 graph TD
-    UI[SwiftUI Views] -->|Binds to state| VM[HomeViewModel @Observable]
-    VM -->|Executes| UC[GetWeatherUseCase]
-    VM -->|Computes insights| IE[InsightEngine]
-    UC -->|Queries interface| RP[WeatherRepository Protocol]
-    RP -->|Production| WR[WeatherKitWeatherRepository]
-    RP -->|Offline / Testing| MR[MockWeatherRepository]
-    WR -->|Apple API| WK[WeatherService / CoreLocation]
-    WR -->|Caches to| CM[WeatherCacheManager]
-    VM -->|Manages cities| LM[SavedLocationsManager]
-    LM -->|Persists to| FS[FileLocationStore]
+    subgraph Presentation ["Presentation Layer (SwiftUI & ViewModels)"]
+        UI[SwiftUI Views: HomeView, ForecastView, InsightsView, SettingsView]
+        VM[HomeViewModel, CitySearchViewModel, SettingsViewModel @Observable]
+        UI -->|Binds to state| VM
+    end
+
+    subgraph Domain ["Domain Layer (Business Logic & Entities)"]
+        UC[GetWeatherUseCase]
+        RC[WeatherRefreshCoordinator @MainActor]
+        IE[InsightEngine & RainActivityStateCalculator]
+        DM[Domain Models: Weather, HourlyWeather, LocationStatus]
+        VM -->|Executes| UC
+        VM -->|Delegates refresh side effects| RC
+        VM -->|Evaluates forecast metrics| IE
+    end
+
+    subgraph Data ["Data Layer (Repositories & Persistence)"]
+        RP[WeatherRepository Protocol]
+        WR[WeatherKitWeatherRepository]
+        MR[MockWeatherRepository]
+        LS[LocationService & LocationStore]
+        LM[SavedLocationsManager]
+        CM[WeatherCacheManager]
+        UC -->|Queries interface| RP
+        RP -->|Production| WR
+        RP -->|Offline / Testing| MR
+        WR -->|Apple API| WK[WeatherService / CoreLocation]
+        WR -->|Caches to| CM
+        LM -->|Persists to| LS
+    end
+
+    subgraph Platform ["Platform & Extensions Layer"]
+        WID[WidgetKit Target & UpthereWidgets]
+        WSS[WidgetSnapshotStore]
+        SI[SpotlightService & CSSearchableItem]
+        AI[App Intents: CheckWeatherIntent, TrackRainIntent]
+        AG[AppGroup Shared Storage]
+        RC -->|Writes snapshot| WSS
+        RC -->|Indexes search| SI
+        WID -->|Reads snapshot| WSS
+        AI -->|Invokes loader| WR
+        WSS -->|Shares via| AG
+    end
 ```
 
 ### Verified Test Coverage by Layer
 
-All **84 tests** across **5 test suites** pass deterministically using Apple's Swift Testing framework (`@Suite`, `@Test`, `#expect`):
+All **120 tests** across **16 test suites** pass deterministically using Apple's Swift Testing framework (`@Suite`, `@Test`, `#expect`):
 
-| Layer | Test Count | Key Areas Covered |
+| Layer / Feature Suite | Test Count | Key Areas Covered |
 | :--- | :---: | :--- |
-| **Presentation Layer** *(Views & ViewModels)* | **25** | `HomeViewModel` debouncing, tab-switch cache hits, refresh failure banners, error retryability states, `SettingsViewModel` bundle versioning and AppGroup bindings, `CitySearchViewModel` typing debounce and cancellation, `WeatherFormatter` observable unit dynamic updates without view recreation. |
-| **Domain Layer** *(Business Logic & Models)* | **27** | `InsightEngine` weather patterns (UV peaks, polar days, storm nights, rain windows), `RainActivityStateCalculator` Live Activity state machine, domain entity conversions, severe alert expiration logic. |
-| **Data Layer** *(Services, Repositories & Storage)* | **20** | `LocationService` (timeout within 4s, reverse-geocoding immutability, request generation counter), `SavedLocationsManager` & `FileLocationStore` (persistence, restarts, 5 km duplicate detection, current location protection, migration), `WeatherCacheManager`, `NotificationScheduler` alert deduplication. |
-| **Platform & Integration Layer** *(Intents, Widgets, Spotlight, App Group)* | **12** | `WidgetSnapshot` & `WidgetSnapshotStore` round-trip, `WeatherWidgetEntry` fresh/stale/empty timeline entries, `CheckWeatherIntent`, `TrackRainIntent`, `ToggleSevereAlertsIntent`, `LocationEntityQuery`, `SpotlightService`, `AppGroup` migration. |
-| **Total** | **84** | **100% Passing** |
+| **HomeViewModel Tests** | **21** | Launch states, permission revoking, offline fallbacks, city selection, stale response dropping, rapid debouncing, refresh failure retention, geocoding timeouts & async resolution. |
+| **Settings Tests** | **14** | `ToggleSevereAlertsIntent`, `SettingsViewModel` settings keys & bundle version, Spotlight toggle, `SavedLocationsManager` persistence, current location pinning, filtered reordering, duplicate detection, `FileLocationStore` migration, and `AppGroup` migration. |
+| **WeatherMapping Tests** | **10** | Decoding failures, partial forecasts, condition codes, temperature formatting/conversions, forecast midnight timestamps, expired alerts, extended hourly metrics, rain window formatting, dynamic unit preferences view formatting. |
+| **Rain Activity State Tests** | **10** | Rain onset/cessation/intensity calculations, sliding windows, Live Activity ContentState mapping. |
+| **IntentWeatherLoader Tests** | **9** | Intent location resolution (`nil`, `current`, custom city), network fetch with dual-key cache fallback, `WeatherUnavailableError`, dialog builder string formatting. |
+| **WidgetSnapshot Tests** | **8** | Snapshot JSON round-trip, weather-to-snapshot mapping, fresh/stale/empty widget entries, timeline provider fresh fetch, stale fallback, and missing snapshot states. |
+| **InsightEngine Tests** | **6** | Weather patterns (rain window, best outdoor window, temperature trends, peak UV, cloud changes). |
+| **Notification Tests** | **6** | Severe weather deduplication, rain alert scheduling & rescheduling, cancellation on weather clear, toggle gating, permission request triggers, refresh-triggered rain scheduling. |
+| **WeatherRefreshCoordinator Tests** | **6** | Single-run side-effects coordinator, widget timeline reloading, Spotlight indexing bypass, error tolerance. |
+| **Cache Tests** | **5** | Cache key city isolation, `CheckWeatherIntent` cached fallback & unavailable error, `TrackRainIntent` cached fallback & unavailable error. |
+| **LocationService Tests** | **5** | Timeout within 4s, reverse-geocoding immutability, request generation counter. |
+| **LocationStatus Tests** | **5** | Banner derivation for `.denied`, `.timedOut`, `.savedCity`, `.live`, banner actions. |
+| **City Search Tests** | **5** | Typing debounce, request cancellation, duplicate regional filtering. |
+| **WCAG AA Contrast Verification** | **5** | Algorithmic luminance and WCAG AA / AAA contrast validation on dynamic sky canvases. |
+| **Sky Background Tests** | **3** | Dynamic sky scene classification, diurnal particle systems. |
+| **Spotlight Tests** | **2** | `SpotlightService` identifier resolution, `LocationEntityQuery` entity fetching. |
+| **Total** | **120** | **100% Passing** |
 
 ---
 
@@ -82,7 +131,7 @@ All **84 tests** across **5 test suites** pass deterministically using Apple's S
 - **WidgetKit**: Home Screen and Lock Screen widgets supporting `.systemSmall`, `.systemMedium`, `.systemLarge`, `.accessoryCircular`, `.accessoryRectangular`, and `.accessoryInline` families.
 - **Control Center**: Quick weather launcher control and severe weather alert toggle control (`ControlWidget`).
 - **App Shortcuts & Siri**: Siri shortcuts (`UpthereShortcuts`) for checking current weather (`CheckWeatherIntent`), opening locations (`OpenLocationIntent`), toggling severe alerts (`ToggleSevereAlertsIntent`), and tracking rain (`TrackRainIntent`).
-- **CoreSpotlight Indexing**: Automatic indexing of current weather conditions and saved cities into iOS system search via `CSSearchableItem`.
+- **CoreSpotlight Indexing**: Automatic indexing of current weather conditions and saved cities into iOS system search via `CSSearchableItem`, with user preference toggle and index management in Settings.
 
 ---
 

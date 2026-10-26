@@ -76,7 +76,7 @@ nonisolated struct InsightEngine: Sendable {
         }
     }
 
-    func temperatureTrend(from hourly: [HourlyWeather]) -> TemperatureTrendResult? {
+    func temperatureTrend(from hourly: [HourlyWeather], currentTemperature: Double? = nil) -> TemperatureTrendResult? {
         let spID = AppSignposts.shared.insightSignposter.makeSignpostID()
         let spState = AppSignposts.shared.insightSignposter.beginInterval("TemperatureTrendComputation", id: spID)
         defer { AppSignposts.shared.insightSignposter.endInterval("TemperatureTrendComputation", spState) }
@@ -95,7 +95,7 @@ nonisolated struct InsightEngine: Sendable {
             maxTemperature: maxHour.temperature,
             minDate: minHour.date,
             maxDate: maxHour.date,
-            currentTemperature: first.temperature,
+            currentTemperature: currentTemperature ?? first.temperature,
             temperatureSwing: swing
         )
     }

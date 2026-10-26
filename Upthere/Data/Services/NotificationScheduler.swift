@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import os
 
 enum NotificationAuthorizationStatus: Sendable, Equatable {
     case notDetermined
@@ -21,6 +22,8 @@ struct LocalNotificationRequest: Equatable, Sendable {
     }
 }
 
+typealias NotificationScheduling = NotificationSchedulerProtocol
+
 protocol NotificationSchedulerProtocol: AnyObject, Sendable {
     func requestAuthorization() async -> Bool
     func authorizationStatus() async -> NotificationAuthorizationStatus
@@ -29,6 +32,12 @@ protocol NotificationSchedulerProtocol: AnyObject, Sendable {
     func cancelAll() async
     func isAlertDelivered(id: String) -> Bool
     func markAlertDelivered(id: String)
+    func handleWeatherRefresh(
+        weather: Weather,
+        rainAlertsEnabled: Bool,
+        severeAlertsEnabled: Bool,
+        now: Date
+    ) async
 }
 
 extension NotificationSchedulerProtocol {
@@ -52,7 +61,12 @@ extension NotificationSchedulerProtocol {
                     body: "Rain starting in \(weather.cityName) in about 15 minutes.",
                     fireDate: fireDate
                 )
-                try? await schedule(rainRequest)
+                do {
+                    try await schedule(rainRequest)
+                } catch {
+                    let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "Notifications")
+                    logger.error("Failed to schedule rain notification: \(error.localizedDescription)")
+                }
             }
         }
 
@@ -67,18 +81,26 @@ extension NotificationSchedulerProtocol {
                 body: alert.details ?? alert.validUntil,
                 fireDate: nil
             )
-            try? await schedule(severeRequest)
-            markAlertDelivered(id: alert.id)
+            do {
+                try await schedule(severeRequest)
+                markAlertDelivered(id: alert.id)
+            } catch {
+                let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "Notifications")
+                logger.error("Failed to schedule severe alert notification: \(error.localizedDescription)")
+            }
         }
     }
 }
 
+/// Lock-protected notification scheduler coordinating local alerts across processes.
+/// Invariant: Access to delivered alerts in UserDefaults is synchronized via `lock`.
 final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
     static let shared = NotificationScheduler()
 
     static let rainAlertId = "upthere.notification.rain"
     static let severeAlertIdPrefix = "upthere.notification.severe."
 
+    private let lock = NSLock()
     private let center: UNUserNotificationCenter
     private let defaults: UserDefaults
     private let deliveredAlertsKey = "upthere.notifications.delivered_alerts"
@@ -147,15 +169,19 @@ final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sen
     }
 
     func isAlertDelivered(id: String) -> Bool {
-        let delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
-        return delivered.contains(id)
+        lock.withLock {
+            let delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
+            return delivered.contains(id)
+        }
     }
 
     func markAlertDelivered(id: String) {
-        var delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
-        if !delivered.contains(id) {
-            delivered.append(id)
-            defaults.set(delivered, forKey: deliveredAlertsKey)
+        lock.withLock {
+            var delivered = defaults.stringArray(forKey: deliveredAlertsKey) ?? []
+            if !delivered.contains(id) {
+                delivered.append(id)
+                defaults.set(delivered, forKey: deliveredAlertsKey)
+            }
         }
     }
 }
@@ -163,57 +189,100 @@ final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sen
 // MARK: - Fake Scheduler for Unit Tests
 
 #if DEBUG
+/// Lock-protected test double for notification scheduling.
+/// Invariant: All mutable state (call counts, scheduled requests, cancelled IDs, delivered alert IDs)
+/// is synchronized via `lock` to ensure safe concurrent test assertions.
 final class FakeNotificationScheduler: NotificationSchedulerProtocol, @unchecked Sendable {
-    var authorizationStatusToReturn: NotificationAuthorizationStatus = .authorized
-    var requestAuthorizationResult: Bool = true
-    private(set) var requestAuthorizationCallCount: Int = 0
+    private let lock = NSLock()
+    private var _authorizationStatusToReturn: NotificationAuthorizationStatus = .authorized
+    private var _requestAuthorizationResult: Bool = true
+    private var _requestAuthorizationCallCount: Int = 0
 
-    private(set) var scheduledRequests: [LocalNotificationRequest] = []
-    private(set) var cancelledIds: [String] = []
-    var deliveredAlertIds: Set<String> = []
+    private var _scheduledRequests: [LocalNotificationRequest] = []
+    private var _cancelledIds: [String] = []
+    private var _deliveredAlertIds: Set<String> = []
+
+    var authorizationStatusToReturn: NotificationAuthorizationStatus {
+        get { lock.withLock { _authorizationStatusToReturn } }
+        set { lock.withLock { _authorizationStatusToReturn = newValue } }
+    }
+
+    var requestAuthorizationResult: Bool {
+        get { lock.withLock { _requestAuthorizationResult } }
+        set { lock.withLock { _requestAuthorizationResult = newValue } }
+    }
+
+    var requestAuthorizationCallCount: Int {
+        lock.withLock { _requestAuthorizationCallCount }
+    }
+
+    var scheduledRequests: [LocalNotificationRequest] {
+        lock.withLock { _scheduledRequests }
+    }
+
+    var cancelledIds: [String] {
+        lock.withLock { _cancelledIds }
+    }
+
+    var deliveredAlertIds: Set<String> {
+        get { lock.withLock { _deliveredAlertIds } }
+        set { lock.withLock { _deliveredAlertIds = newValue } }
+    }
 
     init(
         authorizationStatus: NotificationAuthorizationStatus = .authorized,
         requestAuthorizationResult: Bool = true
     ) {
-        self.authorizationStatusToReturn = authorizationStatus
-        self.requestAuthorizationResult = requestAuthorizationResult
+        self._authorizationStatusToReturn = authorizationStatus
+        self._requestAuthorizationResult = requestAuthorizationResult
     }
 
     func requestAuthorization() async -> Bool {
-        requestAuthorizationCallCount += 1
-        if requestAuthorizationResult {
-            authorizationStatusToReturn = .authorized
-        } else {
-            authorizationStatusToReturn = .denied
+        lock.withLock {
+            _requestAuthorizationCallCount += 1
+            if _requestAuthorizationResult {
+                _authorizationStatusToReturn = .authorized
+            } else {
+                _authorizationStatusToReturn = .denied
+            }
+            return _requestAuthorizationResult
         }
-        return requestAuthorizationResult
     }
 
     func authorizationStatus() async -> NotificationAuthorizationStatus {
-        authorizationStatusToReturn
+        lock.withLock { _authorizationStatusToReturn }
     }
 
     func schedule(_ request: LocalNotificationRequest) async throws {
-        scheduledRequests.removeAll { $0.id == request.id }
-        scheduledRequests.append(request)
+        lock.withLock {
+            _scheduledRequests.removeAll { $0.id == request.id }
+            _scheduledRequests.append(request)
+        }
     }
 
     func cancel(id: String) async {
-        cancelledIds.append(id)
-        scheduledRequests.removeAll { $0.id == id }
+        lock.withLock {
+            _cancelledIds.append(id)
+            _scheduledRequests.removeAll { $0.id == id }
+        }
     }
 
     func cancelAll() async {
-        scheduledRequests.removeAll()
+        lock.withLock {
+            _scheduledRequests.removeAll()
+        }
     }
 
     func isAlertDelivered(id: String) -> Bool {
-        deliveredAlertIds.contains(id)
+        lock.withLock {
+            _deliveredAlertIds.contains(id)
+        }
     }
 
     func markAlertDelivered(id: String) {
-        deliveredAlertIds.insert(id)
+        lock.withLock {
+            _deliveredAlertIds.insert(id)
+        }
     }
 }
 #endif

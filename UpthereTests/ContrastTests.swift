@@ -184,6 +184,7 @@ struct ContrastTests {
         #expect(highContrastRatio >= 7.0, "High contrast text exceeds 7.0:1 WCAG AAA")
     }
 
+    // swiftlint:disable no_print - Test utility prints diagnostic contrast comparison table to runner output
     @Test("Generate Before vs After contrast comparison table")
     func generateComparisonTable() {
         print("\n================== WCAG AA CONTRAST COMPARISON TABLE ==================")
@@ -218,4 +219,5 @@ struct ContrastTests {
         }
         print("=======================================================================\n")
     }
+    // swiftlint:enable no_print
 }

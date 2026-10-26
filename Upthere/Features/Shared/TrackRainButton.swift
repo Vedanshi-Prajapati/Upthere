@@ -31,6 +31,7 @@ struct TrackRainButton: View {
         }
         .accessibilityLabel(isTracking ? "Tracking rain live activity active" : "Track rain in Live Activity")
         .accessibilityHint("Starts a Lock Screen and Dynamic Island live activity for upcoming rain")
+        .accessibilityIdentifier("track_rain_button")
         .onAppear {
             isTracking = RainActivityManager.shared.hasActiveActivity
         }

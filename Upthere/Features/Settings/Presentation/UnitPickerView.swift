@@ -60,6 +60,9 @@ struct UnitPickerView: View {
                                 .padding(.vertical, 14)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityIdentifier("unit_option_\(option)")
+                            .accessibilityLabel("\(option)\(selected == option ? ", Selected" : "")")
+                            .accessibilityAddTraits(selected == option ? [.isSelected, .isButton] : [.isButton])
 
                             if index < options.count - 1 {
                                 Rectangle()

@@ -48,17 +48,20 @@ struct HomeView: View {
 
     private var homeContent: some View {
         ZStack {
-            WeatherBackgroundView(
-                condition: viewModel.displayedWeather?.condition,
-                symbolName: viewModel.displayedWeather?.weatherSymbolName
-            )
-
             if let weather = viewModel.displayedWeather {
                 WeatherScrollContent(
                     weather: weather,
                     banner: bannerForState,
                     isCurrentLocation: viewModel.isCurrentLocation,
-                    onNavigateToInsights: onNavigateToInsights
+                    onNavigateToInsights: onNavigateToInsights,
+                    onRetry: {
+                        Task {
+                            await viewModel.retryLocation()
+                        }
+                    },
+                    onOpenSettings: {
+                        viewModel.openSettings()
+                    }
                 )
                 .refreshable {
                     await viewModel.refreshWeather()
@@ -111,6 +114,8 @@ private struct WeatherScrollContent: View {
     let banner: HomeViewModel.BannerType?
     let isCurrentLocation: Bool
     var onNavigateToInsights: (() -> Void)?
+    var onRetry: (() -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.weatherFormatter) private var weatherFormatter
@@ -151,6 +156,8 @@ private struct WeatherScrollContent: View {
             .padding(.horizontal, AppTheme.spacingXLarge)
             .padding(.top, AppTheme.spacingSmall)
         }
+        .scrollEdgeEffectStyle(.soft, for: .top)
+        .scrollEdgeEffectStyle(.soft, for: .bottom)
         .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
     }
 
@@ -180,11 +187,11 @@ private struct WeatherScrollContent: View {
                 Text("Could not refresh: \(reason)")
                     .font(AppFont.footnote)
                     .foregroundStyle(AppTheme.textPrimary)
-            case .locationFallback(let reason):
+            case .locationFallback(let message, _):
                 Image(systemName: "location.slash.fill")
                     .font(AppFont.footnoteSemibold)
                     .foregroundStyle(AppTheme.accent)
-                Text("Using default location (Ghaziabad) · \(reason)")
+                Text(message)
                     .font(AppFont.footnote)
                     .foregroundStyle(AppTheme.textPrimary)
             }
@@ -197,8 +204,28 @@ private struct WeatherScrollContent: View {
             RoundedRectangle(cornerRadius: AppTheme.radiusSmall, style: .continuous)
                 .fill(Color.white.opacity(0.12))
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if case .locationFallback(_, let action) = banner {
+                switch action {
+                case .openSettings:
+                    if let onOpenSettings = onOpenSettings {
+                        onOpenSettings()
+                    } else if let url = URL(string: UIApplication.openSettingsURLString),
+                              UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                case .retry:
+                    onRetry?()
+                case nil:
+                    break
+                }
+            }
+        }
         .padding(.bottom, AppTheme.spacingMedium)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("home_banner_action")
+        .accessibilitySortPriority(11)
     }
 
     // MARK: Header
@@ -245,8 +272,12 @@ private struct WeatherScrollContent: View {
             }
         }
         .padding(.bottom, AppTheme.spacingLarge)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(weather.condition), \(weatherFormatter.tempWithUnit(weather.temperature)), Feels like \(weatherFormatter.temp(weather.feelsLike)), High \(weatherFormatter.temp(weather.highTemperature)), Low \(weatherFormatter.temp(weather.lowTemperature))")
+        .accessibilityLabel(
+            "\(weather.condition), \(weatherFormatter.tempWithUnit(weather.temperature)), " +
+            "Feels like \(weatherFormatter.temp(weather.feelsLike)), " +
+            "High \(weatherFormatter.temp(weather.highTemperature)), " +
+            "Low \(weatherFormatter.temp(weather.lowTemperature))"
+        )
         .accessibilityIdentifier("hero_section")
     }
 
@@ -265,7 +296,7 @@ private struct WeatherScrollContent: View {
             let feelsLike = weatherFormatter.temp(weather.feelsLike)
             let high = weatherFormatter.temp(weather.highTemperature)
             let low = weatherFormatter.temp(weather.lowTemperature)
-            Text("Feels like \(feelsLike) · H \(high) L \(low)")
+            Text("Feels like \(feelsLike) · Today H/L \(high) \(low)")
                 .font(AppFont.subheadline)
                 .foregroundStyle(AppTheme.textSecondary)
         }
@@ -338,6 +369,8 @@ private struct WeatherScrollContent: View {
         .buttonStyle(.plain)
         .padding(.bottom, AppTheme.spacingXLarge)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("home_alert_button")
+        .accessibilityLabel("Severe weather alert: \(alert.title). \(alert.validUntil)")
         .accessibilityHint("Opens severe weather alert details")
     }
 
@@ -454,6 +487,9 @@ private struct WeatherScrollContent: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("home_insight_button")
+                    .accessibilityLabel("UpThere insight: \(rain.title), \(rain.timeRange). \(rain.detail)")
+                    .accessibilityHint("Opens Insights tab")
 
                     if let window = InsightEngine().rainWindow(from: weather.hourlyForecast),
                        RainActivityStateCalculator.isRainWithinTwoHours(rainWindow: window) {
@@ -513,6 +549,7 @@ private struct WeatherScrollContent: View {
                         } else {
                             PrecipitationBarChart(hourly: weather.hourlyForecast)
                                 .frame(height: 64)
+                                .accessibilityIdentifier("home_precipitation_chart")
                         }
                     }
                 }
@@ -539,9 +576,11 @@ private struct WeatherScrollContent: View {
 
                         TemperatureLineChart(
                             hourly: weather.hourlyForecast,
+                            currentTemperature: weather.temperature,
                             high: weather.highTemperature,
                             low: weather.lowTemperature
                         )
+                        .accessibilityIdentifier("temperature_line_chart")
 
                         let warmingText: String = {
                             if let minHour = weather.hourlyForecast.min(by: { $0.temperature < $1.temperature }),

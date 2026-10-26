@@ -43,8 +43,6 @@ struct LocationsView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                WeatherBackgroundView(condition: condition, symbolName: symbolName)
-
                 VStack(spacing: 0) {
                     if let error = locationsManager.saveErrorMessage {
                         HStack(spacing: 10) {
@@ -136,6 +134,7 @@ struct LocationsView: View {
                                     .padding(.vertical, 10)
                                     .background(Capsule().fill(Color.white))
                                 }
+                                .accessibilityIdentifier("empty_add_city_button")
                                 .padding(.top, 4)
                             }
                             .frame(maxWidth: .infinity)
@@ -184,6 +183,7 @@ struct LocationsView: View {
                                 EditButton()
                                     .font(AppFont.subheadlineSemibold)
                                     .foregroundStyle(AppTheme.textPrimary)
+                                    .accessibilityIdentifier("locations_edit_button")
                                     .padding(.horizontal, 8)
                                     .frame(minHeight: 32)
 
@@ -196,6 +196,7 @@ struct LocationsView: View {
                                         .frame(minWidth: 30, minHeight: 32)
                                 }
                                 .accessibilityLabel("Add city")
+                                .accessibilityIdentifier("add_city_button")
                             }
                             .padding(.horizontal, 4)
                             .padding(.vertical, 2)
@@ -206,6 +207,7 @@ struct LocationsView: View {
                                     EditButton()
                                         .font(AppFont.subheadlineSemibold)
                                         .foregroundStyle(AppTheme.textPrimary)
+                                        .accessibilityIdentifier("locations_edit_button")
                                         .padding(.horizontal, 8)
                                         .frame(minHeight: 32)
 
@@ -218,6 +220,7 @@ struct LocationsView: View {
                                             .frame(minWidth: 30, minHeight: 32)
                                     }
                                     .accessibilityLabel("Add city")
+                                    .accessibilityIdentifier("add_city_button")
                                 }
                             }
                         }
@@ -225,10 +228,8 @@ struct LocationsView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbarBackground(.hidden, for: .navigationBar)
         }
-        .environment(\.colorScheme, .dark)
         .task {
             updateCurrentLocationHeader()
             await fetchWeatherForLocations(locationsManager.locations)
@@ -268,9 +269,9 @@ struct LocationsView: View {
     }
 
     private func updateCurrentLocationHeader() {
-        let subtitle = locationService.currentSubtitle.isEmpty
+        let subtitle = (locationService.currentStatus == .live)
             ? "Current GPS location"
-            : locationService.currentSubtitle
+            : "Default location"
         locationsManager.updateCurrentLocationHeader(
             cityName: locationService.currentCityName,
             subtitle: subtitle
@@ -469,11 +470,13 @@ private struct LocationRowView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("location_row_\(location.cityName)")
+        .accessibilityLabel("\(location.cityName), \(subtitleText)\(isSelected ? ", Selected" : "")")
     }
 
     private var subtitleText: String {
         if location.isCurrentLocation {
-            return location.regionName.isEmpty ? "GPS location" : location.regionName
+            return location.regionName.isEmpty ? "Default location" : location.regionName
         } else {
             return location.regionName
         }

@@ -3,7 +3,15 @@ import ActivityKit
 import OSLog
 
 @MainActor
-final class RainActivityManager {
+public protocol RainActivityUpdating: Sendable {
+    func updateOnForegroundRefresh(
+        hourly: [HourlyWeather],
+        city: String?
+    ) async
+}
+
+@MainActor
+final class RainActivityManager: RainActivityUpdating {
     static let shared = RainActivityManager()
 
     private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "RainActivityManager")
@@ -63,6 +71,14 @@ final class RainActivityManager {
             logger.error("Failed to request Live Activity: \(error.localizedDescription)")
             return false
         }
+    }
+
+    /// Updates existing RainStartActivities on foreground refresh
+    func updateOnForegroundRefresh(
+        hourly: [HourlyWeather],
+        city: String?
+    ) async {
+        await updateOnForegroundRefresh(hourly: hourly, city: city, now: Date())
     }
 
     /// Updates existing RainStartActivities on foreground refresh

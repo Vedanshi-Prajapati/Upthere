@@ -1,9 +1,11 @@
 import SwiftUI
+import Accessibility
 
 // MARK: - TemperatureLineChart
 
 struct TemperatureLineChart: View {
     let hourly: [HourlyWeather]
+    var currentTemperature: Double? = nil
     let high: Double
     let low: Double
 
@@ -86,22 +88,31 @@ struct TemperatureLineChart: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Temperature forecast chart")
         .accessibilityValue(accessibilitySummary)
+        .accessibilityChartDescriptor(HourlyTemperatureChartDescriptor(hourly: hourly, summary: accessibilitySummary))
     }
 
     private var accessibilitySummary: String {
         guard let first = hourly.first else { return "Hourly forecast unavailable" }
-        let nowTemp = weatherFormatter.temp(first.temperature)
+        let currentT = currentTemperature ?? first.temperature
+        let nowTemp = weatherFormatter.temp(currentT)
         let peak = hourly.max(by: { $0.temperature < $1.temperature }) ?? first
         let trough = hourly.min(by: { $0.temperature < $1.temperature }) ?? first
 
-        if peak.temperature > first.temperature + 1.0 {
-            let peakTemp = weatherFormatter.temp(peak.temperature)
-            return "Temperature rises from \(nowTemp) now to \(peakTemp) at \(peak.time)"
-        } else if trough.temperature < first.temperature - 1.0 {
-            let troughTemp = weatherFormatter.temp(trough.temperature)
-            return "Temperature falls from \(nowTemp) now to \(troughTemp) at \(trough.time)"
+        let troughIndex = hourly.firstIndex(where: { $0.id == trough.id }) ?? 0
+        let peakIndex = hourly.firstIndex(where: { $0.id == peak.id }) ?? 0
+        let peakTemp = weatherFormatter.temp(peak.temperature)
+        let troughTemp = weatherFormatter.temp(trough.temperature)
+
+        if troughIndex < peakIndex && trough.temperature < currentT - 1.0 && peak.temperature > trough.temperature + 1.0 {
+            return "Temperature falls from \(nowTemp) to \(troughTemp) by \(trough.time), then rises to \(peakTemp) by \(peak.time)"
+        } else if peakIndex < troughIndex && peak.temperature > currentT + 1.0 && trough.temperature < peak.temperature - 1.0 {
+            return "Temperature rises from \(nowTemp) to \(peakTemp) by \(peak.time), then falls to \(troughTemp) by \(trough.time)"
+        } else if peak.temperature > currentT + 1.0 {
+            return "Temperature rises from \(nowTemp) to \(peakTemp) by \(peak.time)"
+        } else if trough.temperature < currentT - 1.0 {
+            return "Temperature falls from \(nowTemp) to \(troughTemp) by \(trough.time)"
         } else {
-            return "Temperature steady around \(nowTemp) now, high of \(weatherFormatter.temp(high)), low of \(weatherFormatter.temp(low))"
+            return "Temperature steady around \(nowTemp), high of \(weatherFormatter.temp(high)), low of \(weatherFormatter.temp(low))"
         }
     }
 
@@ -292,7 +303,8 @@ struct TemperatureLineChart: View {
     private func nowDotAndLabel(w: CGFloat, h: CGFloat) -> some View {
         Group {
             if let first = hourly.first {
-                let py = yPos(first.temperature, in: h)
+                let currentT = currentTemperature ?? first.temperature
+                let py = yPos(currentT, in: h)
                 let px = xPos(0, in: w)
 
                 Circle()
@@ -300,7 +312,7 @@ struct TemperatureLineChart: View {
                     .frame(width: 7, height: 7)
                     .position(x: px, y: py)
 
-                Text("Now \(weatherFormatter.temp(first.temperature))")
+                Text("Now \(weatherFormatter.temp(currentT))")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .position(x: 34, y: 8)
@@ -327,5 +339,41 @@ struct TemperatureLineChart: View {
         let count = hourly.count
         let indices = [0, count / 4, count / 2, 3 * count / 4, count - 1]
         return indices.map { hourly[$0].time }
+    }
+}
+
+// MARK: - Audio Graph Accessibility Descriptor
+
+struct HourlyTemperatureChartDescriptor: AXChartDescriptorRepresentable {
+    let hourly: [HourlyWeather]
+    let summary: String
+
+    func makeChartDescriptor() -> AXChartDescriptor {
+        guard !hourly.isEmpty else {
+            return AXChartDescriptor(
+                title: "Hourly Temperature Forecast", summary: summary,
+                xAxis: AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: []),
+                yAxis: AXNumericDataAxisDescriptor(title: "Temperature", range: 0...1, gridlinePositions: []) { _ in "" },
+                additionalAxes: [], series: []
+            )
+        }
+        let xAxis = AXCategoricalDataAxisDescriptor(title: "Time", categoryOrder: hourly.map(\.time))
+        let temps = hourly.map(\.temperature)
+        let minTemp = temps.min() ?? 0
+        let maxTemp = temps.max() ?? 40
+
+        let yAxis = AXNumericDataAxisDescriptor(
+            title: "Temperature", range: minTemp...max(minTemp + 1, maxTemp), gridlinePositions: []
+        ) { value in "\(Int(round(value)))°" }
+
+        let dataPoints = hourly.map { item in
+            AXDataPoint(x: item.time, y: item.temperature, additionalValues: [], label: "\(item.time): \(Int(round(item.temperature)))°")
+        }
+        let series = AXDataSeriesDescriptor(name: "Hourly Temperature", isContinuous: true, dataPoints: dataPoints)
+
+        return AXChartDescriptor(
+            title: "Hourly Temperature Forecast", summary: summary,
+            xAxis: xAxis, yAxis: yAxis, additionalAxes: [], series: [series]
+        )
     }
 }

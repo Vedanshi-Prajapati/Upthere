@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 protocol LocationStore: AnyObject, Sendable {
     func loadLocations() throws -> [SavedLocation]
@@ -7,6 +8,8 @@ protocol LocationStore: AnyObject, Sendable {
     func saveSelectedLocationId(_ id: UUID?)
 }
 
+/// Lock-protected store ensuring safe concurrent file and UserDefaults access.
+/// Invariant: All disk reads, writes, and migration operations are synchronized via `lock`.
 final class FileLocationStore: LocationStore, @unchecked Sendable {
     private struct StoredPayload: Codable {
         var locations: [SavedLocation]
@@ -20,6 +23,7 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
     private let migrationKey = "upthere.saved_locations.migrated_to_file"
     private let storeFilenameKey = "upthere.saved_locations.store_filename"
     private let lock = NSLock()
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "LocationStore")
 
     init(
         fileURL: URL? = nil,
@@ -31,9 +35,15 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         if let fileURL = fileURL {
             self.fileURL = fileURL
         } else {
-            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+                ?? FileManager.default.temporaryDirectory
             let dir = appSupport.appendingPathComponent("Upthere", isDirectory: true)
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            do {
+                try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            } catch {
+                let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "LocationStore")
+                logger.error("Failed to create Upthere directory at \(dir.path): \(error.localizedDescription)")
+            }
             if isIsolatedTestDefaults {
                 let filename: String
                 if let existingName = defaults.string(forKey: storeFilenameKey) {
@@ -75,8 +85,11 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
                 selectedId = UUID(uuidString: idString)
             }
             let payload = StoredPayload(locations: saved, selectedLocationId: selectedId)
-            if (try? writePayload(payload)) != nil {
+            do {
+                try writePayload(payload)
                 defaults.set(true, forKey: migrationKey)
+            } catch {
+                logger.error("Failed to write migrated location payload to \(self.fileURL.path): \(error.localizedDescription)")
             }
         }
     }
@@ -113,17 +126,27 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
 
         var payload = readPayload() ?? StoredPayload(locations: [], selectedLocationId: nil)
         payload.selectedLocationId = id
-        try? writePayload(payload)
+        do {
+            try writePayload(payload)
+        } catch {
+            logger.error("Failed to save selected location ID to \(self.fileURL.path): \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Internal File I/O
 
     private func readPayload() -> StoredPayload? {
-        guard let data = try? Data(contentsOf: fileURL),
-              let payload = try? JSONDecoder().decode(StoredPayload.self, from: data) else {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            // Genuinely optional: file does not exist yet before first save
             return nil
         }
-        return payload
+        do {
+            let data = try Data(contentsOf: fileURL)
+            return try JSONDecoder().decode(StoredPayload.self, from: data)
+        } catch {
+            logger.error("Failed to read or decode location payload from \(self.fileURL.path): \(error.localizedDescription)")
+            return nil
+        }
     }
 
     private func writePayload(_ payload: StoredPayload) throws {

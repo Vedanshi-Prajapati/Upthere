@@ -11,11 +11,6 @@ struct InsightsView: View {
 
     var body: some View {
         ZStack {
-            WeatherBackgroundView(
-                condition: viewModel.displayedWeather?.condition,
-                symbolName: viewModel.displayedWeather?.weatherSymbolName
-            )
-
             if let weather = viewModel.displayedWeather {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -27,8 +22,10 @@ struct InsightsView: View {
                             .padding(.top, 16)
                             .padding(.horizontal, 20)
                     }
-                    .padding(.bottom, AppTheme.tabBarClearance)
                 }
+                .scrollEdgeEffectStyle(.soft, for: .top)
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
+                .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
             } else {
                 switch viewModel.state {
                 case .idle, .loading:
@@ -42,6 +39,7 @@ struct InsightsView: View {
                         }
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.accent)
+                        .accessibilityIdentifier("insights_retry_button")
                     }
                     .padding(.horizontal, 20)
                 case .loaded:
@@ -207,7 +205,7 @@ struct InsightsView: View {
     private func insightsSection(weather: Weather) -> some View {
         let hourly = weather.hourlyForecast
         let rainWindow = insightEngine.rainWindow(from: hourly)
-        let tempTrend = insightEngine.temperatureTrend(from: hourly)
+        let tempTrend = insightEngine.temperatureTrend(from: hourly, currentTemperature: weather.temperature)
         let strongWind = insightEngine.strongestWind(from: hourly)
         let outdoorWindow = insightEngine.bestOutdoorWindow(from: hourly)
         let peakUV = insightEngine.peakUV(from: hourly)

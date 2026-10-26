@@ -21,46 +21,48 @@ final class WeatherKitWeatherRepository: WeatherRepository {
 
     func fetchCurrentWeather() async throws -> Weather {
         let location: CLLocation
-        let cityName: String
-        let subtitle: String
+        let fallbackCity: String
+        let fallbackSubtitle: String
+        let status: LocationStatus
 
         do {
             let userLoc = try await locationService.requestCurrentLocation(force: true)
             location = userLoc
-            let geo = await locationService.reverseGeocode(location: userLoc)
-            cityName = geo.cityName
-            subtitle = geo.subtitle
+            let initialMatch = locationService.matchSavedOrPresetCity(for: userLoc)
+            fallbackCity = initialMatch ?? "Current Location"
+            fallbackSubtitle = locationService.isReducedAccuracy ? "Approximate location" : "Current location"
+            status = .live
         } catch {
             // Fall back strictly to Ghaziabad, Uttar Pradesh, India when device location cannot be obtained
             location = LocationService.fallbackCoordinate
-            cityName = LocationService.fallbackCityName
-            let reason: String
-            if let locError = error as? LocationServiceError {
-                switch locError {
-                case .servicesDisabled:
-                    reason = "Location Services disabled"
-                case .permissionDenied:
-                    reason = "Location permission denied"
-                case .restricted:
-                    reason = "Location restricted"
-                case .timeout:
-                    reason = "Location timed out"
-                case .invalidCoordinates:
-                    reason = "Invalid coordinates"
-                }
-            } else {
-                reason = "Location unavailable"
-            }
-            subtitle = "Default location · \(reason)"
+            fallbackCity = LocationService.fallbackCityName
+            fallbackSubtitle = "Default location · \(LocationService.fallbackRegionName)"
+            status = LocationStatus.from(error)
         }
 
-        return try await fetchWeather(for: location, cityName: cityName, locationSubtitle: subtitle)
+        // Run WeatherKit fetch without waiting for reverse geocoding
+        Task { @MainActor [weak locationService] in
+            guard let locationService = locationService else { return }
+            let geo = await locationService.reverseGeocode(location: location)
+            locationService.updateCity(geo.cityName, subtitle: geo.subtitle)
+        }
+
+        return try await fetchWeather(for: location, cityName: fallbackCity, locationSubtitle: fallbackSubtitle, locationStatus: status)
     }
 
     func fetchWeather(
         for location: CLLocation,
         cityName: String,
         locationSubtitle: String
+    ) async throws -> Weather {
+        try await fetchWeather(for: location, cityName: cityName, locationSubtitle: locationSubtitle, locationStatus: .live)
+    }
+
+    func fetchWeather(
+        for location: CLLocation,
+        cityName: String,
+        locationSubtitle: String,
+        locationStatus: LocationStatus
     ) async throws -> Weather {
         guard locationService.isValidCoordinate(location.coordinate) else {
             throw WeatherServiceError.corruptedData("Invalid coordinates provided")
@@ -80,7 +82,8 @@ final class WeatherKitWeatherRepository: WeatherRepository {
                 weather: rawWeather,
                 cityName: cityName,
                 locationSubtitle: locationSubtitle,
-                coordinate: location.coordinate
+                coordinate: location.coordinate,
+                locationStatus: locationStatus
             )
             cacheManager.save(weather: mapped, key: cacheKey)
             return mapped

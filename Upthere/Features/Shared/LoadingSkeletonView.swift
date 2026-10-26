@@ -10,7 +10,7 @@ struct LoadingSkeletonView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.backgroundGradient.ignoresSafeArea()
+            Color(red: 0.08, green: 0.10, blue: 0.14).ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
                 // "Updating forecast..." header

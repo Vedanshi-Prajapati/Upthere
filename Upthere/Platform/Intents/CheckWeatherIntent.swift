@@ -14,20 +14,24 @@ struct CheckWeatherIntent: AppIntent {
 
     private var repository: (any WeatherRepository)?
     private var cacheManager: WeatherCacheManager?
+    private var weatherLoader: (any IntentWeatherLoading)?
 
     init() {
         self.repository = nil
         self.cacheManager = nil
+        self.weatherLoader = nil
     }
 
     init(
         location: LocationEntity?,
         repository: (any WeatherRepository)? = nil,
-        cacheManager: WeatherCacheManager? = nil
+        cacheManager: WeatherCacheManager? = nil,
+        weatherLoader: (any IntentWeatherLoading)? = nil
     ) {
         self.repository = repository
         self.cacheManager = cacheManager
         self.location = location
+        self.weatherLoader = weatherLoader
     }
 
     static var parameterSummary: some ParameterSummary {
@@ -36,119 +40,20 @@ struct CheckWeatherIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some ReturnsValue<String> & ProvidesDialog & ShowsSnippetView {
-        let targetCity: String
-        let coordinate: CLLocationCoordinate2D
+        let loader = weatherLoader ?? IntentWeatherLoader()
+        let (weather, _) = try await loader.loadWeather(
+            for: location,
+            repository: repository,
+            cacheManager: cacheManager
+        )
 
-        if let loc = location, loc.id != "current" {
-            targetCity = loc.name
-            coordinate = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
-        } else {
-            targetCity = LocationService.shared.currentCityName
-            coordinate = LocationService.shared.currentLocation?.coordinate ?? LocationService.fallbackCoordinate.coordinate
-        }
-
-        // Fetch weather or fallback to cached
-        let cache = cacheManager ?? WeatherCacheManager.shared
-        let repo = repository ?? WeatherKitWeatherRepository(locationService: LocationService.shared, cacheManager: cache)
-
-        let weather: Weather
-        do {
-            weather = try await repo.fetchWeather(
-                for: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
-                cityName: targetCity,
-                locationSubtitle: targetCity == LocationService.shared.currentCityName ? "Current Location" : ""
-            )
-        } catch {
-            let coordKey = cache.cacheKey(
-                for: targetCity,
-                coordinate: (lat: coordinate.latitude, lon: coordinate.longitude)
-            )
-            let cityKey = cache.cacheKey(for: targetCity)
-            if let cached = cache.load(key: coordKey, allowExpired: true)?.weather ?? cache.load(key: cityKey, allowExpired: true)?.weather {
-                weather = cached
-            } else {
-                throw WeatherUnavailableError()
-            }
-        }
-
-        let tempStr = "\(Int(round(weather.temperature)))°"
-        let condition = weather.condition
-        let rainChance = weather.chanceOfRain
-        let highStr = "\(Int(round(weather.highTemperature)))°"
-        let lowStr = "\(Int(round(weather.lowTemperature)))°"
-
-        let dialogText = "It's currently \(tempStr) and \(condition) in \(weather.cityName), with a high of \(highStr), low of \(lowStr), and \(rainChance)% chance of rain."
+        let summaryValue = IntentDialogSnippetBuilder.checkWeatherSummaryValue(for: weather)
+        let dialogText = IntentDialogSnippetBuilder.checkWeatherDialogText(for: weather)
 
         return .result(
-            value: "\(weather.cityName): \(tempStr), \(condition)",
+            value: summaryValue,
             dialog: IntentDialog(stringLiteral: dialogText),
-            view: WeatherSnippetView(weather: weather)
+            view: IntentDialogSnippetBuilder.makeWeatherSnippetView(for: weather)
         )
-    }
-}
-
-// MARK: - Rich Siri / Shortcuts Snippet Card
-private struct WeatherSnippetView: View {
-    @Environment(\.weatherFormatter) private var weatherFormatter
-    let weather: Weather
-
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.14, green: 0.38, blue: 0.78),
-                    Color(red: 0.04, green: 0.16, blue: 0.44)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(weather.cityName)
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(.white)
-                        Text(weather.condition)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Color.white.opacity(0.8))
-                    }
-                    Spacer()
-                    Image(systemName: weather.weatherSymbolName)
-                        .symbolRenderingMode(.multicolor)
-                        .symbolVariant(.fill)
-                        .foregroundStyle(.white)
-                        .font(.largeTitle)
-                }
-
-                HStack(alignment: .firstTextBaseline) {
-                    Text(weatherFormatter.temp(weather.temperature))
-                        .font(.largeTitle.weight(.thin))
-                        .foregroundStyle(.white)
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 3) {
-                        Text("H \(weatherFormatter.temp(weather.highTemperature))  L \(weatherFormatter.temp(weather.lowTemperature))")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.white.opacity(0.85))
-
-                        let rainChance = weather.chanceOfRain
-                        if rainChance > 0 {
-                            HStack(spacing: 3) {
-                                Image(systemName: "umbrella.fill")
-                                    .font(.caption2)
-                                Text("\(rainChance)%")
-                                    .font(.caption.weight(.semibold))
-                            }
-                            .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))
-                        }
-                    }
-                }
-            }
-            .padding(16)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .padding(8)
     }
 }

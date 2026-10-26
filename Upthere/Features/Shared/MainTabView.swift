@@ -30,6 +30,31 @@ struct MainTabView: View {
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
+    private var isLowPowerMode: Bool {
+        WeatherAnimationManager.shared.isLowPowerModeEnabled
+    }
+
+    private var shouldPauseAnimation: Bool {
+        if reduceMotion { return true }
+        if isLowPowerMode { return true }
+        if scenePhase != .active { return true }
+        if selectedTab != .home { return true }
+        return false
+    }
+
+    private var currentSkyScene: SkyScene {
+        #if DEBUG
+        if let override = SkyScene.debugOverride {
+            return override
+        }
+        #endif
+        return SkyScene.from(
+            condition: homeViewModel.displayedWeather?.condition,
+            isDaylight: homeViewModel.displayedWeather?.isDaylight ?? true
+        )
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -77,6 +102,13 @@ struct MainTabView: View {
                 )
                 .dynamicTypeSize(.xSmall ... .accessibility5)
             }
+        }
+        .background {
+            SkyBackgroundView(
+                scene: currentSkyScene,
+                isPaused: shouldPauseAnimation
+            )
+            .ignoresSafeArea()
         }
         .environment(\.isHomeTabSelected, selectedTab == .home)
         .tabBarMinimizeBehavior(.onScrollDown)

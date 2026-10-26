@@ -18,11 +18,6 @@ struct ForecastView: View {
 
     var body: some View {
         ZStack {
-            WeatherBackgroundView(
-                condition: viewModel.displayedWeather?.condition,
-                symbolName: viewModel.displayedWeather?.weatherSymbolName
-            )
-
             if let weather = viewModel.displayedWeather {
                 forecastContent(weather: weather)
             } else {
@@ -61,8 +56,10 @@ struct ForecastView: View {
                     AttributionView()
                         .padding(.top, 8)
                 }
-                .padding(.bottom, AppTheme.tabBarClearance)
             }
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .scrollEdgeEffectStyle(.soft, for: .bottom)
+            .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
             .padding(.top, 16)
         }
     }
@@ -127,6 +124,9 @@ struct ForecastView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("forecast_\(title.lowercased())_button")
+        .accessibilityLabel("\(title) forecast")
+        .accessibilityAddTraits(selectedTab == tab ? [.isSelected, .isButton] : [.isButton])
     }
 
     private func dailyView(weather: Weather) -> some View {

@@ -58,6 +58,7 @@ struct CitySearchSheet: View {
                 .submitLabel(.search)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled(true)
+                .accessibilityIdentifier("city_search_text_field")
                 .onChange(of: searchText) { _, newValue in
                     viewModel.updateSearchText(newValue)
                 }
@@ -71,6 +72,8 @@ struct CitySearchSheet: View {
                             .font(.body)
                             .foregroundStyle(AppTheme.textTertiary)
                     }
+                    .accessibilityLabel("Clear search text")
+                    .accessibilityIdentifier("city_search_clear_button")
                 } else {
                     Button {
                         dismiss()
@@ -84,6 +87,8 @@ struct CitySearchSheet: View {
                                     .fill(Color.white.opacity(0.14))
                             )
                     }
+                    .accessibilityLabel("Close city search")
+                    .accessibilityIdentifier("city_search_dismiss_button")
                 }
             }
             .padding(.horizontal, 16)
@@ -172,6 +177,8 @@ struct CitySearchSheet: View {
                             }
                             .buttonStyle(.plain)
                             .disabled(viewModel.isResolving)
+                            .accessibilityIdentifier("city_search_result_button")
+                            .accessibilityLabel("\(result.title), \(result.subtitle)")
 
                             Rectangle()
                                 .fill(Color.white.opacity(0.08))
@@ -186,6 +193,7 @@ struct CitySearchSheet: View {
         }
         .background(
             WeatherBackgroundView(condition: condition, symbolName: symbolName)
+                .ignoresSafeArea()
         )
     }
 

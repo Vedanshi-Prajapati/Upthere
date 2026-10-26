@@ -1,5 +1,6 @@
 import Foundation
 import WidgetKit
+import os
 
 public struct WidgetHourlySnapshot: Codable, Sendable, Identifiable, Equatable {
     public let id: String
@@ -52,6 +53,12 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
     public let hourly: [WidgetHourlySnapshot]
     public let daily: [WidgetDailySnapshot]
     public let updatedAt: Date
+    public let locationStatus: LocationStatus
+
+    enum CodingKeys: String, CodingKey {
+        case city, latitude, longitude, temp, feelsLike, high, low, condition, symbolName
+        case rainChance, rainInsight, hourly, daily, updatedAt, locationStatus
+    }
 
     public init(
         city: String,
@@ -67,7 +74,8 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
         rainInsight: String,
         hourly: [WidgetHourlySnapshot],
         daily: [WidgetDailySnapshot],
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        locationStatus: LocationStatus = .live
     ) {
         self.city = city
         self.latitude = latitude
@@ -83,6 +91,45 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
         self.hourly = hourly
         self.daily = daily
         self.updatedAt = updatedAt
+        self.locationStatus = locationStatus
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.city = try container.decode(String.self, forKey: .city)
+        self.latitude = try container.decodeIfPresent(Double.self, forKey: .latitude)
+        self.longitude = try container.decodeIfPresent(Double.self, forKey: .longitude)
+        self.temp = try container.decode(Int.self, forKey: .temp)
+        self.feelsLike = try container.decode(Int.self, forKey: .feelsLike)
+        self.high = try container.decode(Int.self, forKey: .high)
+        self.low = try container.decode(Int.self, forKey: .low)
+        self.condition = try container.decode(String.self, forKey: .condition)
+        self.symbolName = try container.decode(String.self, forKey: .symbolName)
+        self.rainChance = try container.decode(Int.self, forKey: .rainChance)
+        self.rainInsight = try container.decode(String.self, forKey: .rainInsight)
+        self.hourly = try container.decode([WidgetHourlySnapshot].self, forKey: .hourly)
+        self.daily = try container.decode([WidgetDailySnapshot].self, forKey: .daily)
+        self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        self.locationStatus = try container.decodeIfPresent(LocationStatus.self, forKey: .locationStatus) ?? .live
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(city, forKey: .city)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+        try container.encode(temp, forKey: .temp)
+        try container.encode(feelsLike, forKey: .feelsLike)
+        try container.encode(high, forKey: .high)
+        try container.encode(low, forKey: .low)
+        try container.encode(condition, forKey: .condition)
+        try container.encode(symbolName, forKey: .symbolName)
+        try container.encode(rainChance, forKey: .rainChance)
+        try container.encode(rainInsight, forKey: .rainInsight)
+        try container.encode(hourly, forKey: .hourly)
+        try container.encode(daily, forKey: .daily)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encode(locationStatus, forKey: .locationStatus)
     }
 
     /// True if this snapshot is older than 3 hours (10,800 seconds).
@@ -91,7 +138,12 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
     }
 }
 
-public final class WidgetSnapshotStore: Sendable {
+public protocol WidgetSnapshotWriting: Sendable {
+    func save(_ snapshot: WidgetSnapshot) throws
+    func reloadAllTimelines()
+}
+
+public final class WidgetSnapshotStore: WidgetSnapshotWriting, Sendable {
     public static let shared = WidgetSnapshotStore()
     public static let defaultFilename = "widget_snapshot.json"
 
@@ -131,13 +183,24 @@ public final class WidgetSnapshotStore: Sendable {
         try data.write(to: url, options: .atomic)
     }
 
+    public func reloadAllTimelines() {
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     public func load() -> WidgetSnapshot? {
-        guard let url = fileURL,
-              let data = try? Data(contentsOf: url),
-              let snapshot = try? decoder.decode(WidgetSnapshot.self, from: data) else {
+        guard let url = fileURL else { return nil }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            // Genuinely optional: snapshot file does not exist until first weather fetch
             return nil
         }
-        return snapshot
+        do {
+            let data = try Data(contentsOf: url)
+            return try decoder.decode(WidgetSnapshot.self, from: data)
+        } catch {
+            let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "WidgetSnapshot")
+            logger.error("Failed to load or decode widget snapshot from \(url.path): \(error.localizedDescription)")
+            return nil
+        }
     }
 }
 

@@ -79,7 +79,7 @@ extension InsightsView {
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("24h Range")
+                            Text("Next 24 h range")
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
                             HStack(spacing: 4) {
@@ -106,7 +106,7 @@ extension InsightsView {
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("24h Range")
+                            Text("Next 24 h range")
                                 .font(AppFont.captionMedium)
                                 .foregroundStyle(AppTheme.textTertiary)
                             HStack(spacing: 4) {

@@ -6,26 +6,56 @@ import CoreLocation
 @Suite("City Search Tests")
 struct CitySearchTests {
 
+    /// Lock-protected test double for city search service.
+    /// Invariant: All handler closures and tracking counters are protected by `lock`.
     final class FakeCitySearchService: CitySearching, @unchecked Sendable {
-        var completionsHandler: ((String) async throws -> [CitySearchResult])?
-        var resolveHandler: ((CitySearchResult) async throws -> ResolvedCityLocation)?
+        private let lock = NSLock()
+        private var _completionsHandler: ((String) async throws -> [CitySearchResult])?
+        private var _resolveHandler: ((CitySearchResult) async throws -> ResolvedCityLocation)?
+        private var _searchCallCount: Int = 0
+        private var _resolveCallCount: Int = 0
+        private var _lastQuery: String?
 
-        var searchCallCount: Int = 0
-        var resolveCallCount: Int = 0
-        var lastQuery: String?
+        var completionsHandler: ((String) async throws -> [CitySearchResult])? {
+            get { lock.withLock { _completionsHandler } }
+            set { lock.withLock { _completionsHandler = newValue } }
+        }
+
+        var resolveHandler: ((CitySearchResult) async throws -> ResolvedCityLocation)? {
+            get { lock.withLock { _resolveHandler } }
+            set { lock.withLock { _resolveHandler = newValue } }
+        }
+
+        var searchCallCount: Int {
+            lock.withLock { _searchCallCount }
+        }
+
+        var resolveCallCount: Int {
+            lock.withLock { _resolveCallCount }
+        }
+
+        var lastQuery: String? {
+            lock.withLock { _lastQuery }
+        }
 
         func searchCompletions(for query: String) async throws -> [CitySearchResult] {
-            searchCallCount += 1
-            lastQuery = query
-            if let handler = completionsHandler {
+            let handler = lock.withLock { () -> ((String) async throws -> [CitySearchResult])? in
+                _searchCallCount += 1
+                _lastQuery = query
+                return _completionsHandler
+            }
+            if let handler = handler {
                 return try await handler(query)
             }
             return []
         }
 
         func resolveLocation(for result: CitySearchResult) async throws -> ResolvedCityLocation {
-            resolveCallCount += 1
-            if let handler = resolveHandler {
+            let handler = lock.withLock { () -> ((CitySearchResult) async throws -> ResolvedCityLocation)? in
+                _resolveCallCount += 1
+                return _resolveHandler
+            }
+            if let handler = handler {
                 return try await handler(result)
             }
             return ResolvedCityLocation(
@@ -121,7 +151,8 @@ struct CitySearchTests {
     @MainActor
     func staleSearchResultsDropped() async throws {
         let fake = FakeCitySearchService()
-        final class SearchTracker: @unchecked Sendable {
+        @MainActor
+        final class SearchTracker {
             var slowSearchStarted = false
             var slowSearchFinished = false
         }

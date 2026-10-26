@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 public enum AppGroup: Sendable {
     nonisolated public static let identifier = "group.com.vedanshi.upthereapp"
@@ -17,7 +18,12 @@ public enum AppGroup: Sendable {
     nonisolated public static func containerURL(forSubdirectory subdirectory: String) -> URL? {
         guard let base = containerURL else { return nil }
         let dir = base.appendingPathComponent(subdirectory, isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "AppGroup")
+            logger.error("Failed to create container subdirectory \(subdirectory): \(error.localizedDescription)")
+        }
         return dir
     }
 

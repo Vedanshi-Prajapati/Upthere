@@ -4,7 +4,12 @@ import UniformTypeIdentifiers
 import os
 
 @MainActor
-final class SpotlightService {
+public protocol SpotlightIndexing: Sendable {
+    func indexWeather(_ weather: Weather) async
+}
+
+@MainActor
+final class SpotlightService: SpotlightIndexing {
     static let shared = SpotlightService()
 
     static let weatherDomain = "com.vedanshi.upthere.weather"
