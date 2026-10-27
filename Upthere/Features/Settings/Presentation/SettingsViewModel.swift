@@ -122,11 +122,6 @@ final class SettingsViewModel {
         }
     }
 
-    // MARK: - Appearance
-    var appearanceMode: AppearanceMode {
-        didSet { defaults.set(appearanceMode.rawValue, forKey: "settings.appearanceMode") }
-    }
-
     // MARK: - About
     let weatherDataProvider = "Apple WeatherKit"
     var appVersion: String {
@@ -150,13 +145,6 @@ final class SettingsViewModel {
         self.notificationScheduler = notificationScheduler ?? NotificationScheduler.shared
         self.bundle = bundle
         AppGroup.migrateSettingsIfNeeded(standard: .standard, group: defaults)
-
-        if let rawApp = defaults.string(forKey: "settings.appearanceMode"),
-           let mode = AppearanceMode(rawValue: rawApp) {
-            self.appearanceMode = mode
-        } else {
-            self.appearanceMode = .system
-        }
 
         if defaults.object(forKey: AppGroup.rainAlertsKey) != nil {
             self.rainAlertsEnabled = defaults.bool(forKey: AppGroup.rainAlertsKey)
@@ -185,23 +173,5 @@ final class SettingsViewModel {
     func formatWind(_ kmh: Double) -> String {
         let val = windSpeedUnit.convert(kmh: kmh)
         return "\(Int(round(val))) \(windSpeedUnit.rawValue)"
-    }
-}
-
-// MARK: - AppearanceMode Enum
-
-enum AppearanceMode: String, CaseIterable, Identifiable {
-    case system = "System"
-    case light = "Light"
-    case dark = "Dark"
-
-    var id: String { rawValue }
-
-    var colorScheme: ColorScheme? {
-        switch self {
-        case .system: return nil
-        case .light:  return .light
-        case .dark:   return .dark
-        }
     }
 }

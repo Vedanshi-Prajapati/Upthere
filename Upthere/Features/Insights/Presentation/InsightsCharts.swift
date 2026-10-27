@@ -291,7 +291,7 @@ extension InsightsView {
                                 Rectangle()
                                     .fill(AppTheme.chartGrid)
                                     .frame(height: 1)
-                                Text("\(value)%")
+                                Text(verbatim: (Double(value) / 100.0).formatted(.percent))
                                     .font(.caption2.weight(.medium))
                                     .foregroundStyle(AppTheme.chartAxisLabel)
                                     .frame(width: labelWidth - 4, alignment: .trailing)

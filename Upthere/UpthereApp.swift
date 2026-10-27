@@ -11,10 +11,6 @@ struct UpthereApp: App {
         AppGroup.migrateSettingsIfNeeded()
     }
 
-    private var selectedColorScheme: ColorScheme? {
-        container.settingsViewModel.appearanceMode.colorScheme
-    }
-
     private var isTesting: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
@@ -82,7 +78,7 @@ struct UpthereApp: App {
                 }
                 .environment(\.weatherFormatter, container.weatherFormatter)
                 .environment(container.unitPreferences)
-                .preferredColorScheme(selectedColorScheme)
+                .preferredColorScheme(.dark)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: showSplash)
                 .task {
                     guard showSplash && !disableSplash else { return }

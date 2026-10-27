@@ -43,6 +43,8 @@ struct LocationsView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
+                WeatherBackgroundView(condition: condition, symbolName: symbolName)
+
                 VStack(spacing: 0) {
                     if let error = locationsManager.saveErrorMessage {
                         HStack(spacing: 10) {

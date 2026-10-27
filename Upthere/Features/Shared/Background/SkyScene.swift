@@ -166,9 +166,10 @@ public enum SkyScene: Equatable, Hashable, Sendable {
     public var gradientStops: (top: (r: Double, g: Double, b: Double), bottom: (r: Double, g: Double, b: Double)) {
         switch self {
         case .clearDay:
+            // Bright blue sky — top vivid, bottom lighter horizon blue
             return (
-                top: (r: 0.08, g: 0.22, b: 0.50),
-                bottom: (r: 0.14, g: 0.34, b: 0.60)
+                top: (r: 0.16, g: 0.45, b: 0.85),
+                bottom: (r: 0.42, g: 0.68, b: 0.95)
             )
         case .clearNight:
             return (
@@ -177,9 +178,10 @@ public enum SkyScene: Equatable, Hashable, Sendable {
             )
         case .partlyCloudy(let isDay):
             if isDay {
+                // Slightly greyer than clearDay
                 return (
-                    top: (r: 0.09, g: 0.22, b: 0.46),
-                    bottom: (r: 0.15, g: 0.32, b: 0.56)
+                    top: (r: 0.22, g: 0.48, b: 0.78),
+                    bottom: (r: 0.48, g: 0.66, b: 0.88)
                 )
             } else {
                 return (
@@ -188,9 +190,10 @@ public enum SkyScene: Equatable, Hashable, Sendable {
                 )
             }
         case .cloudy:
+            // Medium blue-grey, clearly a sky scene
             return (
-                top: (r: 0.12, g: 0.18, b: 0.26),
-                bottom: (r: 0.18, g: 0.25, b: 0.36)
+                top: (r: 0.38, g: 0.47, b: 0.58),
+                bottom: (r: 0.55, g: 0.64, b: 0.74)
             )
         case .fog:
             return (

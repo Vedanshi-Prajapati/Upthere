@@ -42,7 +42,8 @@ struct HourlyPrecipitationBarChart: View {
                             .foregroundStyle(AppTheme.textPrimary)
                         Text("•")
                             .foregroundStyle(AppTheme.textTertiary)
-                        Text("\(pct)% chance")
+                        let pctString = (Double(pct) / 100.0).formatted(.percent)
+                        Text("\(pctString) chance")
                             .font(.footnote.weight(.semibold))
                             .foregroundStyle(rainBlue)
                         if item.precipitationAmount > 0 {
@@ -55,7 +56,8 @@ struct HourlyPrecipitationBarChart: View {
                     let peakHour = items.max(by: { $0.precipitationProbability < $1.precipitationProbability })
                     let peakPct = Int(round((peakHour?.precipitationProbability ?? 0) * 100))
                     if peakPct > 0, let peakHour {
-                        Text("Peak: \(peakHour.time) (\(peakPct)%)")
+                        let peakPctString = (Double(peakPct) / 100.0).formatted(.percent)
+                        Text("Peak: \(peakHour.time) (\(peakPctString))")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(rainBlue)
                     } else {

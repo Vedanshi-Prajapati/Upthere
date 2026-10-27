@@ -65,7 +65,8 @@ struct LocationPermissionView: View {
                                 Text("Rain Window · 2:15 PM – 3:30 PM")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(AppTheme.textPrimary)
-                                Text("Peak precipitation at 2:45 PM (80% probability)")
+                                let probStr = (0.8).formatted(.percent)
+                                Text("Peak precipitation at 2:45 PM (\(probStr) probability)")
                                     .font(.caption)
                                     .foregroundStyle(AppTheme.textSecondary)
                             }

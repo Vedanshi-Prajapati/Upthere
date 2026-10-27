@@ -18,5 +18,6 @@ struct WeatherBackgroundView: View {
 
     var body: some View {
         SkyBackgroundView(scene: scene, isPaused: isPaused)
+            .accessibilityIdentifier("sky-background")
     }
 }

@@ -30,7 +30,7 @@ struct HourlyCard: View {
                     .font(AppFont.headline)
                     .foregroundStyle(AppTheme.textPrimary)
 
-                Text("\(Int(hourly.precipitationProbability * 100))%")
+                Text(verbatim: hourly.precipitationProbability.formatted(.percent.precision(.fractionLength(0))))
                     .font(AppFont.caption)
                     .foregroundStyle(hourly.precipitationProbability >= 0.3
                         ? AppTheme.rainBlueLight
@@ -68,7 +68,7 @@ struct DailyWeatherRow: View {
                             .foregroundStyle(AppTheme.textPrimary)
                             .font(AppFont.title3)
                         if daily.precipitationProbability > 0 {
-                            Text("\(Int(daily.precipitationProbability * 100))%")
+                            Text(verbatim: daily.precipitationProbability.formatted(.percent.precision(.fractionLength(0))))
                                 .font(AppFont.caption2Semibold)
                                 .foregroundStyle(AppTheme.rainBlueLight)
                         }
@@ -105,7 +105,7 @@ struct DailyWeatherRow: View {
                             .foregroundStyle(AppTheme.textPrimary)
                             .font(AppFont.title3)
                         if daily.precipitationProbability > 0 {
-                            Text("\(Int(daily.precipitationProbability * 100))%")
+                            Text(verbatim: daily.precipitationProbability.formatted(.percent.precision(.fractionLength(0))))
                                 .font(AppFont.caption2Semibold)
                                 .foregroundStyle(AppTheme.rainBlueLight)
                         }

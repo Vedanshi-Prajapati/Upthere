@@ -4,12 +4,10 @@ import os
 public enum AppGroup: Sendable {
     nonisolated public static let identifier = "group.com.vedanshi.upthereapp"
 
-    /// Shared UserDefaults suite for sharing state across the app, widget, and controls.
     nonisolated public static var defaults: UserDefaults {
         UserDefaults(suiteName: identifier) ?? .standard
     }
 
-    /// Shared App Group container URL.
     nonisolated public static var containerURL: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
     }
@@ -37,7 +35,6 @@ public enum AppGroup: Sendable {
         "settings.temperatureUnit",
         "settings.windSpeedUnit",
         "settings.precipitationUnit",
-        "settings.appearanceMode",
         "settings.rainAlertsEnabled",
         "settings.severeAlertsEnabled",
         "settings.spotlightEnabled"

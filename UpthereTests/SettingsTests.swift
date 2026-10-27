@@ -224,7 +224,6 @@ struct SettingsTests {
         mockStandard.set("fahrenheit", forKey: "settings.temperatureUnit")
         mockStandard.set("mph", forKey: "settings.windSpeedUnit")
         mockStandard.set("inch", forKey: "settings.precipitationUnit")
-        mockStandard.set("dark", forKey: "settings.appearanceMode")
         mockStandard.set(false, forKey: "settings.rainAlertsEnabled")
         mockStandard.set(false, forKey: "settings.severeAlertsEnabled")
 
@@ -235,7 +234,7 @@ struct SettingsTests {
         #expect(mockGroup.string(forKey: "settings.temperatureUnit") == "fahrenheit")
         #expect(mockGroup.string(forKey: "settings.windSpeedUnit") == "mph")
         #expect(mockGroup.string(forKey: "settings.precipitationUnit") == "inch")
-        #expect(mockGroup.string(forKey: "settings.appearanceMode") == "dark")
+        // settings.appearanceMode is no longer migrated; app is locked to dark mode
         #expect(mockGroup.bool(forKey: "settings.rainAlertsEnabled") == false)
         #expect(mockGroup.bool(forKey: "settings.severeAlertsEnabled") == false)
         #expect(mockGroup.bool(forKey: AppGroup.migrationKey) == true)

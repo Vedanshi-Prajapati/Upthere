@@ -296,4 +296,55 @@ nonisolated final class UpthereUITests: XCTestCase {
         XCTAssertTrue(rainToggle.waitForExistence(timeout: 4), "Rain alerts toggle should exist")
         XCTAssertFalse(rainToggle.label.isEmpty, "Rain alerts toggle must have VoiceOver label")
     }
+
+    // MARK: - (8) Sky background element presence on every tab (default and clearDay)
+    @MainActor
+    func testSkyBackgroundElementPresenceOnEveryTab() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-disableSplash",
+            "-disablePermission"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        let tabs = ["Home", "Forecast", "Insights", "Locations", "Settings"]
+        for tabName in tabs {
+            let tabButton = tabBar.buttons[tabName].firstMatch
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 4), "\(tabName) tab button should exist")
+            tabButton.tap()
+
+            let skyBg = app.descendants(matching: .any)["sky-background"].firstMatch
+            XCTAssertTrue(skyBg.waitForExistence(timeout: 4), "sky-background should exist on \(tabName) tab")
+        }
+    }
+
+    @MainActor
+    func testSkyBackgroundElementPresenceWithClearDayFlag() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-useMockRepository",
+            "-disableSplash",
+            "-disablePermission",
+            "-skyScene", "clearDay"
+        ]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 8), "App should launch and display tab bar")
+
+        let tabs = ["Home", "Forecast", "Insights", "Locations", "Settings"]
+        for tabName in tabs {
+            let tabButton = tabBar.buttons[tabName].firstMatch
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 4), "\(tabName) tab button should exist")
+            tabButton.tap()
+
+            let skyBg = app.descendants(matching: .any)["sky-background"].firstMatch
+            XCTAssertTrue(skyBg.waitForExistence(timeout: 4), "sky-background should exist on \(tabName) tab with clearDay flag")
+        }
+    }
 }
+ 

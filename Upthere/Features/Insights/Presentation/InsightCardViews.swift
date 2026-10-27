@@ -31,11 +31,11 @@ extension InsightsView {
                         .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
                     let precipProb = Int(((hourly.first?.precipitationChance ?? 0.0) * 100).rounded())
-                    Text("\(precipProb)%")
+                    Text(verbatim: (Double(precipProb) / 100.0).formatted(.percent))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                     Spacer()
-                    Text("100%")
+                    Text(verbatim: (1.0).formatted(.percent))
                         .font(.caption)
                         .foregroundStyle(AppTheme.textTertiary)
                 }

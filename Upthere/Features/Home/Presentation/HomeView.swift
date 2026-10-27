@@ -48,6 +48,12 @@ struct HomeView: View {
 
     private var homeContent: some View {
         ZStack {
+            WeatherBackgroundView(
+                condition: viewModel.displayedWeather?.condition,
+                symbolName: viewModel.displayedWeather?.weatherSymbolName,
+                isPaused: isAnimationPaused
+            )
+
             if let weather = viewModel.displayedWeather {
                 WeatherScrollContent(
                     weather: weather,
@@ -301,13 +307,8 @@ private struct WeatherScrollContent: View {
                 .foregroundStyle(AppTheme.textSecondary)
         }
         .accessibilityIdentifier("hero_text_content")
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
-                .fill(Color.black.opacity(0.18))
-                .blur(radius: 6)
-        )
+        // Soft shadow for legibility — no rectangular box, no opaque fill
+        .shadow(color: .black.opacity(0.22), radius: 10, x: 0, y: 2)
     }
 
     private var heroIllustration: some View {

@@ -76,10 +76,10 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
         locationSubtitle: String,
         locationStatus: LocationStatus
     ) async throws -> Weather {
-        let (delay, error, base) = lock.withLock { () -> (UInt64, Error?, Weather) in
+        let (delay, error, mock, base) = lock.withLock { () -> (UInt64, Error?, Weather?, Weather) in
             _fetchCallCount += 1
             let b = _mockWeather ?? Self.makeGhaziabadWeather()
-            return (_delayNanoseconds, _errorToThrow, b)
+            return (_delayNanoseconds, _errorToThrow, _mockWeather, b)
         }
         if delay > 0 {
             // Genuinely optional: sleep cancellation during test teardown is acceptable
@@ -87,6 +87,9 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
         }
         if let err = error {
             throw err
+        }
+        if let mock = mock {
+            return mock
         }
         let baseWeather = base
         return Weather(
@@ -120,7 +123,7 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
             sunset: base.sunset,
             fetchTimestamp: base.fetchTimestamp,
             isCached: base.isCached,
-            locationStatus: locationStatus
+            locationStatus: base.locationStatus != .live ? base.locationStatus : locationStatus
         )
     }
 

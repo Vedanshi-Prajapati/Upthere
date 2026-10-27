@@ -138,8 +138,12 @@ struct LocationStatusTests {
         // 1. Denied
         let deniedWeather = base.withStatus(.denied)
         let repoDenied = MockWeatherRepository(mockWeather: deniedWeather)
+        let fakeManagerDenied = FakeLocationManager()
+        fakeManagerDenied.authorizationStatus = .denied
+        let locServiceDenied = LocationService(manager: fakeManagerDenied)
         let vmDenied = HomeViewModel(
             getWeatherUseCase: GetWeatherUseCase(repository: repoDenied),
+            locationService: locServiceDenied,
             defaults: mockDefaults
         )
         await vmDenied.loadWeather(force: true)
@@ -152,8 +156,12 @@ struct LocationStatusTests {
         // 2. TimedOut
         let timedOutWeather = base.withStatus(.timedOut)
         let repoTimedOut = MockWeatherRepository(mockWeather: timedOutWeather)
+        let fakeManagerTimedOut = FakeLocationManager()
+        fakeManagerTimedOut.authorizationStatus = .denied
+        let locServiceTimedOut = LocationService(manager: fakeManagerTimedOut)
         let vmTimedOut = HomeViewModel(
             getWeatherUseCase: GetWeatherUseCase(repository: repoTimedOut),
+            locationService: locServiceTimedOut,
             defaults: mockDefaults
         )
         await vmTimedOut.loadWeather(force: true)

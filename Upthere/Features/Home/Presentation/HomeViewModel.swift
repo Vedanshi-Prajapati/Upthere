@@ -50,7 +50,7 @@ final class HomeViewModel {
     ) {
         self.getWeatherUseCase = getWeatherUseCase
         self.cacheManager = cacheManager ?? WeatherCacheManager(defaults: defaults)
-        let locManager = locationsManager ?? SavedLocationsManager()
+        let locManager = locationsManager ?? SavedLocationsManager(defaults: defaults)
         self.locationsManager = locManager
         self.selectedLocation = locManager.selectedLocation
         let locService = locationService ?? LocationService()

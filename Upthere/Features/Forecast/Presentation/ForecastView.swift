@@ -18,6 +18,11 @@ struct ForecastView: View {
 
     var body: some View {
         ZStack {
+            WeatherBackgroundView(
+                condition: viewModel.displayedWeather?.condition,
+                symbolName: viewModel.displayedWeather?.weatherSymbolName
+            )
+
             if let weather = viewModel.displayedWeather {
                 forecastContent(weather: weather)
             } else {
@@ -60,7 +65,7 @@ struct ForecastView: View {
             .scrollEdgeEffectStyle(.soft, for: .top)
             .scrollEdgeEffectStyle(.soft, for: .bottom)
             .contentMargins(.bottom, AppTheme.tabBarClearance, for: .scrollContent)
-            .padding(.top, 16)
+            .padding(.top, AppTheme.spacingSmall)
         }
     }
 

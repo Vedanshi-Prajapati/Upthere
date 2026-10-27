@@ -348,10 +348,10 @@ struct SkyCanvasView: View {
     // MARK: - Scrim
 
     private func drawScrim(context: GraphicsContext, size: CGSize) {
-        // Subtle top-to-bottom dark scrim (black 0 -> 25%)
+        // Subtle bottom scrim only — black 0% at top to 15% at bottom
         let scrimGradient = Gradient(colors: [
             Color.black.opacity(0.0),
-            Color.black.opacity(0.25)
+            Color.black.opacity(0.15)
         ])
         let rect = CGRect(origin: .zero, size: size)
         context.fill(

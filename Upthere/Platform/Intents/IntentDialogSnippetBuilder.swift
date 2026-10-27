@@ -99,7 +99,7 @@ struct WeatherSnippetView: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "umbrella.fill")
                                     .font(.caption2)
-                                Text("\(rainChance)%")
+                                Text(verbatim: (Double(rainChance) / 100.0).formatted(.percent))
                                     .font(.caption.weight(.semibold))
                             }
                             .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 1.0))

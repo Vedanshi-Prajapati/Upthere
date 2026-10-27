@@ -26,6 +26,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                WeatherBackgroundView(condition: condition, symbolName: symbolName)
+
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: AppTheme.spacingXXLarge) {
                         // Header
@@ -43,10 +45,7 @@ struct SettingsView: View {
                         // 4. Location
                         locationSection
 
-                        // 4. Appearance
-                        appearanceSection
-
-                        // 5. About
+                        // 4. About
                         aboutSection
                     }
                     .padding(.horizontal, AppTheme.spacingXLarge)
@@ -318,40 +317,6 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("settings_location_permissions_button")
             }
-        }
-    }
-
-    // MARK: - 4. Appearance
-    private var appearanceSection: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spacingSmall) {
-            sectionHeader("Appearance")
-
-            Group {
-                if reduceTransparency {
-                    Picker("Appearance", selection: $viewModel.appearanceMode) {
-                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .background(Color(white: 0.18), in: RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
-                } else {
-                    Picker("Appearance", selection: $viewModel.appearanceMode) {
-                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                            Text(mode.rawValue).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
-                }
-            }
-            .accessibilityIdentifier("settings_appearance_picker")
-
-            Text("Text size follows your iPhone’s Display & Brightness setting.")
-                .font(AppFont.footnote)
-                .foregroundStyle(AppTheme.textSecondary)
-                .padding(.top, 4)
-                .padding(.horizontal, 4)
         }
     }
 

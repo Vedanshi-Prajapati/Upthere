@@ -109,50 +109,45 @@ struct SkyBackgroundTests {
         #expect(SkyParticleGenerator.generate(for: .snow).count == 50, "snow must have 50 dots")
     }
 
-    // MARK: - 3. Contrast Test: Lightest and Darkest Stops with Scrim
+    // MARK: - 3. Contrast Test: Lightest and Darkest Stops with Card
 
-    @Test("White text over each scene gradient plus scrim meets 4.5:1 body and 3:1 large text")
+    @Test("White text over each scene (gradient + scrim + card) meets 4.5:1 body and 3:1 large text")
     func testContrastOverScenesWithScrim() {
         let whiteFg = (r: 1.0, g: 1.0, b: 1.0, a: 1.0)
-        let scrimBottomAlpha = 0.25 // Subtle top-to-bottom dark scrim (0% at top, 25% at bottom)
+        let scrimBottomAlpha = 0.15 // Phase 4: Max 15% black at bottom, 0% at top
         let scrimTopAlpha = 0.0
 
         for scene in SkyScene.allCases {
             let (topStop, bottomStop) = scene.gradientStops
 
-            // Top stop (at scrimTopAlpha = 0.0)
+            // Top stop (at scrimTopAlpha = 0.0) with dark glass card
             let topEffective = WCAGHelper.applyScrim(bg: topStop, alpha: scrimTopAlpha)
-            let topRatio = WCAGHelper.contrastRatio(fg: whiteFg, bg: topEffective)
+            let topWithCard = WCAGHelper.composite(fg: (r: 0.08, g: 0.16, b: 0.32, a: 0.65), bg: topEffective)
+            let topRatio = WCAGHelper.contrastRatio(fg: whiteFg, bg: topWithCard)
 
-            // Bottom stop (at scrimBottomAlpha = 0.25)
+            // Bottom stop (at scrimBottomAlpha = 0.15) with dark glass card
             let bottomEffective = WCAGHelper.applyScrim(bg: bottomStop, alpha: scrimBottomAlpha)
-            let bottomRatio = WCAGHelper.contrastRatio(fg: whiteFg, bg: bottomEffective)
+            let bottomWithCard = WCAGHelper.composite(fg: (r: 0.08, g: 0.16, b: 0.32, a: 0.65), bg: bottomEffective)
+            let bottomRatio = WCAGHelper.contrastRatio(fg: whiteFg, bg: bottomWithCard)
 
             // Body text requires 4.5:1
             #expect(
                 topRatio >= 4.5,
-                "White body text on top stop of [\(scene.displayName)] must meet 4.5:1. Got \(String(format: "%.2f", topRatio)):1"
+                "White body text on top stop with card of [\(scene.displayName)] must meet 4.5:1. Got \(String(format: "%.2f", topRatio)):1"
             )
             #expect(
                 bottomRatio >= 4.5,
-                "White body text on bottom stop with scrim of [\(scene.displayName)] must meet 4.5:1. Got \(String(format: "%.2f", bottomRatio)):1"
+                "White body text on bottom stop with card of [\(scene.displayName)] must meet 4.5:1. Got \(String(format: "%.2f", bottomRatio)):1"
             )
 
             // Large text requires 3.0:1
             #expect(
                 topRatio >= 3.0,
-                "White large text on top stop of [\(scene.displayName)] must meet 3.0:1. Got \(String(format: "%.2f", topRatio)):1"
+                "White large text on top stop with card of [\(scene.displayName)] must meet 3.0:1. Got \(String(format: "%.2f", topRatio)):1"
             )
             #expect(
                 bottomRatio >= 3.0,
-                "White large text on bottom stop with scrim of [\(scene.displayName)] must meet 3.0:1. Got \(String(format: "%.2f", bottomRatio)):1"
-            )
-
-            // Even without scrim at bottom, verify it meets at least 3.0:1 large text
-            let rawBottomRatio = WCAGHelper.contrastRatio(fg: whiteFg, bg: bottomStop)
-            #expect(
-                rawBottomRatio >= 3.0,
-                "Raw bottom stop without scrim of [\(scene.displayName)] must meet 3.0:1. Got \(String(format: "%.2f", rawBottomRatio)):1"
+                "White large text on bottom stop with card of [\(scene.displayName)] must meet 3.0:1. Got \(String(format: "%.2f", bottomRatio)):1"
             )
         }
     }

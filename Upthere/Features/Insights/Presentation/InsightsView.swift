@@ -11,6 +11,11 @@ struct InsightsView: View {
 
     var body: some View {
         ZStack {
+            WeatherBackgroundView(
+                condition: viewModel.displayedWeather?.condition,
+                symbolName: viewModel.displayedWeather?.weatherSymbolName
+            )
+
             if let weather = viewModel.displayedWeather {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {

@@ -57,58 +57,66 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house", value: .home) {
-                HomeView(viewModel: homeViewModel, onNavigateToInsights: {
-                    withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
-                        selectedTab = .insights
-                    }
-                })
-                .dynamicTypeSize(.xSmall ... .accessibility5)
-            }
-
-            Tab("Forecast", systemImage: "calendar", value: .forecast) {
-                ForecastView(viewModel: homeViewModel)
-                    .dynamicTypeSize(.xSmall ... .accessibility5)
-            }
-
-            Tab("Insights", systemImage: "sparkles", value: .insights) {
-                InsightsView(viewModel: homeViewModel)
-                    .dynamicTypeSize(.xSmall ... .accessibility5)
-            }
-
-            Tab("Locations", systemImage: "mappin.and.ellipse", value: .locations) {
-                LocationsView(
-                    condition: homeViewModel.displayedWeather?.condition,
-                    symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
-                    locationsManager: locationsManager,
-                    locationService: locationService,
-                    onSelectLocation: { location in
-                        homeViewModel.selectLocation(location)
-                        withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
-                            selectedTab = .home
-                        }
-                    }
-                )
-                .dynamicTypeSize(.xSmall ... .accessibility5)
-            }
-
-            Tab("Settings", systemImage: "gearshape", value: .settings) {
-                SettingsView(
-                    viewModel: settingsViewModel,
-                    locationService: locationService,
-                    condition: homeViewModel.displayedWeather?.condition,
-                    symbolName: homeViewModel.displayedWeather?.weatherSymbolName
-                )
-                .dynamicTypeSize(.xSmall ... .accessibility5)
-            }
-        }
-        .background {
+        ZStack {
+            // PHASE 2: Sky lives in a ZStack behind the TabView so it shows through
+            // every tab. Placing it in .background{} caused the system TabView
+            // content layer to paint over it with an opaque material.
             SkyBackgroundView(
                 scene: currentSkyScene,
                 isPaused: shouldPauseAnimation
             )
             .ignoresSafeArea()
+            .accessibilityIdentifier("sky-background")
+            .accessibilityHidden(true)
+
+            TabView(selection: $selectedTab) {
+                Tab("Home", systemImage: "house", value: .home) {
+                    HomeView(viewModel: homeViewModel, onNavigateToInsights: {
+                        withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
+                            selectedTab = .insights
+                        }
+                    })
+                    .dynamicTypeSize(.xSmall ... .accessibility5)
+                }
+
+                Tab("Forecast", systemImage: "calendar", value: .forecast) {
+                    ForecastView(viewModel: homeViewModel)
+                        .dynamicTypeSize(.xSmall ... .accessibility5)
+                }
+
+                Tab("Insights", systemImage: "sparkles", value: .insights) {
+                    InsightsView(viewModel: homeViewModel)
+                        .dynamicTypeSize(.xSmall ... .accessibility5)
+                }
+
+                Tab("Locations", systemImage: "mappin.and.ellipse", value: .locations) {
+                    LocationsView(
+                        condition: homeViewModel.displayedWeather?.condition,
+                        symbolName: homeViewModel.displayedWeather?.weatherSymbolName,
+                        locationsManager: locationsManager,
+                        locationService: locationService,
+                        onSelectLocation: { location in
+                            homeViewModel.selectLocation(location)
+                            withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.75)) {
+                                selectedTab = .home
+                            }
+                        }
+                    )
+                    .dynamicTypeSize(.xSmall ... .accessibility5)
+                }
+
+                Tab("Settings", systemImage: "gearshape", value: .settings) {
+                    SettingsView(
+                        viewModel: settingsViewModel,
+                        locationService: locationService,
+                        condition: homeViewModel.displayedWeather?.condition,
+                        symbolName: homeViewModel.displayedWeather?.weatherSymbolName
+                    )
+                    .dynamicTypeSize(.xSmall ... .accessibility5)
+                }
+            }
+            // Make TabView background transparent so the sky ZStack layer shows through
+            .toolbarBackground(.clear, for: .tabBar)
         }
         .environment(\.isHomeTabSelected, selectedTab == .home)
         .tabBarMinimizeBehavior(.onScrollDown)
