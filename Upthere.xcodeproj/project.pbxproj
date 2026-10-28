@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 110;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -37,11 +37,11 @@
 /* Begin PBXFileReference section */
 		ECB9CBFB30729A6200BD49AF /* Upthere.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Upthere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC2030729A6200BD49AF /* UpthereTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UpthereTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		ECB9CC5030729A6200BD49AF /* UpthereUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UpthereUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UpthereWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC4030729A6200BD49AF /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		ECB9CC4430729A6200BD49AF /* WidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotStore.swift; sourceTree = "<group>"; };
 		ECB9CC4730729A6200BD49AF /* RainStartActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainStartActivityAttributes.swift; sourceTree = "<group>"; };
+		ECB9CC5030729A6200BD49AF /* UpthereUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UpthereUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECB9CC6030729A6200BD49AF /* WeatherDomainMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDomainMapping.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -56,14 +56,14 @@
 			path = UpthereTests;
 			sourceTree = "<group>";
 		};
-		ECB9CC5130729A6200BD49AF /* UpthereUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = UpthereUITests;
-			sourceTree = "<group>";
-		};
 		ECB9CC3130729A6200BD49AF /* UpthereWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = UpthereWidgets;
+			sourceTree = "<group>";
+		};
+		ECB9CC5130729A6200BD49AF /* UpthereUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = UpthereUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -168,6 +168,24 @@
 			productReference = ECB9CC2030729A6200BD49AF /* UpthereTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		ECB9CC3730729A6200BD49AF /* UpthereWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ECB9CC3830729A6400BD49AF /* Build configuration list for PBXNativeTarget "UpthereWidgets" */;
+			buildPhases = (
+				ECB9CC3230729A6200BD49AF /* Sources */,
+				ECB9CC3330729A6200BD49AF /* Frameworks */,
+				ECB9CC3430729A6200BD49AF /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				ECB9CC3130729A6200BD49AF /* UpthereWidgets */,
+			);
+			name = UpthereWidgets;
+			productName = UpthereWidgets;
+			productReference = ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		ECB9CC5730729A6200BD49AF /* UpthereUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = ECB9CC5830729A6400BD49AF /* Build configuration list for PBXNativeTarget "UpthereUITests" */;
@@ -189,24 +207,6 @@
 			productReference = ECB9CC5030729A6200BD49AF /* UpthereUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		ECB9CC3730729A6200BD49AF /* UpthereWidgets */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = ECB9CC3830729A6400BD49AF /* Build configuration list for PBXNativeTarget "UpthereWidgets" */;
-			buildPhases = (
-				ECB9CC3230729A6200BD49AF /* Sources */,
-				ECB9CC3330729A6200BD49AF /* Frameworks */,
-				ECB9CC3430729A6200BD49AF /* Resources */,
-			);
-			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				ECB9CC3130729A6200BD49AF /* UpthereWidgets */,
-			);
-			name = UpthereWidgets;
-			productName = UpthereWidgets;
-			productReference = ECB9CC3030729A6200BD49AF /* UpthereWidgets.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -224,12 +224,12 @@
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = ECB9CBFA30729A6200BD49AF;
 					};
+					ECB9CC3730729A6200BD49AF = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					ECB9CC5730729A6200BD49AF = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = ECB9CBFA30729A6200BD49AF;
-					};
-					ECB9CC3730729A6200BD49AF = {
-						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -482,8 +482,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -520,8 +520,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -542,8 +542,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Upthere.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Upthere";
@@ -565,8 +565,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Upthere.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Upthere";
@@ -592,8 +592,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -618,8 +618,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

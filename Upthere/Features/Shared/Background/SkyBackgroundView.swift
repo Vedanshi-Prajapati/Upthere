@@ -115,9 +115,9 @@ struct SkyCanvasView: View {
             let cx = star.x * size.width + sin(time * 0.15 + star.phase) * 5.0
             let cy = star.y * size.height + cos(time * 0.10 + star.phase) * 3.5
 
-            // Twinkle: opacity 0.3 - 1.0
+            // Twinkle: opacity 0.62 - 0.88
             let twinkleFactor = 0.5 + 0.5 * sin(time * (1.8 + star.speedX) + star.phase)
-            let opacity = (0.30 + 0.70 * twinkleFactor) * star.opacity
+            let opacity = 0.62 + (0.88 - 0.62) * twinkleFactor
             let r = star.size * 0.5
 
             let starRect = CGRect(x: cx - r, y: cy - r, width: 2 * r, height: 2 * r)
@@ -129,15 +129,12 @@ struct SkyCanvasView: View {
 
     private func drawSunGlowAndRays(context: GraphicsContext, size: CGSize, time: TimeInterval) {
         let sunOrigin = CGPoint(x: size.width * 0.85, y: size.height * 0.08)
-
-        // Pulsing sun-glare glow
-        let pulseScale = 1.0 + 0.08 * sin(time * 0.8)
-        let glowAlpha = 0.20 + 0.06 * cos(time * 0.6)
-        let glowRadius = 240.0 * pulseScale
+        let glowRadius = size.width * 0.30
+        let glowAlpha = 0.32
 
         let glowGradient = Gradient(colors: [
             Color.white.opacity(glowAlpha),
-            Color(red: 1.0, green: 0.92, blue: 0.65).opacity(glowAlpha * 0.5),
+            Color(red: 1.0, green: 0.95, blue: 0.80).opacity(glowAlpha * 0.5),
             Color.clear
         ])
 
@@ -151,10 +148,10 @@ struct SkyCanvasView: View {
             )
         )
 
-        // 2-3 faint light rays
+        // 2 light rays, opacity 0.10
         for ray in particles {
-            let rayAlpha = ray.opacity * (0.8 + 0.2 * sin(time * 0.6 + ray.phase))
-            let rayAngle = 2.15 + Double(ray.id) * 0.22 // Angle down-left in radians
+            let rayAlpha = 0.10
+            let rayAngle = 2.15 + Double(ray.id) * 0.35 // Angle down-left in radians
             let length = ray.length
             let width = ray.size
 
@@ -202,11 +199,15 @@ struct SkyCanvasView: View {
             let cx = rawX.truncatingRemainder(dividingBy: span) - cloudW
             let cy = cloud.y * size.height + sin(time * 0.25 + cloud.phase) * 6.0
 
+            // Cap cloud opacity behind the temperature text area (top-left third) to minimum of range (0.10)
+            let isInTextArea = cx <= size.width / 3.0 && cy <= size.height / 3.0
+            let cloudOpacity = isInTextArea ? min(cloud.opacity, 0.10) : cloud.opacity
+
             let cloudRect = CGRect(x: cx - cloudW / 2, y: cy - cloudH / 2, width: cloudW, height: cloudH)
 
             let cloudGradient = Gradient(colors: [
-                Color.white.opacity(cloud.opacity),
-                Color.white.opacity(cloud.opacity * 0.4),
+                Color.white.opacity(cloudOpacity),
+                Color.white.opacity(cloudOpacity * 0.4),
                 Color.clear
             ])
 
@@ -234,7 +235,7 @@ struct SkyCanvasView: View {
             let bandH = band.size * 1.4
             let cy = band.y * size.height
             let drift = sin(time * 0.2 + band.phase) * 35.0
-            let opacity = band.opacity * (0.85 + 0.15 * sin(time * 0.3 + band.phase))
+            let opacity = band.opacity
 
             let bandRect = CGRect(x: -40 + drift, y: cy - bandH / 2, width: size.width + 80, height: bandH)
 
@@ -258,7 +259,7 @@ struct SkyCanvasView: View {
     // MARK: - Element 5: Rain
 
     private func drawRain(context: GraphicsContext, size: CGSize, time: TimeInterval) {
-        // ~60 thin falling diagonal lines (varying length, speed, opacity)
+        // 60 thin falling diagonal lines (varying length, speed, opacity 0.34 to 0.58)
         for rain in particles {
             let dx = rain.length * 0.20 // ~12° diagonal tilt
             let dy = rain.length
@@ -285,11 +286,11 @@ struct SkyCanvasView: View {
     }
 
     private func drawCloudLayerAtTop(context: GraphicsContext, size: CGSize, time: TimeInterval) {
-        // Few soft cloud blobs at top of rain/thunderstorm
+        // Soft cloud band at top of rain/thunderstorm (opacity range 0.12 to 0.18)
         let topH = size.height * 0.24
         let topRect = CGRect(x: 0, y: 0, width: size.width, height: topH)
         let gradient = Gradient(colors: [
-            Color.black.opacity(0.35),
+            Color.black.opacity(0.18),
             Color.black.opacity(0.12),
             Color.clear
         ])
@@ -326,7 +327,7 @@ struct SkyCanvasView: View {
     // MARK: - Element 7: Snow
 
     private func drawSnow(context: GraphicsContext, size: CGSize, time: TimeInterval) {
-        // ~50 slow dots drifting down with slight sideways sway
+        // 50 slow dots drifting down with slight sideways sway (opacity 0.38 to 0.78)
         for flake in particles {
             let sway = sin(time * (1.2 + flake.speedX) + flake.phase) * 16.0
             let spanY = size.height + flake.size + 20.0
@@ -335,12 +336,16 @@ struct SkyCanvasView: View {
             let y = rawY.truncatingRemainder(dividingBy: spanY) - 10.0
             let x = (flake.x * size.width + sway).truncatingRemainder(dividingBy: size.width)
 
+            // Cap snow opacity behind the temperature text area (top-left third) to minimum of range (0.38)
+            let isInTextArea = x <= size.width / 3.0 && y <= size.height / 3.0
+            let flakeOpacity = isInTextArea ? min(flake.opacity, 0.38) : flake.opacity
+
             let r = flake.size * 0.5
             let flakeRect = CGRect(x: x - r, y: y - r, width: 2 * r, height: 2 * r)
 
             context.fill(
                 Path(ellipseIn: flakeRect),
-                with: .color(Color.white.opacity(flake.opacity))
+                with: .color(Color.white.opacity(flakeOpacity))
             )
         }
     }

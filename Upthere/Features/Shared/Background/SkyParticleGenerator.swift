@@ -43,7 +43,7 @@ public enum SkyParticleGenerator {
 
         switch scene {
         case .clearNight:
-            // ~40 tiny dots (stars) that slowly twinkle (opacity 0.3-1.0), occasional faint drift
+            // 40 stars, twinkle opacity range 0.62 to 0.88
             let count = scene.expectedParticleCount // 40
             for i in 0..<count {
                 particles.append(
@@ -54,7 +54,7 @@ public enum SkyParticleGenerator {
                         size: rng.nextDouble(in: 1.0...2.4),
                         speedX: rng.nextDouble(in: -0.5...0.5),
                         speedY: rng.nextDouble(in: -0.3...0.3),
-                        opacity: rng.nextDouble(in: 0.4...0.95),
+                        opacity: rng.nextDouble(in: 0.62...0.88),
                         phase: rng.nextDouble(in: 0.0...(2 * .pi)),
                         length: 0.0
                     )
@@ -62,8 +62,8 @@ public enum SkyParticleGenerator {
             }
 
         case .clearDay:
-            // 2-3 faint light rays (plus sun glow)
-            let count = scene.expectedParticleCount // 3
+            // 2 rays, opacity 0.10
+            let count = scene.expectedParticleCount // 2
             for i in 0..<count {
                 particles.append(
                     SkyParticle(
@@ -73,26 +73,34 @@ public enum SkyParticleGenerator {
                         size: rng.nextDouble(in: 40...70),
                         speedX: rng.nextDouble(in: 0.2...0.4),
                         speedY: 0.0,
-                        opacity: rng.nextDouble(in: 0.05...0.12),
-                        phase: Double(i) * (.pi / 3.0),
-                        length: rng.nextDouble(in: 320...500)
+                        opacity: 0.10, // Exact 0.10
+                        phase: Double(i) * (.pi / 2.0),
+                        length: rng.nextDouble(in: 340...480)
                     )
                 )
             }
 
         case .partlyCloudy:
-            // 3-6 large blurred ellipse "clouds" (white, 10-25% opacity)
-            let count = scene.expectedParticleCount // 4
+            // 3 clouds, opacity range 0.10 to 0.18, in 3 depth layers
+            let count = scene.expectedParticleCount // 3
             for i in 0..<count {
+                let depthLayer = i % 3
+                let (speedRange, sizeRange): (ClosedRange<Double>, ClosedRange<Double>) = {
+                    switch depthLayer {
+                    case 0: return (6.0...10.0, 180...240)
+                    case 1: return (10.0...16.0, 240...300)
+                    default: return (16.0...22.0, 300...380)
+                    }
+                }()
                 particles.append(
                     SkyParticle(
                         id: i,
                         x: rng.nextDouble(in: 0.0...1.0),
-                        y: 0.06 + Double(i) * 0.16 + rng.nextDouble(in: -0.04...0.04),
-                        size: rng.nextDouble(in: 180...320),
-                        speedX: rng.nextDouble(in: 6.0...16.0),
+                        y: 0.06 + Double(i) * 0.18 + rng.nextDouble(in: -0.03...0.03),
+                        size: rng.nextDouble(in: sizeRange),
+                        speedX: rng.nextDouble(in: speedRange),
                         speedY: 0.0,
-                        opacity: rng.nextDouble(in: 0.12...0.22),
+                        opacity: rng.nextDouble(in: 0.10...0.18),
                         phase: rng.nextDouble(in: 0.0...(2 * .pi)),
                         length: 0.0
                     )
@@ -100,18 +108,26 @@ public enum SkyParticleGenerator {
             }
 
         case .cloudy:
-            // 3-6 large blurred ellipse clouds (denser)
-            let count = scene.expectedParticleCount // 6
+            // 5 clouds, opacity range 0.10 to 0.18, in 3 depth layers
+            let count = scene.expectedParticleCount // 5
             for i in 0..<count {
+                let depthLayer = i % 3
+                let (speedRange, sizeRange): (ClosedRange<Double>, ClosedRange<Double>) = {
+                    switch depthLayer {
+                    case 0: return (6.0...10.0, 180...240)
+                    case 1: return (10.0...16.0, 240...300)
+                    default: return (16.0...22.0, 300...380)
+                    }
+                }()
                 particles.append(
                     SkyParticle(
                         id: i,
                         x: rng.nextDouble(in: 0.0...1.0),
-                        y: 0.05 + Double(i) * 0.12 + rng.nextDouble(in: -0.03...0.03),
-                        size: rng.nextDouble(in: 220...360),
-                        speedX: rng.nextDouble(in: 8.0...20.0),
+                        y: 0.05 + Double(i) * 0.14 + rng.nextDouble(in: -0.03...0.03),
+                        size: rng.nextDouble(in: sizeRange),
+                        speedX: rng.nextDouble(in: speedRange),
                         speedY: 0.0,
-                        opacity: rng.nextDouble(in: 0.15...0.25),
+                        opacity: rng.nextDouble(in: 0.10...0.18),
                         phase: rng.nextDouble(in: 0.0...(2 * .pi)),
                         length: 0.0
                     )
@@ -119,7 +135,7 @@ public enum SkyParticleGenerator {
             }
 
         case .fog, .haze:
-            // 2-3 wide, very soft horizontal bands drifting slowly
+            // 3 bands, opacity range 0.10 to 0.16
             let count = scene.expectedParticleCount // 3
             for i in 0..<count {
                 particles.append(
@@ -130,7 +146,7 @@ public enum SkyParticleGenerator {
                         size: rng.nextDouble(in: 140...240),
                         speedX: rng.nextDouble(in: 5.0...12.0),
                         speedY: 0.0,
-                        opacity: rng.nextDouble(in: 0.12...0.20),
+                        opacity: rng.nextDouble(in: 0.10...0.16),
                         phase: Double(i) * 1.5,
                         length: 0.0
                     )
@@ -138,7 +154,7 @@ public enum SkyParticleGenerator {
             }
 
         case .rain, .thunderstorm:
-            // ~60 thin falling diagonal lines (varying length, speed, opacity)
+            // 60 streaks, opacity range 0.34 to 0.58
             let count = scene.expectedParticleCount // 60
             for i in 0..<count {
                 particles.append(
@@ -149,7 +165,7 @@ public enum SkyParticleGenerator {
                         size: rng.nextDouble(in: 0.8...1.4),
                         speedX: 0.0,
                         speedY: rng.nextDouble(in: 340...620),
-                        opacity: rng.nextDouble(in: 0.18...0.48),
+                        opacity: rng.nextDouble(in: 0.34...0.58),
                         phase: rng.nextDouble(in: 0.0...(2 * .pi)),
                         length: rng.nextDouble(in: 16...34)
                     )
@@ -157,7 +173,7 @@ public enum SkyParticleGenerator {
             }
 
         case .snow:
-            // ~50 slow dots drifting down with slight sideways sway
+            // 50 dots, opacity range 0.38 to 0.78
             let count = scene.expectedParticleCount // 50
             for i in 0..<count {
                 particles.append(
@@ -168,7 +184,7 @@ public enum SkyParticleGenerator {
                         size: rng.nextDouble(in: 2.0...4.5),
                         speedX: rng.nextDouble(in: 0.5...1.5),
                         speedY: rng.nextDouble(in: 30...70),
-                        opacity: rng.nextDouble(in: 0.35...0.80),
+                        opacity: rng.nextDouble(in: 0.38...0.78),
                         phase: rng.nextDouble(in: 0.0...(2 * .pi)),
                         length: 0.0
                     )

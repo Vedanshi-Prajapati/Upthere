@@ -163,64 +163,42 @@ public enum SkyScene: Equatable, Hashable, Sendable {
 
     // MARK: - Gradients (Vertical Stop RGBs & Colors)
 
-    public var gradientStops: (top: (r: Double, g: Double, b: Double), bottom: (r: Double, g: Double, b: Double)) {
+    // MARK: - Hex Converter Helper
+
+    public static func hexToRGB(_ hex: String) -> (r: Double, g: Double, b: Double) {
+        let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: clean).scanHexInt64(&int)
+        let r = Double((int >> 16) & 0xFF) / 255.0
+        let g = Double((int >> 8) & 0xFF) / 255.0
+        let b = Double(int & 0xFF) / 255.0
+        return (r, g, b)
+    }
+
+    // MARK: - Gradient Hex Stops
+
+    public var gradientHex: (top: String, bottom: String) {
         switch self {
         case .clearDay:
-            // Bright blue sky — top vivid, bottom lighter horizon blue
-            return (
-                top: (r: 0.16, g: 0.45, b: 0.85),
-                bottom: (r: 0.42, g: 0.68, b: 0.95)
-            )
+            return ("#1F4F78", "#3E7396")
         case .clearNight:
-            return (
-                top: (r: 0.02, g: 0.04, b: 0.12),
-                bottom: (r: 0.05, g: 0.09, b: 0.22)
-            )
+            return ("#080F25", "#182641")
         case .partlyCloudy(let isDay):
-            if isDay {
-                // Slightly greyer than clearDay
-                return (
-                    top: (r: 0.22, g: 0.48, b: 0.78),
-                    bottom: (r: 0.48, g: 0.66, b: 0.88)
-                )
-            } else {
-                return (
-                    top: (r: 0.03, g: 0.05, b: 0.14),
-                    bottom: (r: 0.06, g: 0.10, b: 0.24)
-                )
-            }
+            return isDay ? ("#3D5366", "#667784") : ("#080F25", "#182641")
         case .cloudy:
-            // Medium blue-grey, clearly a sky scene
-            return (
-                top: (r: 0.38, g: 0.47, b: 0.58),
-                bottom: (r: 0.55, g: 0.64, b: 0.74)
-            )
-        case .fog:
-            return (
-                top: (r: 0.16, g: 0.20, b: 0.25),
-                bottom: (r: 0.22, g: 0.27, b: 0.33)
-            )
-        case .haze:
-            return (
-                top: (r: 0.20, g: 0.18, b: 0.16),
-                bottom: (r: 0.26, g: 0.24, b: 0.21)
-            )
-        case .rain:
-            return (
-                top: (r: 0.08, g: 0.12, b: 0.20),
-                bottom: (r: 0.13, g: 0.18, b: 0.27)
-            )
-        case .thunderstorm:
-            return (
-                top: (r: 0.04, g: 0.06, b: 0.12),
-                bottom: (r: 0.08, g: 0.11, b: 0.19)
-            )
+            return ("#3D5366", "#667784")
+        case .fog, .haze:
+            return ("#405E61", "#647676")
+        case .rain, .thunderstorm:
+            return ("#243748", "#465D70")
         case .snow:
-            return (
-                top: (r: 0.10, g: 0.16, b: 0.25),
-                bottom: (r: 0.16, g: 0.23, b: 0.34)
-            )
+            return ("#40576D", "#637788")
         }
+    }
+
+    public var gradientStops: (top: (r: Double, g: Double, b: Double), bottom: (r: Double, g: Double, b: Double)) {
+        let hex = gradientHex
+        return (top: SkyScene.hexToRGB(hex.top), bottom: SkyScene.hexToRGB(hex.bottom))
     }
 
     public var colors: [Color] {
@@ -236,19 +214,19 @@ public enum SkyScene: Equatable, Hashable, Sendable {
     public var expectedParticleCount: Int {
         switch self {
         case .clearNight:
-            return 40 // ~40 tiny dots (stars)
+            return 40 // 40 stars
         case .clearDay:
-            return 3  // 2-3 faint light rays (+ sun glow)
+            return 2  // 2 rays
         case .partlyCloudy:
-            return 4  // 3-6 blurred ellipse clouds
+            return 3  // 3 clouds
         case .cloudy:
-            return 6  // 3-6 blurred ellipse clouds (denser)
+            return 5  // 5 clouds
         case .fog, .haze:
-            return 3  // 2-3 wide soft horizontal bands
+            return 3  // 3 bands
         case .rain, .thunderstorm:
-            return 60 // ~60 thin falling diagonal lines
+            return 60 // 60 streaks
         case .snow:
-            return 50 // ~50 slow dots
+            return 50 // 50 dots
         }
     }
 }
