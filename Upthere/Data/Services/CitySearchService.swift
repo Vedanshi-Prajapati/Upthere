@@ -140,8 +140,8 @@ final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSearchCompl
         // Convert MKMapItem result to a plain Sendable struct inside callback before returning
         let itemData = MapItemData(
             name: mapItem.name,
-            locality: mapItem.addressRepresentations?.cityName ?? mapItem.placemark.locality,
-            region: mapItem.addressRepresentations?.regionName ?? mapItem.placemark.administrativeArea,
+            locality: mapItem.addressRepresentations?.cityName,
+            region: mapItem.addressRepresentations?.regionName,
             coordinate: mapItem.location.coordinate
         )
 

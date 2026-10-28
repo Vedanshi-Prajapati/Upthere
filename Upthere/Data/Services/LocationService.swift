@@ -84,8 +84,8 @@ final class SystemGeocoder: GeocoderProtocol {
         let firstItem: MapItemData? = mapItems.first.map { item in
             MapItemData(
                 name: item.name,
-                locality: item.addressRepresentations?.cityName ?? item.placemark.locality,
-                region: item.addressRepresentations?.regionName ?? item.placemark.administrativeArea,
+                locality: item.addressRepresentations?.cityName,
+                region: item.addressRepresentations?.regionName,
                 coordinate: item.location.coordinate
             )
         }
