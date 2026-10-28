@@ -165,8 +165,8 @@ final class SavedLocationsManager: ObservableObject {
             }
         } catch {
             logger.error("Failed to load locations from store: \(error.localizedDescription)")
-            self.locations = Self.defaultLocations
-            save()
+            let fallback = "Storage is unavailable. Saved locations cannot be stored permanently."
+            self.saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? fallback
         }
 
         ensureCurrentLocationPinned()
@@ -188,7 +188,7 @@ final class SavedLocationsManager: ObservableObject {
             saveErrorMessage = nil
         } catch {
             logger.error("Failed to persist saved locations: \(error.localizedDescription)")
-            saveErrorMessage = "Unable to save locations changes. Please try again."
+            saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? "Unable to save locations changes. Please try again."
         }
         store.saveSelectedLocationId(selectedLocationId)
         if AppGroup.defaults.object(forKey: AppGroup.spotlightEnabledKey) as? Bool ?? true {

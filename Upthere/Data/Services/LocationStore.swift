@@ -1,6 +1,17 @@
 import Foundation
 import os
 
+enum LocationStoreError: LocalizedError, Sendable {
+    case storageUnavailable(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .storageUnavailable(let message):
+            return message
+        }
+    }
+}
+
 protocol LocationStore: AnyObject, Sendable {
     func loadLocations() throws -> [SavedLocation]
     func saveLocations(_ locations: [SavedLocation]) throws
@@ -16,7 +27,7 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         var selectedLocationId: UUID?
     }
 
-    private let fileURL: URL
+    private let fileURL: URL?
     private let defaults: UserDefaults
     private let locationsKey = "upthere.saved_locations.list"
     private let selectedIdKey = "upthere.saved_locations.selected_id"
@@ -27,7 +38,8 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
 
     init(
         fileURL: URL? = nil,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        directoryProvider: (@Sendable () -> URL?)? = nil
     ) {
         self.defaults = defaults
         let isIsolatedTestDefaults = (defaults != .standard)
@@ -35,13 +47,23 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         if let fileURL = fileURL {
             self.fileURL = fileURL
         } else {
-            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-                ?? FileManager.default.temporaryDirectory
+            // Guard against unavailable Application Support directory:
+            // Refuse to fall back to temporary directory to avoid silent data loss when iOS purges /tmp.
+            let appSupport: URL? = if let provider = directoryProvider {
+                provider()
+            } else {
+                FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            }
+            guard let appSupport = appSupport else {
+                logger.error("Application Support directory is unavailable. Refusing temporary directory fallback to prevent data loss.")
+                self.fileURL = nil
+                return
+            }
+
             let dir = appSupport.appendingPathComponent("Upthere", isDirectory: true)
             do {
                 try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             } catch {
-                let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "LocationStore")
                 logger.error("Failed to create Upthere directory at \(dir.path): \(error.localizedDescription)")
             }
             if isIsolatedTestDefaults {
@@ -59,10 +81,7 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
             }
         }
 
-        // Only migrate from defaults if:
-        // 1) Production app: fileURL was nil && defaults was .standard, OR
-        // 2) Isolated test defaults explicitly supplied: defaults != .standard
-        if fileURL == nil || isIsolatedTestDefaults {
+        if (fileURL == nil || isIsolatedTestDefaults) && self.fileURL != nil {
             migrateIfNeeded()
         }
     }
@@ -70,6 +89,8 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
     private func migrateIfNeeded() {
         lock.lock()
         defer { lock.unlock() }
+
+        guard let fileURL = fileURL else { return }
 
         // If file already exists, migration is not needed
         if FileManager.default.fileExists(atPath: fileURL.path) {
@@ -86,10 +107,10 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
             }
             let payload = StoredPayload(locations: saved, selectedLocationId: selectedId)
             do {
-                try writePayload(payload)
+                try writePayload(payload, to: fileURL)
                 defaults.set(true, forKey: migrationKey)
             } catch {
-                logger.error("Failed to write migrated location payload to \(self.fileURL.path): \(error.localizedDescription)")
+                logger.error("Failed to write migrated location payload to \(fileURL.path): \(error.localizedDescription)")
             }
         }
     }
@@ -98,7 +119,11 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
 
-        guard let payload = readPayload() else {
+        guard let fileURL = fileURL else {
+            throw LocationStoreError.storageUnavailable("Storage is unavailable. Application Support directory could not be accessed.")
+        }
+
+        guard let payload = readPayload(from: fileURL) else {
             return []
         }
         return payload.locations
@@ -108,51 +133,57 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
 
-        var payload = readPayload() ?? StoredPayload(locations: [], selectedLocationId: nil)
+        guard let fileURL = fileURL else {
+            throw LocationStoreError.storageUnavailable("Storage is unavailable. Application Support directory could not be accessed.")
+        }
+
+        var payload = readPayload(from: fileURL) ?? StoredPayload(locations: [], selectedLocationId: nil)
         payload.locations = locations
-        try writePayload(payload)
+        try writePayload(payload, to: fileURL)
     }
 
     func loadSelectedLocationId() -> UUID? {
         lock.lock()
         defer { lock.unlock() }
 
-        return readPayload()?.selectedLocationId
+        guard let fileURL = fileURL else { return nil }
+        return readPayload(from: fileURL)?.selectedLocationId
     }
 
     func saveSelectedLocationId(_ id: UUID?) {
         lock.lock()
         defer { lock.unlock() }
 
-        var payload = readPayload() ?? StoredPayload(locations: [], selectedLocationId: nil)
+        guard let fileURL = fileURL else { return }
+        var payload = readPayload(from: fileURL) ?? StoredPayload(locations: [], selectedLocationId: nil)
         payload.selectedLocationId = id
         do {
-            try writePayload(payload)
+            try writePayload(payload, to: fileURL)
         } catch {
-            logger.error("Failed to save selected location ID to \(self.fileURL.path): \(error.localizedDescription)")
+            logger.error("Failed to save selected location ID to \(fileURL.path): \(error.localizedDescription)")
         }
     }
 
     // MARK: - Internal File I/O
 
-    private func readPayload() -> StoredPayload? {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+    private func readPayload(from url: URL) -> StoredPayload? {
+        guard FileManager.default.fileExists(atPath: url.path) else {
             // Genuinely optional: file does not exist yet before first save
             return nil
         }
         do {
-            let data = try Data(contentsOf: fileURL)
+            let data = try Data(contentsOf: url)
             return try JSONDecoder().decode(StoredPayload.self, from: data)
         } catch {
-            logger.error("Failed to read or decode location payload from \(self.fileURL.path): \(error.localizedDescription)")
+            logger.error("Failed to read or decode location payload from \(url.path): \(error.localizedDescription)")
             return nil
         }
     }
 
-    private func writePayload(_ payload: StoredPayload) throws {
+    private func writePayload(_ payload: StoredPayload, to url: URL) throws {
         let data = try JSONEncoder().encode(payload)
-        let parentDir = fileURL.deletingLastPathComponent()
+        let parentDir = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
-        try data.write(to: fileURL, options: .atomic)
+        try data.write(to: url, options: .atomic)
     }
 }

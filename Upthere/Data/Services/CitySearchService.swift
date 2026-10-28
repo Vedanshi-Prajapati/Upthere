@@ -1,6 +1,20 @@
 import Foundation
 import CoreLocation
-import MapKit
+@preconcurrency import MapKit
+
+struct MapItemData: Sendable {
+    let name: String?
+    let locality: String?
+    let region: String?
+    let coordinate: CLLocationCoordinate2D
+
+    init(name: String?, locality: String?, region: String?, coordinate: CLLocationCoordinate2D) {
+        self.name = name
+        self.locality = locality
+        self.region = region
+        self.coordinate = coordinate
+    }
+}
 
 enum CitySearchError: LocalizedError, Equatable, Sendable {
     case locationNotFound
@@ -123,11 +137,18 @@ final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSearchCompl
             throw CitySearchError.locationNotFound
         }
 
-        let coord = mapItem.location.coordinate
-        let cityName = mapItem.addressRepresentations?.cityName ?? mapItem.name ?? result.title
+        // Convert MKMapItem result to a plain Sendable struct inside callback before returning
+        let itemData = MapItemData(
+            name: mapItem.name,
+            locality: mapItem.addressRepresentations?.cityName ?? mapItem.placemark.locality,
+            region: mapItem.addressRepresentations?.regionName ?? mapItem.placemark.administrativeArea,
+            coordinate: mapItem.location.coordinate
+        )
+
+        let cityName = itemData.locality ?? itemData.name ?? result.title
 
         let regionName: String
-        if let reg = mapItem.addressRepresentations?.regionName, !reg.isEmpty {
+        if let reg = itemData.region, !reg.isEmpty {
             regionName = reg
         } else if !result.subtitle.isEmpty {
             regionName = result.subtitle
@@ -138,8 +159,8 @@ final class MapKitCitySearchService: NSObject, CitySearching, MKLocalSearchCompl
         return ResolvedCityLocation(
             cityName: cityName,
             regionName: regionName,
-            latitude: coord.latitude,
-            longitude: coord.longitude
+            latitude: itemData.coordinate.latitude,
+            longitude: itemData.coordinate.longitude
         )
     }
 }

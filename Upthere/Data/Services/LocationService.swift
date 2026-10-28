@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-import MapKit
+@preconcurrency import MapKit
 import Observation
 
 enum LocationResolutionStatus: Equatable, Sendable {
@@ -80,10 +80,16 @@ final class SystemGeocoder: GeocoderProtocol {
     func reverseGeocode(location: CLLocation) async throws -> String? {
         guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
         let mapItems = try await request.mapItems
-        if let first = mapItems.first {
-            return first.addressRepresentations?.cityName ?? first.name
+        // Convert MKReverseGeocodingRequest results to a plain Sendable struct inside callback before returning
+        let firstItem: MapItemData? = mapItems.first.map { item in
+            MapItemData(
+                name: item.name,
+                locality: item.addressRepresentations?.cityName ?? item.placemark.locality,
+                region: item.addressRepresentations?.regionName ?? item.placemark.administrativeArea,
+                coordinate: item.location.coordinate
+            )
         }
-        return nil
+        return firstItem?.locality ?? firstItem?.name
     }
 }
 

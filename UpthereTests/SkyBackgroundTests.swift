@@ -1,6 +1,7 @@
 import Testing
 import SwiftUI
 import CoreGraphics
+import os
 @testable import Upthere
 
 // MARK: - Composited Scene Measurement & Renderer
@@ -460,9 +461,10 @@ struct SkyBackgroundTests {
             )
         }
 
-        print("=== COMPOSITED CONTRAST RATIO REPORT ===")
+        let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "SkyBackgroundTests")
+        logger.info("=== COMPOSITED CONTRAST RATIO REPORT ===")
         for line in summaryOutputs {
-            print(line)
+            logger.info("\(line, privacy: .public)")
         }
     }
 }

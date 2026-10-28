@@ -210,6 +210,15 @@ struct SettingsTests {
         #expect(manager.saveErrorMessage != nil)
     }
 
+    @Test("When Application Support is unavailable, FileLocationStore does not fall back to tmp and surfaces error banner")
+    func applicationSupportUnavailableShowsErrorBanner() {
+        let store = FileLocationStore(defaults: .standard, directoryProvider: { nil })
+        let manager = SavedLocationsManager(store: store)
+
+        #expect(manager.saveErrorMessage != nil)
+        #expect(manager.saveErrorMessage?.contains("Storage is unavailable") == true)
+    }
+
 
     // MARK: - App Group Settings Migration
     @Test("App Group migration copies settings once and does not overwrite later changes")

@@ -91,7 +91,6 @@ final class MockWeatherRepository: WeatherRepository, @unchecked Sendable {
         if let mock = mock {
             return mock
         }
-        let baseWeather = base
         return Weather(
             cityName: cityName,
             locationSubtitle: locationSubtitle.isEmpty ? base.locationSubtitle : locationSubtitle,

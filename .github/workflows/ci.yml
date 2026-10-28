@@ -17,7 +17,7 @@ jobs:
   lint:
     name: SwiftLint
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository
@@ -38,7 +38,7 @@ jobs:
   unit-tests:
     name: Unit tests
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository
@@ -54,47 +54,34 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-deriveddata-
 
-      - name: Select Xcode 26
-        run: |
-          FOUND_XCODE=""
-          for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
-            if [ -d "$app" ]; then
-              FOUND_XCODE="$app"
-              break
-            fi
-          done
+      - name: Set up Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0.1'
 
-          if [ -z "$FOUND_XCODE" ] && [ -d "/Applications/Xcode.app" ]; then
-            VERSION=$(defaults read /Applications/Xcode.app/Contents/Info.plist CFBundleShortVersionString 2>/dev/null || echo "")
-            if [[ "$VERSION" =~ ^26\. ]]; then
-              FOUND_XCODE="/Applications/Xcode.app"
-            fi
-          fi
-
-          if [ -z "$FOUND_XCODE" ]; then
-            echo "::error::No Xcode 26 installation found in /Applications (looked for Xcode_26*.app and Xcode-26*.app)."
-            exit 1
-          fi
-
-          echo "Selecting Xcode 26 at $FOUND_XCODE"
-          sudo xcode-select -s "$FOUND_XCODE/Contents/Developer"
-          xcodebuild -version
-
-      - name: Find available iPhone simulator
+      - name: Select iOS 26 simulator
         id: select-simulator
         run: |
           xcrun simctl list runtimes
+          if ! xcrun simctl list runtimes | grep -q "iOS 26"; then
+            echo "::error::No iOS 26 simulator runtime found on this runner."
+            exit 1
+          fi
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c "
           import json,sys
-          d=json.load(sys.stdin)['devices']
+          d=json.load(sys.stdin).get('devices', {})
           for rt,devs in sorted(d.items(), reverse=True):
-              if 'iOS-26' in rt:
+              if 'iOS-26' in rt or 'iOS 26' in rt:
                   for x in devs:
-                      if 'iPhone' in x['name'] and x['isAvailable']:
-                          print(x['udid']); sys.exit()
+                      if x.get('isAvailable', False):
+                          print(x['udid']); sys.exit(0)
+          sys.exit(1)
           ")
-          [ -z "$DEVICE_ID" ] && { echo '::error::No iOS 26 iPhone simulator'; exit 1; }
-          echo "Selected iPhone simulator UDID: $DEVICE_ID"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available simulator found for iOS 26 runtime."
+            exit 1
+          fi
+          echo "Selected simulator UDID: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
 
@@ -120,7 +107,7 @@ jobs:
   build-release:
     name: Build Release
     if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository
@@ -136,31 +123,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-release-
 
-      - name: Select Xcode 26
-        run: |
-          FOUND_XCODE=""
-          for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
-            if [ -d "$app" ]; then
-              FOUND_XCODE="$app"
-              break
-            fi
-          done
-
-          if [ -z "$FOUND_XCODE" ] && [ -d "/Applications/Xcode.app" ]; then
-            VERSION=$(defaults read /Applications/Xcode.app/Contents/Info.plist CFBundleShortVersionString 2>/dev/null || echo "")
-            if [[ "$VERSION" =~ ^26\. ]]; then
-              FOUND_XCODE="/Applications/Xcode.app"
-            fi
-          fi
-
-          if [ -z "$FOUND_XCODE" ]; then
-            echo "::error::No Xcode 26 installation found in /Applications (looked for Xcode_26*.app and Xcode-26*.app)."
-            exit 1
-          fi
-
-          echo "Selecting Xcode 26 at $FOUND_XCODE"
-          sudo xcode-select -s "$FOUND_XCODE/Contents/Developer"
-          xcodebuild -version
+      - name: Set up Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0.1'
 
       - name: Build Release App
         run: |
@@ -183,7 +149,7 @@ jobs:
   ui-tests:
     name: UI tests
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository
@@ -199,47 +165,34 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-deriveddata-
 
-      - name: Select Xcode 26
-        run: |
-          FOUND_XCODE=""
-          for app in /Applications/Xcode_26*.app /Applications/Xcode-26*.app; do
-            if [ -d "$app" ]; then
-              FOUND_XCODE="$app"
-              break
-            fi
-          done
+      - name: Set up Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0.1'
 
-          if [ -z "$FOUND_XCODE" ] && [ -d "/Applications/Xcode.app" ]; then
-            VERSION=$(defaults read /Applications/Xcode.app/Contents/Info.plist CFBundleShortVersionString 2>/dev/null || echo "")
-            if [[ "$VERSION" =~ ^26\. ]]; then
-              FOUND_XCODE="/Applications/Xcode.app"
-            fi
-          fi
-
-          if [ -z "$FOUND_XCODE" ]; then
-            echo "::error::No Xcode 26 installation found in /Applications (looked for Xcode_26*.app and Xcode-26*.app)."
-            exit 1
-          fi
-
-          echo "Selecting Xcode 26 at $FOUND_XCODE"
-          sudo xcode-select -s "$FOUND_XCODE/Contents/Developer"
-          xcodebuild -version
-
-      - name: Find available iPhone simulator
+      - name: Select iOS 26 simulator
         id: select-simulator
         run: |
           xcrun simctl list runtimes
+          if ! xcrun simctl list runtimes | grep -q "iOS 26"; then
+            echo "::error::No iOS 26 simulator runtime found on this runner."
+            exit 1
+          fi
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c "
           import json,sys
-          d=json.load(sys.stdin)['devices']
+          d=json.load(sys.stdin).get('devices', {})
           for rt,devs in sorted(d.items(), reverse=True):
-              if 'iOS-26' in rt:
+              if 'iOS-26' in rt or 'iOS 26' in rt:
                   for x in devs:
-                      if 'iPhone' in x['name'] and x['isAvailable']:
-                          print(x['udid']); sys.exit()
+                      if x.get('isAvailable', False):
+                          print(x['udid']); sys.exit(0)
+          sys.exit(1)
           ")
-          [ -z "$DEVICE_ID" ] && { echo '::error::No iOS 26 iPhone simulator'; exit 1; }
-          echo "Selected iPhone simulator UDID: $DEVICE_ID"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available simulator found for iOS 26 runtime."
+            exit 1
+          fi
+          echo "Selected simulator UDID: $DEVICE_ID"
           xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
           echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
 

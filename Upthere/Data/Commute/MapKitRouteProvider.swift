@@ -1,6 +1,6 @@
 import Foundation
 import CoreLocation
-import MapKit
+@preconcurrency import MapKit
 
 /// Production implementation of RouteProviding backed by MapKit's MKDirections.
 public final class MapKitRouteProvider: RouteProviding, @unchecked Sendable {

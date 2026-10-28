@@ -357,7 +357,18 @@ struct UpthereWidgetEntryView: View {
                         // Apple Weather Attribution
                         HStack {
                             Spacer()
-                            Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                            if let legalURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                                Link(destination: legalURL) {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "apple.logo")
+                                            .font(.caption2)
+                                        Text("Weather")
+                                            .font(.caption2.weight(.medium))
+                                    }
+                                    .foregroundStyle(AppTheme.textTertiary)
+                                }
+                            } else {
+                                // Documented fallback: render non-interactive attribution text if URL fails to parse
                                 HStack(spacing: 3) {
                                     Image(systemName: "apple.logo")
                                         .font(.caption2)
@@ -505,7 +516,20 @@ struct UpthereWidgetEntryView: View {
                     // Apple Weather Attribution
                     HStack {
                         Spacer()
-                        Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                        if let legalURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                            Link(destination: legalURL) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "apple.logo")
+                                        .font(.caption2)
+                                    Text("Weather")
+                                        .font(.caption2.weight(.medium))
+                                    Text("• Data Sources")
+                                        .font(.caption2)
+                                }
+                                .foregroundStyle(AppTheme.textTertiary)
+                            }
+                        } else {
+                            // Documented fallback: render non-interactive attribution text if URL fails to parse
                             HStack(spacing: 4) {
                                 Image(systemName: "apple.logo")
                                     .font(.caption2)

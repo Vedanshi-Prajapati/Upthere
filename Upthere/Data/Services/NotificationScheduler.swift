@@ -280,7 +280,7 @@ final class FakeNotificationScheduler: NotificationSchedulerProtocol, @unchecked
     }
 
     func markAlertDelivered(id: String) {
-        lock.withLock {
+        _ = lock.withLock {
             _deliveredAlertIds.insert(id)
         }
     }
