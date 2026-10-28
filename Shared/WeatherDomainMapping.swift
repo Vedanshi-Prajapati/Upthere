@@ -1020,6 +1020,8 @@ public struct WeatherWidgetTimelineProvider: TimelineProvider {
             let entries = makeHourlyEntries(from: newSnapshot)
             return Timeline(entries: entries, policy: .after(nextUpdate))
         } catch {
+            let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "WeatherWidgetTimeline")
+            logger.error("Failed to fetch weather for widget timeline: \(error.localizedDescription)")
             // If the fetch fails, fall back to the saved snapshot and show "Updated h:mm a"
             let fallbackEntry = WeatherWidgetEntry(from: savedSnapshot, isStale: true)
             return Timeline(entries: [fallbackEntry], policy: .after(nextUpdate))

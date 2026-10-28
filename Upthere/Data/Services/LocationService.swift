@@ -2,6 +2,7 @@ import Foundation
 import CoreLocation
 @preconcurrency import MapKit
 import Observation
+import os
 
 enum LocationResolutionStatus: Equatable, Sendable {
     case liveGPS(CLLocation)
@@ -391,7 +392,8 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
                     do {
                         return try await geocoder.reverseGeocode(location: location)
                     } catch {
-                        // Geocoder failed or timed out
+                        let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "LocationService")
+                        logger.error("Reverse geocoding failed: \(error.localizedDescription)")
                     }
                     return nil
                 }

@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import os
 
 /// Resolved location details from an optional LocationEntity parameter.
 struct IntentResolvedLocation: Equatable, Sendable {
@@ -84,12 +85,16 @@ final class IntentWeatherLoader: IntentWeatherLoading {
                 locationSubtitle: resolved.locationSubtitle
             )
         } catch {
+            let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "IntentWeatherLoader")
+            logger.error("Failed to fetch weather for intent: \(error.localizedDescription)")
             let coordKey = cache.cacheKey(
                 for: resolved.cityName,
                 coordinate: (lat: resolved.coordinate.latitude, lon: resolved.coordinate.longitude)
             )
             let cityKey = cache.cacheKey(for: resolved.cityName)
-            if let cached = cache.load(key: coordKey, allowExpired: true)?.weather ?? cache.load(key: cityKey, allowExpired: true)?.weather {
+            let cachedCoord = cache.load(key: coordKey, allowExpired: true)?.weather
+            let cachedCity = cache.load(key: cityKey, allowExpired: true)?.weather
+            if let cached = cachedCoord ?? cachedCity {
                 weather = cached
             } else {
                 throw WeatherUnavailableError()

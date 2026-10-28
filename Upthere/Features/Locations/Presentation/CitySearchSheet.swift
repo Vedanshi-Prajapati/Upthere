@@ -1,8 +1,10 @@
+import os
 import SwiftUI
 
 /// City search sheet shown when the user taps "+" on the Locations screen.
 /// Uses MapKit city searching via MKLocalSearchCompleter and MKLocalSearch.
 struct CitySearchSheet: View {
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "CitySearch")
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: CitySearchViewModel
     @State private var searchText = ""
@@ -212,6 +214,7 @@ struct CitySearchSheet: View {
                 onCitySelected(saved)
                 dismiss()
             } catch {
+                logger.error("Failed to resolve coordinates for '\(result.title)': \(error.localizedDescription)")
                 // If coordinate resolution fails, fallback to title/subtitle without coordinates
                 let fallback = SavedLocation(
                     cityName: result.title,

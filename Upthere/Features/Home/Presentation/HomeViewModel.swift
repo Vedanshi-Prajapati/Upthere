@@ -1,10 +1,12 @@
 import Foundation
 import CoreLocation
 import Observation
+import os
 
 @Observable
 @MainActor
 final class HomeViewModel {
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "HomeViewModel")
     enum BannerType: Equatable {
         case cached(lastUpdated: String)
         case offline(lastUpdated: String)
@@ -174,6 +176,7 @@ final class HomeViewModel {
                     do {
                         userLoc = try await locationService.requestCurrentLocation(force: force)
                     } catch {
+                        logger.error("Failed to obtain current location for refresh: \(error.localizedDescription)")
                         userLoc = nil
                     }
                 } else {

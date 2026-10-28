@@ -118,6 +118,8 @@ final class NotificationScheduler: NotificationSchedulerProtocol, @unchecked Sen
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
             return granted
         } catch {
+            let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "Notifications")
+            logger.error("Failed to request notification authorization: \(error.localizedDescription)")
             return false
         }
     }

@@ -1,3 +1,4 @@
+import os
 import SwiftUI
 import WeatherKit
 
@@ -9,6 +10,7 @@ final class WeatherAttributionService {
 
     private(set) var attribution: WeatherAttribution?
     private var isFetching = false
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "WeatherAttribution")
 
     func loadAttribution() async {
         guard attribution == nil, !isFetching else { return }
@@ -18,6 +20,7 @@ final class WeatherAttributionService {
         do {
             self.attribution = try await WeatherService.shared.attribution
         } catch {
+            logger.error("Failed to load WeatherKit attribution: \(error.localizedDescription)")
             // Keep nil to trigger text fallback
         }
     }

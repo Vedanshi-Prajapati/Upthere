@@ -1,7 +1,9 @@
+import os
 import SwiftUI
 import CoreLocation
 
 struct LocationsView: View {
+    private let logger = Logger(subsystem: "com.vedanshi.upthereapp", category: "LocationsView")
     @Environment(\.weatherFormatter) private var weatherFormatter
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var searchText = ""
@@ -357,6 +359,7 @@ struct LocationsView: View {
             }
             return (weather.temperature, weather.weatherSymbolName)
         } catch {
+            logger.error("Failed to fetch weather summary for \(location.cityName): \(error.localizedDescription)")
             return nil
         }
     }
