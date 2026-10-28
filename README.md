@@ -13,9 +13,9 @@ An iOS weather application built with SwiftUI, Apple WeatherKit, and determinist
 
 ### Interface & Adaptability
 
-| Light Mode | Dark Mode | Dynamic Type (Small) | Dynamic Type (Large) | WidgetKit |
-| :---: | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/home-light.png" width="180" alt="Light Mode"> | <img src="docs/screenshots/home-dark.png" width="180" alt="Dark Mode"> | <img src="docs/screenshots/home-small.png" width="180" alt="Dynamic Type - Small Text"> | <img src="docs/screenshots/home-large.png" width="180" alt="Dynamic Type - Large Text"> | <img src="docs/screenshots/widget.png" width="180" alt="WidgetKit Medium Widget"> |
+| Dark Mode (Default) | Dynamic Type (Small) | Dynamic Type (Large) | WidgetKit |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/home-dark.png" width="180" alt="Dark Mode"> | <img src="docs/screenshots/home-small.png" width="180" alt="Dynamic Type - Small Text"> | <img src="docs/screenshots/home-large.png" width="180" alt="Dynamic Type - Large Text"> | <img src="docs/screenshots/widget.png" width="180" alt="WidgetKit Medium Widget"> |
 
 ---
 
@@ -25,7 +25,7 @@ Most weather applications present raw meteorological metrics—barometric pressu
 
 > [!NOTE]
 > **iOS 26+ Deployment Target as a Deliberate Choice**
-> UpThere exclusively targets iOS 26.0+ as a deliberate design and architectural decision. By eschewing backward-compatibility branching and runtime OS version checks (`if #available(...)`), the codebase fully leverages modern Swift 6 concurrency (`SWIFT_STRICT_CONCURRENCY = complete`), native `@Observable` state observation, modern SwiftUI Liquid Glass materials, standard MapKit address search representations, WidgetKit interactive timeline extensions, and App Intents without legacy compatibility shims.
+> UpThere exclusively targets iOS 26.0+ as a deliberate design and architectural decision. By eschewing backward-compatibility branching and runtime OS version checks (`if #available(...)`), the codebase fully leverages modern Swift 6 concurrency (`SWIFT_STRICT_CONCURRENCY = complete`), native `@Observable` state observation, modern SwiftUI materials, standard MapKit address search representations, WidgetKit interactive timeline extensions, and App Intents without legacy compatibility shims.
 
 ---
 
@@ -112,7 +112,7 @@ All **120 tests** across **16 test suites** pass deterministically using Apple's
 - **Atmospheric Sky Engine**: Multi-layer background canvas reflecting real-time weather conditions, ambient lighting, and diurnal shifts with restrained particle motion for rain, snow, fog, and storms.
 - **Animated Vector Illustrations**: Custom SwiftUI path-based vector illustrations (`WeatherIllustrationView`) providing fluid visual feedback without static raster assets.
 - **Interactive Temperature Scrubbing**: Canvas-rendered hourly temperature curve (`TemperatureLineChart`) with monotonic cubic smoothing and touch scrubbing to inspect discrete hourly data points.
-- **Liquid Glass & Materials**: Cohesive visual hierarchy utilizing SwiftUI's native `.glassEffect` styling on navigation bars, controls, and tab bars alongside system materials on content cards.
+- **Translucent Materials & Layers**: Cohesive visual hierarchy utilizing SwiftUI's `.ultraThinMaterial` on content cards, navigation elements, and tab bars alongside composited atmospheric backgrounds.
 
 ### 2. Forecast Intelligence (`InsightEngine`)
 - **Precipitation Windows**: Identifies rain onset, cessation, peak probability hour, and accumulated volume from hourly data slices.
