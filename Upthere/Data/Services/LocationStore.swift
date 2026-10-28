@@ -22,9 +22,35 @@ protocol LocationStore: AnyObject, Sendable {
 /// Lock-protected store ensuring safe concurrent file and UserDefaults access.
 /// Invariant: All disk reads, writes, and migration operations are synchronized via `lock`.
 final class FileLocationStore: LocationStore, @unchecked Sendable {
-    private struct StoredPayload: Codable {
+    struct StoredPayload: Codable {
+        var schemaVersion: Int
         var locations: [SavedLocation]
         var selectedLocationId: UUID?
+
+        enum CodingKeys: String, CodingKey {
+            case schemaVersion
+            case locations
+            case selectedLocationId
+        }
+
+        init(schemaVersion: Int = 1, locations: [SavedLocation], selectedLocationId: UUID?) {
+            self.schemaVersion = schemaVersion
+            self.locations = locations
+            self.selectedLocationId = selectedLocationId
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+            self.locations = try container.decode([SavedLocation].self, forKey: .locations)
+            self.selectedLocationId = try container.decodeIfPresent(UUID.self, forKey: .selectedLocationId)
+        }
+    }
+
+    private enum PayloadReadResult {
+        case fileMissing
+        case corrupt
+        case success(StoredPayload)
     }
 
     private let fileURL: URL?
@@ -98,20 +124,23 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         }
 
         // Check UserDefaults for existing data
-        if let data = defaults.data(forKey: locationsKey),
-           let saved = try? JSONDecoder().decode([SavedLocation].self, from: data),
-           !saved.isEmpty {
+        guard let data = defaults.data(forKey: locationsKey) else { return }
+        do {
+            let saved = try JSONDecoder().decode([SavedLocation].self, from: data)
+            guard !saved.isEmpty else { return }
             var selectedId: UUID? = nil
             if let idString = defaults.string(forKey: selectedIdKey) {
                 selectedId = UUID(uuidString: idString)
             }
-            let payload = StoredPayload(locations: saved, selectedLocationId: selectedId)
+            let payload = StoredPayload(schemaVersion: 1, locations: saved, selectedLocationId: selectedId)
             do {
                 try writePayload(payload, to: fileURL)
                 defaults.set(true, forKey: migrationKey)
             } catch {
                 logger.error("Failed to write migrated location payload to \(fileURL.path): \(error.localizedDescription)")
             }
+        } catch {
+            logger.error("Failed to decode legacy locations for migration: \(error.localizedDescription)")
         }
     }
 
@@ -123,10 +152,12 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
             throw LocationStoreError.storageUnavailable("Storage is unavailable. Application Support directory could not be accessed.")
         }
 
-        guard let payload = readPayload(from: fileURL) else {
+        switch readPayload(from: fileURL) {
+        case .success(let payload):
+            return payload.locations
+        case .fileMissing, .corrupt:
             return []
         }
-        return payload.locations
     }
 
     func saveLocations(_ locations: [SavedLocation]) throws {
@@ -137,7 +168,13 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
             throw LocationStoreError.storageUnavailable("Storage is unavailable. Application Support directory could not be accessed.")
         }
 
-        var payload = readPayload(from: fileURL) ?? StoredPayload(locations: [], selectedLocationId: nil)
+        var payload: StoredPayload
+        switch readPayload(from: fileURL) {
+        case .success(let existing):
+            payload = existing
+        case .fileMissing, .corrupt:
+            payload = StoredPayload(schemaVersion: 1, locations: [], selectedLocationId: nil)
+        }
         payload.locations = locations
         try writePayload(payload, to: fileURL)
     }
@@ -147,7 +184,12 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         defer { lock.unlock() }
 
         guard let fileURL = fileURL else { return nil }
-        return readPayload(from: fileURL)?.selectedLocationId
+        switch readPayload(from: fileURL) {
+        case .success(let payload):
+            return payload.selectedLocationId
+        case .fileMissing, .corrupt:
+            return nil
+        }
     }
 
     func saveSelectedLocationId(_ id: UUID?) {
@@ -155,7 +197,13 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
         defer { lock.unlock() }
 
         guard let fileURL = fileURL else { return }
-        var payload = readPayload(from: fileURL) ?? StoredPayload(locations: [], selectedLocationId: nil)
+        var payload: StoredPayload
+        switch readPayload(from: fileURL) {
+        case .success(let existing):
+            payload = existing
+        case .fileMissing, .corrupt:
+            payload = StoredPayload(schemaVersion: 1, locations: [], selectedLocationId: nil)
+        }
         payload.selectedLocationId = id
         do {
             try writePayload(payload, to: fileURL)
@@ -166,17 +214,39 @@ final class FileLocationStore: LocationStore, @unchecked Sendable {
 
     // MARK: - Internal File I/O
 
-    private func readPayload(from url: URL) -> StoredPayload? {
+    private func readPayload(from url: URL) -> PayloadReadResult {
         guard FileManager.default.fileExists(atPath: url.path) else {
-            // Genuinely optional: file does not exist yet before first save
-            return nil
+            return .fileMissing
         }
         do {
             let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode(StoredPayload.self, from: data)
+            let payload = try JSONDecoder().decode(StoredPayload.self, from: data)
+            return .success(payload)
         } catch {
             logger.error("Failed to read or decode location payload from \(url.path): \(error.localizedDescription)")
-            return nil
+            preserveCorruptFile(at: url)
+            return .corrupt
+        }
+    }
+
+    private func preserveCorruptFile(at url: URL) {
+        let parentDir = url.deletingLastPathComponent()
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let corruptFilename = "saved_locations.corrupt-\(timestamp).json"
+        let destinationURL = parentDir.appendingPathComponent(corruptFilename)
+
+        do {
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try FileManager.default.removeItem(at: destinationURL)
+            }
+            try FileManager.default.moveItem(at: url, to: destinationURL)
+            logger.error(
+                "Moved corrupt locations file from \(url.path) to \(destinationURL.path)"
+            )
+        } catch {
+            logger.error(
+                "Failed to preserve corrupt locations file from \(url.path) to \(destinationURL.path): \(error.localizedDescription)"
+            )
         }
     }
 
