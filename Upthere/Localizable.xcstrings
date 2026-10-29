@@ -1,1789 +1,1799 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "": {},
-    "(%@)": {},
-    "[ALERT]": {},
-    "%@": {},
-    "%@ chance": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ chance"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "(%@)" : {
+
+    },
+    "[ALERT]" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ chance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ chance"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ संभावना"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ संभावना"
           }
         }
       }
     },
-    "%@ forecast": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ का पूर्वानुमान"
+    "%@ forecast" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ का पूर्वानुमान"
           }
         }
       }
     },
-    "%@ Weather Alert": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ मौसम चेतावनी"
+    "%@ Weather Alert" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ मौसम चेतावनी"
           }
         }
       }
     },
-    "%@, %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@, %2$@"
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
           }
         }
       }
     },
-    "%@, %@%@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@, %2$@%3$@"
+    "%@, %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@%3$@"
           }
         }
       }
     },
-    "%@: %@ chance of rain": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@: %2$@ chance of rain"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@: बारिश की %@ संभावना"
-          }
-        }
-      }
-    },
-    "%@%@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@%2$@"
-          }
-        }
-      }
-    },
-    "%lld": {},
-    "%lld km/h": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld किमी/घंटा"
-          }
-        }
-      }
-    },
-    "•": {},
-    "Add city": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add city"
+    "%@: %@ chance of rain" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ chance of rain"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर जोड़ें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: बारिश की %@ संभावना"
           }
         }
       }
     },
-    "Add City": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add City"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर जोड़ें"
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
           }
         }
       }
     },
-    "Add your first city": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add your first city"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अपना पहला शहर जोड़ें"
+    "%lld" : {
+
+    },
+    "%lld km/h" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld किमी/घंटा"
           }
         }
       }
     },
-    "Allow location": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान की अनुमति दें"
-          }
-        }
-      }
+    "•" : {
+
     },
-    "App version": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ऐप संस्करण"
-          }
-        }
-      }
-    },
-    "Apple Weather": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple मौसम"
-          }
-        }
-      }
-    },
-    "Best outdoor activity timeline": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सर्वोत्तम बाहरी गतिविधि समयरेखा"
-          }
-        }
-      }
-    },
-    "Check current weather conditions, temperature, and rain chances in UpThere.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere में वर्तमान मौसम की स्थिति, तापमान और बारिश की संभावना देखें।"
-          }
-        }
-      }
-    },
-    "Check Weather": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम देखें"
-          }
-        }
-      }
-    },
-    "Check weather in ${location}": {},
-    "City or location to check weather for": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम देखने के लिए शहर या स्थान"
-          }
-        }
-      }
-    },
-    "City or location to track rain for": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश ट्रैक करने के लिए शहर या स्थान"
-          }
-        }
-      }
-    },
-    "Clear search text": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "खोज टेक्स्ट साफ़ करें"
-          }
-        }
-      }
-    },
-    "Close city search": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर खोज बंद करें"
-          }
-        }
-      }
-    },
-    "Cloud cover forecast mini chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बादल आवरण पूर्वानुमान मिनी चार्ट"
-          }
-        }
-      }
-    },
-    "Could not refresh: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not refresh: %@"
+    "Add city" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add city"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "रिफ्रेश नहीं हो सका: %@"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर जोड़ें"
           }
         }
       }
     },
-    "Couldn't get your location. Using Ghaziabad. Retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't get your location. Using Ghaziabad. Retry"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आपका स्थान प्राप्त नहीं हो सका। गाज़ियाबाद का उपयोग किया जा रहा है। पुनः प्रयास करें"
-          }
-        }
-      }
-    },
-    "Current & Gusts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Current & Gusts"
+    "Add City" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add City"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्तमान और झोंके"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर जोड़ें"
           }
         }
       }
     },
-    "Current location": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Current location"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्तमान स्थान"
-          }
-        }
-      }
-    },
-    "Daily chance of rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "दैनिक बारिश की संभावना"
-          }
-        }
-      }
-    },
-    "Data Sources": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "डेटा स्रोत"
-          }
-        }
-      }
-    },
-    "Drag across hours": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "घंटों में देखने के लिए ड्रैग करें"
-          }
-        }
-      }
-    },
-    "Drag across the chart to see each hour.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "प्रत्येक घंटे को देखने के लिए चार्ट पर ड्रैग करें।"
-          }
-        }
-      }
-    },
-    "Enjoy the dry weather.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enjoy the dry weather."
+    "Add your first city" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add your first city"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सूखे मौसम का आनंद लें।"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपना पहला शहर जोड़ें"
           }
         }
       }
     },
-    "Example insight": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "उदाहरण इनसाइट"
+    "Allow location" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान की अनुमति दें"
           }
         }
       }
     },
-    "Expected temperature swing of %lld° between %@ and %@.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expected temperature swing of %lld° between %@ and %@."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%2$@ और %3$@ के बीच %1$lld° के तापमान परिवर्तन की उम्मीद।"
+    "App version" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप संस्करण"
           }
         }
       }
     },
-    "Feels like %@ · Today H/L %@ %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Feels like %1$@ · Today H/L %2$@ %3$@"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "महसूस होता है %@ · आज उ/नी %@ %@"
+    "Apple Weather" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple मौसम"
           }
         }
       }
     },
-    "Forecast": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forecast"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "पूर्वानुमान"
+    "Best outdoor activity timeline" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सर्वोत्तम बाहरी गतिविधि समयरेखा"
           }
         }
       }
     },
-    "Get hyperlocal conditions and predictive InsightEngine timing for your current location.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अपने वर्तमान स्थान के लिए सटीक स्थानीय स्थिति और पूर्वानुमानित InsightEngine समय प्राप्त करें।"
+    "Check current weather conditions, temperature, and rain chances in UpThere." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere में वर्तमान मौसम की स्थिति, तापमान और बारिश की संभावना देखें।"
           }
         }
       }
     },
-    "H %@": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "उ %@"
+    "Check Weather" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम देखें"
           }
         }
       }
     },
-    "H %@  L %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "H %1$@  L %2$@"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "उ %@  नी %@"
+    "Check weather in ${location}" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${location} में मौसम देखें"
           }
         }
       }
     },
-    "Home": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Home"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "होम"
+    "City or location to check weather for" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम देखने के लिए शहर या स्थान"
           }
         }
       }
     },
-    "Hourly chance of rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "प्रति घंटा बारिश की संभावना"
+    "City or location to track rain for" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश ट्रैक करने के लिए शहर या स्थान"
           }
         }
       }
     },
-    "Hourly forecast unavailable": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "प्रति घंटा पूर्वानुमान अनुपलब्ध"
+    "Clear search text" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खोज टेक्स्ट साफ़ करें"
           }
         }
       }
     },
-    "Hourly precipitation timeline": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "प्रति घंटा वर्षा समयरेखा"
+    "Close city search" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर खोज बंद करें"
           }
         }
       }
     },
-    "How will temperature change?": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "तापमान कैसे बदलेगा?"
+    "Cloud cover forecast mini chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बादल आवरण पूर्वानुमान मिनी चार्ट"
           }
         }
       }
     },
-    "I couldn't get the weather right now. Open UpThere and try again.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अभी मौसम की जानकारी नहीं मिल सकी। UpThere खोलें और पुनः प्रयास करें।"
-          }
-        }
-      }
-    },
-    "Insights": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Insights"
+    "Could not refresh: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not refresh: %@"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "इनसाइट्स"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिफ्रेश नहीं हो सका: %@"
           }
         }
       }
     },
-    "Insights are UpThere's interpretation of forecast data and may change as forecasts update. For official warnings, refer to your national weather service.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Insights are UpThere's interpretation of forecast data and may change as forecasts update. For official warnings, refer to your national weather service."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "इनसाइट्स पूर्वानुमान डेटा की व्याख्या हैं और अपडेट के साथ बदल सकती हैं। आधिकारिक चेतावनियों के लिए अपनी राष्ट्रीय मौसम सेवा देखें।"
-          }
-        }
-      }
-    },
-    "Issued by %@ · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Issued by %1$@ · %2$@"
+    "Couldn't get your location. Using Ghaziabad. Retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't get your location. Using Ghaziabad. Retry"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ द्वारा जारी · %@"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका स्थान प्राप्त नहीं हो सका। गाज़ियाबाद का उपयोग किया जा रहा है। पुनः प्रयास करें"
           }
         }
       }
     },
-    "Key": {
-      "extractionState": "manual",
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कुंजी"
-          }
-        }
-      }
-    },
-    "Location": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान"
-          }
-        }
-      }
-    },
-    "Location access is off. Using Ghaziabad. Open Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location access is off. Using Ghaziabad. Open Settings"
+    "Current & Gusts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current & Gusts"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान पहुँच बंद है। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्तमान और झोंके"
           }
         }
       }
     },
-    "Location access is restricted. Using Ghaziabad. Open Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location access is restricted. Using Ghaziabad. Open Settings"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान पहुँच प्रतिबंधित है। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
-          }
-        }
-      }
-    },
-    "Location is unavailable. Using Ghaziabad. Retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location is unavailable. Using Ghaziabad. Retry"
+    "Current location" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current location"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान अनुपलब्ध है। गाज़ियाबाद का उपयोग किया जा रहा है। पुनः प्रयास करें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्तमान स्थान"
           }
         }
       }
     },
-    "Location permissions": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location permissions"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान अनुमतियां"
+    "Daily chance of rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दैनिक बारिश की संभावना"
           }
         }
       }
     },
-    "Location services are disabled. Using Ghaziabad. Open Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location services are disabled. Using Ghaziabad. Open Settings"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान सेवाएँ अक्षम हैं। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
+    "Data Sources" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेटा स्रोत"
           }
         }
       }
     },
-    "Location unavailable": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान अनुपलब्ध"
+    "Drag across hours" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "घंटों में देखने के लिए ड्रैग करें"
           }
         }
       }
     },
-    "Locations": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Locations"
+    "Drag across the chart to see each hour." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रत्येक घंटे को देखने के लिए चार्ट पर ड्रैग करें।"
+          }
+        }
+      }
+    },
+    "Enjoy the dry weather." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enjoy the dry weather."
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सूखे मौसम का आनंद लें।"
           }
         }
       }
     },
-    "Next 24 h range": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next 24 h range"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अगले 24 घंटे की सीमा"
+    "Example insight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उदाहरण इनसाइट"
           }
         }
       }
     },
-    "No active weather alerts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No active weather alerts"
+    "Expected temperature swing of %lld° between %@ and %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expected temperature swing of %lld° between %@ and %@."
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कोई सक्रिय मौसम चेतावनी नहीं"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ और %3$@ के बीच %1$lld° के तापमान परिवर्तन की उम्मीद।"
           }
         }
       }
     },
-    "No forecast data available": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कोई पूर्वानुमान डेटा उपलब्ध नहीं"
-          }
-        }
-      }
-    },
-    "No hourly forecast available": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कोई प्रति घंटा पूर्वानुमान उपलब्ध नहीं"
-          }
-        }
-      }
-    },
-    "No matching cities found": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कोई मेल खाता शहर नहीं मिला"
-          }
-        }
-      }
-    },
-    "No rain expected": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश की कोई संभावना नहीं"
-          }
-        }
-      }
-    },
-    "No rain expected in the next 24 hours": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अगले 24 घंटों में बारिश की कोई संभावना नहीं"
-          }
-        }
-      }
-    },
-    "No rain expected today": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No rain expected today"
+    "Feels like %@ · Today H/L %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Feels like %1$@ · Today H/L %2$@ %3$@"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आज बारिश की संभावना नहीं है"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "महसूस होता है %@ · आज उ/नी %@ %@"
           }
         }
       }
     },
-    "No severe weather warnings are currently in effect for this region.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No severe weather warnings are currently in effect for this region."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "इस क्षेत्र के लिए वर्तमान में कोई गंभीर मौसम चेतावनी नहीं है।"
-          }
-        }
-      }
-    },
-    "Notifications are off in iOS Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications are off in iOS Settings"
+    "Forecast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forecast"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iOS सेटिंग्स में सूचनाएं बंद हैं"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पूर्वानुमान"
           }
         }
       }
     },
-    "Now": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Now"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अब"
+    "Get hyperlocal conditions and predictive InsightEngine timing for your current location." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने वर्तमान स्थान के लिए सटीक स्थानीय स्थिति और पूर्वानुमानित InsightEngine समय प्राप्त करें।"
           }
         }
       }
     },
-    "Now %@": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अब %@"
+    "H %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उ %@"
           }
         }
       }
     },
-    "Official alert · %@": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आधिकारिक चेतावनी · %@"
-          }
-        }
-      }
-    },
-    "Official source": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Official source"
+    "H %@  L %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "H %1$@  L %2$@"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आधिकारिक स्रोत"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उ %@  नी %@"
           }
         }
       }
     },
-    "Official weather alert": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Official weather alert"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आधिकारिक मौसम चेतावनी"
-          }
-        }
-      }
-    },
-    "Offline · Saved forecast from %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Offline · Saved forecast from %@"
+    "Home" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ऑफ़लाइन · %@ से सहेजा गया पूर्वानुमान"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "होम"
           }
         }
       }
     },
-    "Open Location": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान खोलें"
+    "Hourly chance of rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रति घंटा बारिश की संभावना"
           }
         }
       }
     },
-    "Open Location in UpThere": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere में स्थान खोलें"
+    "Hourly forecast unavailable" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रति घंटा पूर्वानुमान अनुपलब्ध"
           }
         }
       }
     },
-    "Open settings": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सेटिंग्स खोलें"
+    "Hourly precipitation timeline" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रति घंटा वर्षा समयरेखा"
           }
         }
       }
     },
-    "Open Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Settings"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सेटिंग्स खोलें"
+    "How will temperature change?" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तापमान कैसे बदलेगा?"
           }
         }
       }
     },
-    "Open UpThere directly to a specific city's forecast.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "किसी विशिष्ट शहर के पूर्वानुमान के लिए सीधे UpThere खोलें।"
+    "I couldn't get the weather right now. Open UpThere and try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी मौसम की जानकारी नहीं मिल सकी। UpThere खोलें और पुनः प्रयास करें।"
           }
         }
       }
     },
-    "Opens Insights tab": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "इनसाइट्स टैब खोलता है"
-          }
-        }
-      }
-    },
-    "Opens severe weather alert details": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "गंभीर मौसम चेतावनी विवरण खोलता है"
-          }
-        }
-      }
-    },
-    "Peak precipitation at 2:45 PM (%@ probability)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Peak precipitation at 2:45 PM (%@ probability)"
+    "Insights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "दोपहर 2:45 पर अधिकतम बारिश (%@ संभावना)"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इनसाइट्स"
           }
         }
       }
     },
-    "Peak: %@ (%@)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Peak: %1$@ (%2$@)"
+    "Insights are UpThere's interpretation of forecast data and may change as forecasts update. For official warnings, refer to your national weather service." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insights are UpThere's interpretation of forecast data and may change as forecasts update. For official warnings, refer to your national weather service."
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "चरम: %1$@ (%2$@)"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इनसाइट्स पूर्वानुमान डेटा की व्याख्या हैं और अपडेट के साथ बदल सकती हैं। आधिकारिक चेतावनियों के लिए अपनी राष्ट्रीय मौसम सेवा देखें।"
           }
         }
       }
     },
-    "Precipitation": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Precipitation"
+    "Issued by %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Issued by %1$@ · %2$@"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्षा"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ द्वारा जारी · %@"
           }
         }
       }
     },
-    "Precipitation forecast by day": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "दिन के अनुसार वर्षा का पूर्वानुमान"
+    "Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कुंजी"
           }
         }
       }
     },
-    "Precipitation probability": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्षा की संभावना"
+    "Location" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान"
           }
         }
       }
     },
-    "Precipitation probability chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्षा संभावना चार्ट"
-          }
-        }
-      }
-    },
-    "Precipitation probability mini chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्षा संभावना मिनी चार्ट"
-          }
-        }
-      }
-    },
-    "Precipitation unit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Precipitation unit"
+    "Location access is off. Using Ghaziabad. Open Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location access is off. Using Ghaziabad. Open Settings"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "वर्षा इकाई"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान पहुँच बंद है। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
           }
         }
       }
     },
-    "Rain alerts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rain alerts"
+    "Location access is restricted. Using Ghaziabad. Open Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location access is restricted. Using Ghaziabad. Open Settings"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश अलर्ट"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान पहुँच प्रतिबंधित है। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
           }
         }
       }
     },
-    "Rain Window · 2:15 PM – 3:30 PM": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश का समय · 2:15 PM – 3:30 PM"
-          }
-        }
-      }
-    },
-    "Read official attribution": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read official attribution"
+    "Location is unavailable. Using Ghaziabad. Retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location is unavailable. Using Ghaziabad. Retry"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आधिकारिक स्रोत पढ़ें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान अनुपलब्ध है। गाज़ियाबाद का उपयोग किया जा रहा है। पुनः प्रयास करें"
           }
         }
       }
     },
-    "Retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
+    "Location permissions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permissions"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "पुनः प्रयास करें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान अनुमतियां"
           }
         }
       }
     },
-    "Search and save cities to track their weather and quickly switch between them.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search and save cities to track their weather and quickly switch between them."
+    "Location services are disabled. Using Ghaziabad. Open Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location services are disabled. Using Ghaziabad. Open Settings"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम ट्रैक करने और उनके बीच आसानी से स्विच करने के लिए शहरों को खोजें और सहेजें।"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान सेवाएँ अक्षम हैं। गाज़ियाबाद का उपयोग किया जा रहा है। सेटिंग्स खोलें"
           }
         }
       }
     },
-    "Search by city name, state, or country.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर के नाम, राज्य या देश के अनुसार खोजें।"
+    "Location unavailable" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान अनुपलब्ध"
           }
         }
       }
     },
-    "Search for a city": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search for a city"
+    "Locations" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locations"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर खोजें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान"
           }
         }
       }
     },
-    "Search for a City": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर खोजें"
-          }
-        }
-      }
-    },
-    "Search for a city instead": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "इसके बजाय कोई शहर खोजें"
-          }
-        }
-      }
-    },
-    "Search for a location": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्थान खोजें"
-          }
-        }
-      }
-    },
-    "Search saved cities": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search saved cities"
+    "Next 24 h range" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next 24 h range"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सहेजे गए शहर खोजें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगले 24 घंटे की सीमा"
           }
         }
       }
     },
-    "Searching cities...": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर खोजे जा रहे हैं..."
-          }
-        }
-      }
-    },
-    "See weather where\nyou are": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अपने स्थान का\nमौसम देखें"
-          }
-        }
-      }
-    },
-    "Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+    "No active weather alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active weather alerts"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सेटिंग्स"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई सक्रिय मौसम चेतावनी नहीं"
           }
         }
       }
     },
-    "Severe weather alert: %@. %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Severe weather alert: %1$@. %2$@"
+    "No forecast data available" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई पूर्वानुमान डेटा उपलब्ध नहीं"
+          }
+        }
+      }
+    },
+    "No hourly forecast available" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई प्रति घंटा पूर्वानुमान उपलब्ध नहीं"
+          }
+        }
+      }
+    },
+    "No matching cities found" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई मेल खाता शहर नहीं मिला"
+          }
+        }
+      }
+    },
+    "No rain expected" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश की कोई संभावना नहीं"
+          }
+        }
+      }
+    },
+    "No rain expected in the next 24 hours" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगले 24 घंटों में बारिश की कोई संभावना नहीं"
+          }
+        }
+      }
+    },
+    "No rain expected today" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No rain expected today"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "गंभीर मौसम चेतावनी: %@. %@"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आज बारिश की संभावना नहीं है"
           }
         }
       }
     },
-    "Severe weather alerts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Severe weather alerts"
+    "No severe weather warnings are currently in effect for this region." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No severe weather warnings are currently in effect for this region."
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "गंभीर मौसम अलर्ट"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस क्षेत्र के लिए वर्तमान में कोई गंभीर मौसम चेतावनी नहीं है।"
           }
         }
       }
     },
-    "Severe weather alerts are now %@ in UpThere.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere में गंभीर मौसम चेतावनियाँ अब %@ हैं।"
-          }
-        }
-      }
-    },
-    "Show weather in Spotlight": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weather in Spotlight"
+    "Notifications are off in iOS Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off in iOS Settings"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "स्पॉटलाइट में मौसम दिखाएं"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS सेटिंग्स में सूचनाएं बंद हैं"
           }
         }
       }
     },
-    "Showing cached forecast from %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Showing cached forecast from %@"
+    "Now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ से कैश्ड पूर्वानुमान दिखाया जा रहा है"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अब"
           }
         }
       }
     },
-    "Start a Live Activity to track upcoming or current rain in UpThere.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere में आगामी या वर्तमान बारिश को ट्रैक करने के लिए लाइव गतिविधि प्रारंभ करें।"
+    "Now %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अब %@"
           }
         }
       }
     },
-    "Starts a Lock Screen and Dynamic Island live activity for upcoming rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आगामी बारिश के लिए लॉक स्क्रीन और डायनामिक आइलैंड लाइव गतिविधि प्रारंभ करता है"
+    "Official alert · %@" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आधिकारिक चेतावनी · %@"
           }
         }
       }
     },
-    "Tap any city to switch to its live weather.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap any city to switch to its live weather."
+    "Official source" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Official source"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "लाइव मौसम देखने के लिए किसी भी शहर पर टैप करें।"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आधिकारिक स्रोत"
           }
         }
       }
     },
-    "Target Location": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "लक्षित स्थान"
-          }
-        }
-      }
-    },
-    "Temperature forecast chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "तापमान पूर्वानुमान चार्ट"
-          }
-        }
-      }
-    },
-    "Temperature trend mini chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "तापमान रुझान मिनी चार्ट"
-          }
-        }
-      }
-    },
-    "Temperature unit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Temperature unit"
+    "Official weather alert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Official weather alert"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "तापमान इकाई"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आधिकारिक मौसम चेतावनी"
           }
         }
       }
     },
-    "Today": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आज"
-          }
-        }
-      }
-    },
-    "Toggle Severe Alerts": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "गंभीर चेतावनियाँ टॉगल करें"
-          }
-        }
-      }
-    },
-    "Toggle Severe Weather Alerts": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "गंभीर मौसम चेतावनियाँ टॉगल करें"
-          }
-        }
-      }
-    },
-    "Track rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश ट्रैक करें"
-          }
-        }
-      }
-    },
-    "Track Rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश ट्रैक करें"
-          }
-        }
-      }
-    },
-    "Track rain in ${location}": {},
-    "Track rain in Live Activity": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Track rain in Live Activity"
+    "Offline · Saved forecast from %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline · Saved forecast from %@"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "लाइव गतिविधि में बारिश ट्रैक करें"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑफ़लाइन · %@ से सहेजा गया पूर्वानुमान"
           }
         }
       }
     },
-    "Tracking rain": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश ट्रैक की जा रही है"
+    "Open Location" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान खोलें"
           }
         }
       }
     },
-    "Tracking rain live activity active": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बारिश ट्रैकिंग लाइव गतिविधि सक्रिय"
+    "Open Location in UpThere" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere में स्थान खोलें"
           }
         }
       }
     },
-    "Try again": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "पुनः प्रयास करें"
+    "Open settings" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स खोलें"
           }
         }
       }
     },
-    "Try searching by city name, state, or country.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "शहर के नाम, राज्य या देश द्वारा खोजने का प्रयास करें।"
-          }
-        }
-      }
-    },
-    "Turn severe weather alert notifications on or off in UpThere.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere में गंभीर मौसम चेतावनी सूचनाओं को चालू या बंद करें।"
-          }
-        }
-      }
-    },
-    "Updating forecast...": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "पूर्वानुमान अपडेट किया जा रहा है..."
-          }
-        }
-      }
-    },
-    "UpThere": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere"
+    "Open Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अपदेयर"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स खोलें"
           }
         }
       }
     },
-    "UpThere insight": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere इनसाइट"
+    "Open UpThere directly to a specific city's forecast." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी विशिष्ट शहर के पूर्वानुमान के लिए सीधे UpThere खोलें।"
           }
         }
       }
     },
-    "UpThere insight: %@, %@. %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "UpThere insight: %1$@, %2$@. %3$@"
+    "Opens Insights tab" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इनसाइट्स टैब खोलता है"
+          }
+        }
+      }
+    },
+    "Opens severe weather alert details" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गंभीर मौसम चेतावनी विवरण खोलता है"
+          }
+        }
+      }
+    },
+    "Peak precipitation at 2:45 PM (%@ probability)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peak precipitation at 2:45 PM (%@ probability)"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere इनसाइट: %@, %@. %@"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दोपहर 2:45 पर अधिकतम बारिश (%@ संभावना)"
           }
         }
       }
     },
-    "UpThere insights": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UpThere insights"
+    "Peak: %@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peak: %1$@ (%2$@)"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अपदेयर इनसाइट्स"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चरम: %1$@ (%2$@)"
           }
         }
       }
     },
-    "UV index forecast mini chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "यूवी इंडेक्स पूर्वानुमान मिनी चार्ट"
-          }
-        }
-      }
-    },
-    "UV Index: %lld · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "UV Index: %lld · %@"
+    "Precipitation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precipitation"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "यूवी इंडेक्स: %lld · %@"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्षा"
           }
         }
       }
     },
-    "We couldn't retrieve the latest forecast.\nCheck your connection and try again.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "नवीनतम पूर्वानुमान प्राप्त नहीं किया जा सका।\nअपना कनेक्शन जांचें और पुनः प्रयास करें।"
+    "Precipitation forecast by day" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिन के अनुसार वर्षा का पूर्वानुमान"
           }
         }
       }
     },
-    "Weather alerts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weather alerts"
+    "Precipitation probability" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्षा की संभावना"
+          }
+        }
+      }
+    },
+    "Precipitation probability chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्षा संभावना चार्ट"
+          }
+        }
+      }
+    },
+    "Precipitation probability mini chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्षा संभावना मिनी चार्ट"
+          }
+        }
+      }
+    },
+    "Precipitation unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precipitation unit"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम चेतावनी"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्षा इकाई"
           }
         }
       }
     },
-    "Weather data provider": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम डेटा प्रदाता"
-          }
-        }
-      }
-    },
-    "Weather unavailable": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम अनुपलब्ध"
-          }
-        }
-      }
-    },
-    "Weather, understood.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मौसम, समझ में आया।"
-          }
-        }
-      }
-    },
-    "What the forecast actually means.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What the forecast actually means."
+    "Rain alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rain alerts"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "पूर्वानुमान का वास्तविक अर्थ।"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश अलर्ट"
           }
         }
       }
     },
-    "Wind speed trend mini chart": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "हवा की गति रुझान मिनी चार्ट"
+    "Rain Window · 2:15 PM – 3:30 PM" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश का समय · 2:15 PM – 3:30 PM"
           }
         }
       }
     },
-    "Wind speed unit": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wind speed unit"
+    "Read official attribution" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read official attribution"
           }
         },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "हवा गति इकाई"
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आधिकारिक स्रोत पढ़ें"
           }
         }
       }
     },
-    "You can still search for a location manually,\nor turn on access in Settings › Privacy ›\nLocation Services.": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आप अभी भी मैन्युअल रूप से स्थान खोज सकते हैं,\nया सेटिंग्स › गोपनीयता ›\nस्थान सेवाएँ में पहुँच सक्षम कर सकते हैं।"
+    "Retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पुनः प्रयास करें"
           }
         }
       }
     },
-    "Check weather in ": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " में मौसम देखें"
+    "Search and save cities to track their weather and quickly switch between them." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search and save cities to track their weather and quickly switch between them."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम ट्रैक करने और उनके बीच आसानी से स्विच करने के लिए शहरों को खोजें और सहेजें।"
           }
         }
       }
     },
-    "Track rain in ": {
-      "localizations": {
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " में बारिश ट्रैक करें"
+    "Search by city name, state, or country." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर के नाम, राज्य या देश के अनुसार खोजें।"
+          }
+        }
+      }
+    },
+    "Search for a city" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search for a city"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर खोजें"
+          }
+        }
+      }
+    },
+    "Search for a City" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर खोजें"
+          }
+        }
+      }
+    },
+    "Search for a city instead" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसके बजाय कोई शहर खोजें"
+          }
+        }
+      }
+    },
+    "Search for a location" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थान खोजें"
+          }
+        }
+      }
+    },
+    "Search saved cities" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search saved cities"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सहेजे गए शहर खोजें"
+          }
+        }
+      }
+    },
+    "Searching cities..." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर खोजे जा रहे हैं..."
+          }
+        }
+      }
+    },
+    "See weather where\nyou are" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने स्थान का\nमौसम देखें"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स"
+          }
+        }
+      }
+    },
+    "Severe weather alert: %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Severe weather alert: %1$@. %2$@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गंभीर मौसम चेतावनी: %@. %@"
+          }
+        }
+      }
+    },
+    "Severe weather alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Severe weather alerts"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गंभीर मौसम अलर्ट"
+          }
+        }
+      }
+    },
+    "Severe weather alerts are now %@ in UpThere." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere में गंभीर मौसम चेतावनियाँ अब %@ हैं।"
+          }
+        }
+      }
+    },
+    "Show weather in Spotlight" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show weather in Spotlight"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्पॉटलाइट में मौसम दिखाएं"
+          }
+        }
+      }
+    },
+    "Showing cached forecast from %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing cached forecast from %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ से कैश्ड पूर्वानुमान दिखाया जा रहा है"
+          }
+        }
+      }
+    },
+    "Start a Live Activity to track upcoming or current rain in UpThere." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere में आगामी या वर्तमान बारिश को ट्रैक करने के लिए लाइव गतिविधि प्रारंभ करें।"
+          }
+        }
+      }
+    },
+    "Starts a Lock Screen and Dynamic Island live activity for upcoming rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आगामी बारिश के लिए लॉक स्क्रीन और डायनामिक आइलैंड लाइव गतिविधि प्रारंभ करता है"
+          }
+        }
+      }
+    },
+    "Tap any city to switch to its live weather." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap any city to switch to its live weather."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइव मौसम देखने के लिए किसी भी शहर पर टैप करें।"
+          }
+        }
+      }
+    },
+    "Target Location" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लक्षित स्थान"
+          }
+        }
+      }
+    },
+    "Temperature forecast chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तापमान पूर्वानुमान चार्ट"
+          }
+        }
+      }
+    },
+    "Temperature trend mini chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तापमान रुझान मिनी चार्ट"
+          }
+        }
+      }
+    },
+    "Temperature unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature unit"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "तापमान इकाई"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आज"
+          }
+        }
+      }
+    },
+    "Toggle Severe Alerts" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गंभीर चेतावनियाँ टॉगल करें"
+          }
+        }
+      }
+    },
+    "Toggle Severe Weather Alerts" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गंभीर मौसम चेतावनियाँ टॉगल करें"
+          }
+        }
+      }
+    },
+    "Track rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश ट्रैक करें"
+          }
+        }
+      }
+    },
+    "Track Rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश ट्रैक करें"
+          }
+        }
+      }
+    },
+    "Track rain in ${location}" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "${location} में बारिश ट्रैक करें"
+          }
+        }
+      }
+    },
+    "Track rain in Live Activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track rain in Live Activity"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइव गतिविधि में बारिश ट्रैक करें"
+          }
+        }
+      }
+    },
+    "Tracking rain" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश ट्रैक की जा रही है"
+          }
+        }
+      }
+    },
+    "Tracking rain live activity active" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बारिश ट्रैकिंग लाइव गतिविधि सक्रिय"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पुनः प्रयास करें"
+          }
+        }
+      }
+    },
+    "Try searching by city name, state, or country." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शहर के नाम, राज्य या देश द्वारा खोजने का प्रयास करें।"
+          }
+        }
+      }
+    },
+    "Turn severe weather alert notifications on or off in UpThere." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere में गंभीर मौसम चेतावनी सूचनाओं को चालू या बंद करें।"
+          }
+        }
+      }
+    },
+    "Updating forecast..." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पूर्वानुमान अपडेट किया जा रहा है..."
+          }
+        }
+      }
+    },
+    "UpThere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपदेयर"
+          }
+        }
+      }
+    },
+    "UpThere insight" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere इनसाइट"
+          }
+        }
+      }
+    },
+    "UpThere insight: %@, %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "UpThere insight: %1$@, %2$@. %3$@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere इनसाइट: %@, %@. %@"
+          }
+        }
+      }
+    },
+    "UpThere insights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UpThere insights"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपदेयर इनसाइट्स"
+          }
+        }
+      }
+    },
+    "UV index forecast mini chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यूवी इंडेक्स पूर्वानुमान मिनी चार्ट"
+          }
+        }
+      }
+    },
+    "UV Index: %lld · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UV Index: %lld · %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यूवी इंडेक्स: %lld · %@"
+          }
+        }
+      }
+    },
+    "We couldn't retrieve the latest forecast.\nCheck your connection and try again." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नवीनतम पूर्वानुमान प्राप्त नहीं किया जा सका।\nअपना कनेक्शन जांचें और पुनः प्रयास करें।"
+          }
+        }
+      }
+    },
+    "Weather alerts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weather alerts"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम चेतावनी"
+          }
+        }
+      }
+    },
+    "Weather data provider" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम डेटा प्रदाता"
+          }
+        }
+      }
+    },
+    "Weather unavailable" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम अनुपलब्ध"
+          }
+        }
+      }
+    },
+    "Weather, understood." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौसम, समझ में आया।"
+          }
+        }
+      }
+    },
+    "What the forecast actually means." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What the forecast actually means."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पूर्वानुमान का वास्तविक अर्थ।"
+          }
+        }
+      }
+    },
+    "Wind speed trend mini chart" : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हवा की गति रुझान मिनी चार्ट"
+          }
+        }
+      }
+    },
+    "Wind speed unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wind speed unit"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हवा गति इकाई"
+          }
+        }
+      }
+    },
+    "You can still search for a location manually,\nor turn on access in Settings › Privacy ›\nLocation Services." : {
+      "localizations" : {
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप अभी भी मैन्युअल रूप से स्थान खोज सकते हैं,\nया सेटिंग्स › गोपनीयता ›\nस्थान सेवाएँ में पहुँच सक्षम कर सकते हैं।"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
